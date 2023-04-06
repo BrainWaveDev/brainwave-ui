@@ -1,9 +1,12 @@
 import XMarkIcon from '@/components/icons/XMarkIcon';
 import classNames from 'classnames';
+import { motion } from 'framer-motion';
 
 interface Props {
   name: string;
   size: number;
+  index: number;
+  onFileDelete: (index: number) => void;
 }
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -18,12 +21,21 @@ function formatBytes(bytes: number, decimals = 2) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
 
-export default function FilePreview({ name, size }: Props) {
+export default function FilePreview({
+  name,
+  size,
+  index,
+  onFileDelete
+}: Props) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
       className={classNames(
         'flex items-center place-content-between border',
-        'rounded-lg px-2 py-1 w-full group hover:border-teal-400',
+        'rounded-lg px-2 py-1 w-full group hover:border-teal-400 active:border-teal-400',
         'transition duration-150'
       )}
     >
@@ -52,7 +64,10 @@ export default function FilePreview({ name, size }: Props) {
         </div>
       </div>
       <button
-        className={'opacity-0 group-hover:opacity-100 transition duration-150'}
+        className={
+          'opacity-0 group-hover:opacity-100 transition border-none duration-150 outline-0 ring-0 focus:ring-0 active:ring-0'
+        }
+        onClick={() => onFileDelete(index)}
       >
         <XMarkIcon
           className={classNames(
@@ -62,6 +77,6 @@ export default function FilePreview({ name, size }: Props) {
           strokeWidth={1}
         />
       </button>
-    </div>
+    </motion.div>
   );
 }

@@ -5,11 +5,17 @@ import classNames from 'classnames';
 import { useState, ChangeEvent } from 'react';
 import FilePreview from '@/components/ui/FileInput/FilePreview';
 import classes from './FileInput.module.css';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface FileInfo {
+  name: string;
+  size: number;
+}
 
 export default function FileInput() {
   const { user, isLoading } = useUser();
   const [files, setFiles] = useState<FileList | null>();
-  const [previewElements, setPreviewElements] = useState<JSX.Element[]>([]);
+  const [previewElements, setPreviewElements] = useState<FileInfo[]>([]);
 
   // Logic for handling image upload
   const fileInputHandler = (event: ChangeEvent<HTMLInputElement>) => {
@@ -37,53 +43,40 @@ export default function FileInput() {
       // Skip adding photos if there are already present
       if (!existingFileNames.includes(selectedFiles[i].name)) {
         newFiles.items.add(selectedFiles[i]);
-        newPreviewElements.push(
-          <FilePreview
-            name={selectedFiles[i].name}
-            size={selectedFiles[i].size}
-          />
-        );
-      }
+        newPreviewElements.push({
+          name: selectedFiles[i].name,
+          size: selectedFiles[i].size
+        });
+      } else alert('You cannot upload the same file(s) twice!');
     }
 
     setFiles(newFiles.files);
     setPreviewElements(newPreviewElements);
   };
 
-  /*
   const removeFile = (index: number) => {
-    // Remove files from the file list
-    if (selectedFiles && selectedFiles[index]) {
-      const updatedFiles = new DataTransfer();
-
-      for (let i = 0; i < selectedFiles.length; ++i) {
-        if (i !== index) {
-          updatedFiles.items.add(selectedFiles[i]);
-        }
-      }
-
-      if (updatedFiles.files.length === 0)
-        dispatchSection({
-          type: "changeUploadState",
-          uploadState: UploadState.NoSelection,
-        });
-
-      setSelectedFiles(updatedFiles.files);
+    console.log(`Removing file with the index ${index}`);
+    // Update file objects
+    if (files && files[index]) {
+      const newFiles = new DataTransfer();
+      for (let i = 0; i < files.length; ++i)
+        if (i !== index) newFiles.items.add(files[i]);
+      setFiles(newFiles.files);
     }
 
-    // Remove preview elements
+    // Update preview elements
     if (previewElements && previewElements[index]) {
       setPreviewElements((prevElements) => {
         if (prevElements) {
-          prevElements?.splice(index, 1);
-          return prevElements;
+          return prevElements.filter(
+            (_, elementIndex) => elementIndex != index
+          );
         } else {
           return [];
         }
       });
     }
   };
-  */
 
   /*
 	const uploadFile = async () => {
@@ -124,7 +117,17 @@ export default function FileInput() {
           <div
             className={classNames(classes.filePreviewGrid, 'w-full gap-2 grid')}
           >
-            {previewElements.map((previewElement) => previewElement)}
+            <AnimatePresence>
+              {previewElements.map((fileInfo, index) => (
+                <FilePreview
+                  name={fileInfo.name}
+                  size={fileInfo.size}
+                  key={index}
+                  index={index}
+                  onFileDelete={removeFile}
+                />
+              ))}
+            </AnimatePresence>
           </div>
         ) : (
           <>
@@ -161,16 +164,25 @@ export default function FileInput() {
       >
         {files && files.length > 0 && (
           <>
-            <button
+            <label
+              htmlFor={'add-file-button'}
               className={classNames(
                 'font-base text-gray-600 rounded-lg text-sm px-3 py-1.5 inline-flex shadow',
                 ' items-center justify-center bg-white hover:bg-teal-50/[0.5] cursor-pointer outline-none',
                 'transition duration-150'
               )}
-              aria-label="Add files"
             >
+              {' '}
               Add files
-            </button>
+            </label>
+            <input
+              id="add-file-button"
+              type="file"
+              multiple
+              onChange={fileInputHandler}
+              accept={'.txt, .pdf, .docs'}
+              hidden
+            />
             <button
               className={classNames(
                 'font-semibold text-white rounded-lg text-sm px-3 py-1.5 inline-flex shadow',

@@ -1,4 +1,4 @@
 .filePreviewGrid {
     grid-template-columns: repeat(auto-fit, minmax(20rem, 35rem));
-    @apply justify-center;
+    @apply w-full justify-start justify-items-start;
 }
