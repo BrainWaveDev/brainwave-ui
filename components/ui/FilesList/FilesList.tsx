@@ -2,8 +2,12 @@ import FilterPopover from '@/components/ui/FilesList/FilterPopover';
 import ActionsPopover from '@/components/ui/FilesList/ActionsPopover';
 import SearchIcon from '@/components/icons/SearchIcon';
 import classes from './FilesList.module.css';
+import { useEffect } from 'react';
 
 export default function FilesList() {
+  
+
+
   return (
     <section className="container px-4 mx-auto">
       <div className="sm:flex sm:items-center sm:justify-between">
