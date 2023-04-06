@@ -1,0 +1,7 @@
+.input {
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    @apply block p-2 pl-10 text-sm text-gray-700 border-none rounded-lg w-80 bg-white shadow;
+    @apply focus:ring-2 ring-teal-400 !important;
+}

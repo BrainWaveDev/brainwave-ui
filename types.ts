@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+
 export interface PageMeta {
   title: string;
   description: string;
@@ -67,4 +68,18 @@ export interface Subscription {
   trial_start?: string;
   trial_end?: string;
   prices?: Price;
+}
+
+export interface Metadata {
+  size: number;
+  mimetype: string;
+  lastModified: string;
+}
+
+export interface Document {
+  id: string /* primary key */;
+  owner?: string /* foreign key to auth.users.id */;
+  object_id?: string /* foreign key to storage.objects.id */;
+  name: string;
+  metadata: JSON;
 }

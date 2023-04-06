@@ -15,7 +15,7 @@ const SignIn = () => {
 
   useEffect(() => {
     if (user) {
-      router.replace('/account');
+      router.replace('/');
     }
   }, [user]);
 
@@ -29,7 +29,7 @@ const SignIn = () => {
           <div className="flex flex-col space-y-4">
             <Auth
               supabaseClient={supabaseClient}
-              providers={['github']}
+              providers={['google', 'github']}
               redirectTo={getURL()}
               magicLink={true}
               appearance={{
@@ -37,13 +37,12 @@ const SignIn = () => {
                 variables: {
                   default: {
                     colors: {
-                      brand: '#404040',
-                      brandAccent: '#52525b'
+                      brand: 'rgb(50,65,89)',
+                      brandAccent: 'rgb(50,65,89)'
                     }
                   }
                 }
               }}
-              theme="dark"
             />
           </div>
         </div>

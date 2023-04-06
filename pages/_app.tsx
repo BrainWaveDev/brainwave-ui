@@ -4,7 +4,7 @@ import { AppProps } from 'next/app';
 import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
 
-import Layout from '@/components/Layout';
+import Layout from '@/components/ui/Layout/Layout';
 import { MyUserContextProvider } from '@/utils/useUser';
 import type { Database } from 'types_db';
 
@@ -20,7 +20,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   }, []);
 
   return (
-    <div className="bg-black">
+    <div className="bg-black h-full">
       <SessionContextProvider supabaseClient={supabaseClient}>
         <MyUserContextProvider>
           <Layout>
