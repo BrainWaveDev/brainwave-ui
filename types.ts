@@ -81,5 +81,15 @@ export interface Document {
   owner?: string /* foreign key to auth.users.id */;
   object_id?: string /* foreign key to storage.objects.id */;
   name: string;
-  metadata: JSON;
+  metadata: DocMetadata;
+}
+
+export interface DocMetadata {
+  cacheControl: string;
+  contentLength: number;
+  eTag: string;
+  httpStatusCode: number;
+  lastModified: string;
+  mimetype: string;
+  size: number;
 }

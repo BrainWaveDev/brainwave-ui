@@ -9,7 +9,6 @@ interface Props {
 }
 
 export default function HomePage({ documents }: Props) {
-  console.log(documents);
 
   return (
     <>
@@ -25,7 +24,7 @@ export default function HomePage({ documents }: Props) {
         <FileInput />
       </div>
       <div className="mx-auto max-w-7xl pt-2 pb-6 sm:px-6 lg:px-8">
-        <FilesList />
+        <FilesList documents={documents}/>
       </div>
     </>
   );
