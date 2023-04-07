@@ -8,12 +8,12 @@ interface Props {
   documents: Document[];
 }
 
-const ONE_PAGE_SIZE = 5;
+const ONE_PAGE_SIZE = 10;
 
 export default function FilesList(props: Props) {
   const [currentPage, setCurrentPage] = useState(0);
 
-  const totalPages = Math.floor(props.documents.length / ONE_PAGE_SIZE) ;
+  const totalPages = Math.ceil(props.documents.length / ONE_PAGE_SIZE) ;
 
   const splitArray = (array: Document[], chunkSize: number): Document[][] => {
     const result: Document[][] = [];
@@ -60,7 +60,7 @@ export default function FilesList(props: Props) {
                   <tr>
                     <th
                       scope="col"
-                      className="py-3.5 px-4 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+                      className="py-3.5 px-4 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 w-1/4"
                     >
                       <div className="flex items-center gap-x-3">
                         <input
@@ -217,13 +217,13 @@ function PageIndexComponent(props: { totalPages: number, setPage:  Dispatch<SetS
   } else {
     // display first page, last page, selected index, and ellipses
     const isFirstPageSelected = props.currPage === 0;
-    const isLastPageSelected = props.currPage === props.totalPages ;
+    const isLastPageSelected = props.currPage === props.totalPages -1;
     const pages = [
       pageNumberBox(0, isFirstPageSelected),
       !isFirstPageSelected && props.currPage - 1 >= 1 ? ellipsis() : null,
       isFirstPageSelected || isLastPageSelected ? null : pageNumberBox(props.currPage, true),
-      !isLastPageSelected && props.totalPages - props.currPage >= 2 ? ellipsis() : null,
-      pageNumberBox(props.totalPages , isLastPageSelected),
+      !isLastPageSelected && props.totalPages - props.currPage > 2 ? ellipsis() : null,
+      pageNumberBox(props.totalPages-1, isLastPageSelected),
     ].filter(Boolean); // Remove null values from the array
 
     return <>{pages}</>;
