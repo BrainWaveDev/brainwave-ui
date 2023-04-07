@@ -12,10 +12,14 @@ const ONE_PAGE_SIZE = 10;
 
 export default function FilesList(props: Props) {
   const [currentPage, setCurrentPage] = useState(0);
+  const [filter, setFilter] = useState('');
 
   const totalPages = Math.ceil(props.documents.length / ONE_PAGE_SIZE) ;
 
   const splitArray = (array: Document[], chunkSize: number): Document[][] => {
+    array = array.filter((doc) => {
+      return doc.name.toLowerCase().includes(filter.toLowerCase());
+    });
     const result: Document[][] = [];
 
     for (let i = 0; i < array.length; i += chunkSize) {
@@ -23,11 +27,14 @@ export default function FilesList(props: Props) {
       result.push(chunk);
     }
 
+    if (result.length === 0) {
+      return [[]];
+    }
     return result;
   };
 
   return (
-    <section className="container px-4 mx-auto">
+    <section className="container px-4 mx-auto h-[900px]">
       <div className="sm:flex sm:items-center sm:justify-between">
         <div className={'flex items-center place-self-center'}>
           <FilterPopover />
@@ -46,6 +53,10 @@ export default function FilesList(props: Props) {
               id="table-search-users"
               className={classes.input}
               placeholder="Search for files"
+              onChange={(e) => {
+                setFilter(e.target.value);
+              }
+              }
             />
           </div>
         </div>
@@ -57,57 +68,15 @@ export default function FilesList(props: Props) {
             <div className="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed ">
                 <thead className="bg-gray-50 dark:bg-gray-800">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="py-3.5 px-4 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 w-1/4"
-                    >
-                      <div className="flex items-center gap-x-3">
-                        <input
-                          type="checkbox"
-                          className="text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700"
-                        />
-                        <span>File name</span>
-                      </div>
-                    </th>
-
-                    <th
-                      scope="col"
-                      className="px-12 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-                    >
-                      File size
-                    </th>
-
-                    <th
-                      scope="col"
-                      className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-                    >
-                      Date uploaded
-                    </th>
-
-                    <th
-                      scope="col"
-                      className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-                    >
-                      Last updated
-                    </th>
-
-                    <th
-                      scope="col"
-                      className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-                    >
-                      Uploaded by
-                    </th>
-
-                    <th scope="col" className="relative py-3.5 px-4">
-                      <span className="sr-only">Edit</span>
-                    </th>
-                  </tr>
+                  {TableHeader()}
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
                   {splitArray(props.documents, ONE_PAGE_SIZE)[currentPage].map((document) => (
                     DocumentRow(document)
                   ))}
+                  <tr>
+                    
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -180,6 +149,54 @@ export default function FilesList(props: Props) {
       </div>
     </section>
   );
+}
+
+function TableHeader() {
+  return <tr>
+    <th
+      scope="col"
+      className="py-3.5 px-4 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 w-1/4"
+    >
+      <div className="flex items-center gap-x-3">
+        <input
+          type="checkbox"
+          className="text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700" />
+        <span>File name</span>
+      </div>
+    </th>
+
+    <th
+      scope="col"
+      className="px-12 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+    >
+      File size
+    </th>
+
+    <th
+      scope="col"
+      className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+    >
+      Date uploaded
+    </th>
+
+    <th
+      scope="col"
+      className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+    >
+      Last updated
+    </th>
+
+    <th
+      scope="col"
+      className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+    >
+      Uploaded by
+    </th>
+
+    <th scope="col" className="relative py-3.5 px-4">
+      <span className="sr-only">Edit</span>
+    </th>
+  </tr>;
 }
 
 function PageIndexComponent(props: { totalPages: number, setPage:  Dispatch<SetStateAction<number>>, currPage: number }) {
