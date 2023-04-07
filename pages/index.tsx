@@ -1,4 +1,4 @@
-import { GetServerSidePropsContext, GetStaticPropsResult } from 'next';
+import { GetServerSidePropsContext } from 'next';
 import FileInput from '@/components/ui/FileInput/FileInput';
 import FilesList from '@/components/ui/FilesList';
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
@@ -9,7 +9,6 @@ interface Props {
 }
 
 export default function HomePage({ documents }: Props) {
-
   return (
     <>
       <header className="bg-white shadow">

@@ -6,6 +6,7 @@ import classes from './Layout.module.css';
 
 import { PageMeta } from '../../../types';
 import classNames from 'classnames';
+import ErrorList from '@/components/ui/ErrorList/ErrorList';
 
 interface Props extends PropsWithChildren {
   meta?: PageMeta;
@@ -36,6 +37,7 @@ export default function Layout({ children, meta: pageMeta }: Props) {
       >
         {children}
       </main>
+      <ErrorList />
       {/*<Footer />*/}
     </>
   );

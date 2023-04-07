@@ -3,7 +3,7 @@ import React from 'react';
 import { AppProps } from 'next/app';
 import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
-
+import ErrorProvider from '../context/ErrorContext';
 import Layout from '@/components/ui/Layout/Layout';
 import { MyUserContextProvider } from '@/utils/useUser';
 import type { Database } from 'types_db';
@@ -23,9 +23,11 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     <div className="bg-black h-full">
       <SessionContextProvider supabaseClient={supabaseClient}>
         <MyUserContextProvider>
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
+          <ErrorProvider>
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          </ErrorProvider>
         </MyUserContextProvider>
       </SessionContextProvider>
     </div>

@@ -42,3 +42,7 @@ export const toDateTime = (secs: number) => {
   t.setSeconds(secs);
   return t;
 };
+
+export function wait(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}

@@ -5,17 +5,33 @@ import classNames from 'classnames';
 import { useState, ChangeEvent } from 'react';
 import FilePreview from '@/components/ui/FileInput/FilePreview';
 import classes from './FileInput.module.css';
-import { motion, AnimatePresence } from 'framer-motion';
+// @ts-ignore
+import { AnimatePresence } from 'framer-motion';
+import { supabase } from '@/utils/supabase-client';
+import { wait } from '@/utils/helpers';
+import { ErrorAlert, useErrorContext } from '../../../context/ErrorContext';
 
 interface FileInfo {
   name: string;
   size: number;
+  uploadState: UploadState;
+}
+
+export enum UploadState {
+  NotUploading,
+  Uploading,
+  UploadComplete,
+  UploadFailed
 }
 
 export default function FileInput() {
   const { user, isLoading } = useUser();
   const [files, setFiles] = useState<FileList | null>();
   const [previewElements, setPreviewElements] = useState<FileInfo[]>([]);
+  const {
+    errorState: { errors },
+    dispatch: dispatchError
+  } = useErrorContext();
 
   // Logic for handling image upload
   const fileInputHandler = (event: ChangeEvent<HTMLInputElement>) => {
@@ -45,7 +61,8 @@ export default function FileInput() {
         newFiles.items.add(selectedFiles[i]);
         newPreviewElements.push({
           name: selectedFiles[i].name,
-          size: selectedFiles[i].size
+          size: selectedFiles[i].size,
+          uploadState: UploadState.NotUploading
         });
       } else alert('You cannot upload the same file(s) twice!');
     }
@@ -55,7 +72,6 @@ export default function FileInput() {
   };
 
   const removeFile = (index: number) => {
-    console.log(`Removing file with the index ${index}`);
     // Update file objects
     if (files && files[index]) {
       const newFiles = new DataTransfer();
@@ -78,17 +94,116 @@ export default function FileInput() {
     }
   };
 
-  /*
-	const uploadFile = async () => {
-		const avatarFile = event.target.files[0];
-		const { data, error } = await supabase.storage
-			.from('avatars')
-			.upload('public/avatar1.png', avatarFile, {
-				cacheControl: '3600',
-				upsert: false
-			});
-	};
-	*/
+  const updateFilePreviewAfterUpload = () => {
+    setPreviewElements((previewElements) =>
+      previewElements
+        .filter(
+          (previewElement) =>
+            previewElement.uploadState === UploadState.UploadFailed
+        )
+        .map((previewElement) => ({
+          ...previewElement,
+          uploadState: UploadState.NotUploading
+        }))
+    );
+  };
+
+  const uploadFiles = async () => {
+    if (files && files.length > 0 && !isLoading) {
+      // Each file upload will be handled in a separate promise
+      const fileUploads: Promise<any>[] = [];
+      let newPreviewElements: FileInfo[] = [];
+
+      for (let i = 0; i < files.length; ++i) {
+        if (previewElements[i].name === files[i].name) {
+          newPreviewElements.push({
+            ...previewElements[i],
+            uploadState: UploadState.Uploading
+          });
+        }
+
+        fileUploads.push(
+          supabase.storage
+            .from('documents')
+            .upload(`${user!.id}/${files[i].name}`, files[i], {
+              upsert: false
+            })
+        );
+      }
+      setPreviewElements(newPreviewElements);
+
+      let newFiles = new DataTransfer();
+      newPreviewElements = [];
+
+      const results = await Promise.allSettled(fileUploads);
+      results.forEach((result, index) => {
+        const filename =
+          files[index].name.length > 20
+            ? `${files[index].name.slice(0, 20)}...`
+            : files[index].name;
+
+        let errorMessage = null;
+
+        if (result.status === 'fulfilled') {
+          const { error } = result.value;
+          if (error) {
+            newFiles.items.add(files[index]);
+            newPreviewElements.push({
+              name: files[index].name,
+              size: files[index].size,
+              uploadState: UploadState.UploadFailed
+            });
+
+            errorMessage =
+              error.error === 'Duplicate' ? (
+                <>
+                  <strong>{filename}</strong> already exists
+                </>
+              ) : (
+                <> Couldn't upload {filename}.</>
+              );
+          } else {
+            newPreviewElements.push({
+              name: files[index].name,
+              size: files[index].size,
+              uploadState: UploadState.UploadComplete
+            });
+          }
+        } else {
+          newFiles.items.add(files[index]);
+          newPreviewElements.push({
+            name: files[index].name,
+            size: files[index].size,
+            uploadState: UploadState.UploadFailed
+          });
+
+          errorMessage = (
+            <>
+              Couldn't upload <strong>{filename}</strong>.
+            </>
+          );
+        }
+
+        if (errorMessage) {
+          const newError = new ErrorAlert(errorMessage);
+          dispatchError({ type: 'addError', error: newError });
+          // Automatically clear error alert
+          setTimeout(() => {
+            dispatchError({
+              type: 'removeError',
+              id: newError.id
+            });
+          }, 3000);
+        }
+      });
+
+      setFiles(newFiles.files);
+      setPreviewElements(newPreviewElements);
+
+      await wait(3000);
+      updateFilePreviewAfterUpload();
+    }
+  };
 
   return (
     <div className="flex items-center justify-center flex-col w-full px-4">
@@ -122,6 +237,7 @@ export default function FileInput() {
                 <FilePreview
                   name={fileInfo.name}
                   size={fileInfo.size}
+                  uploadState={fileInfo.uploadState}
                   key={index}
                   index={index}
                   onFileDelete={removeFile}
@@ -190,6 +306,7 @@ export default function FileInput() {
                 'transition duration-150'
               )}
               aria-label="Upload files"
+              onClick={uploadFiles}
             >
               Upload
             </button>
