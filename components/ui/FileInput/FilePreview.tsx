@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RotatingLines } from 'react-loader-spinner';
-import { UploadState } from '@/components/ui/FileInput/FileInput';
+import { UploadState } from '../../../lib/classes';
 import CheckMark from '@/components/icons/CheckMark';
 import XMarkIcon from '@/components/icons/XMarkIcon';
 

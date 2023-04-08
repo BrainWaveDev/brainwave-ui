@@ -2,109 +2,60 @@ import FileUpload from '@/components/icons/FileUpload';
 import { useUser } from '@/utils/useUser';
 import { RotatingLines } from 'react-loader-spinner';
 import classNames from 'classnames';
-import { useState, ChangeEvent } from 'react';
+import { ChangeEvent, useState } from 'react';
 import FilePreview from '@/components/ui/FileInput/FilePreview';
 import classes from './FileInput.module.css';
+import { FileInfo, UploadState } from '../../../lib/classes';
 // @ts-ignore
 import { AnimatePresence } from 'framer-motion';
 import { supabase } from '@/utils/supabase-client';
 import { wait } from '@/utils/helpers';
 import { ErrorAlert, useErrorContext } from '../../../context/ErrorContext';
 
-interface FileInfo {
-  name: string;
-  size: number;
-  uploadState: UploadState;
-}
-
-export enum UploadState {
-  NotUploading,
-  Uploading,
-  UploadComplete,
-  UploadFailed
-}
-
 export default function FileInput() {
   const { user, isLoading } = useUser();
-  const [files, setFiles] = useState<FileList | null>();
-  const [previewElements, setPreviewElements] = useState<FileInfo[]>([]);
-  const {
-    errorState: { errors },
-    dispatch: dispatchError
-  } = useErrorContext();
+  const [files, setFiles] = useState<FileInfo[]>([]);
+  // const [previewElements, setPreviewElements] = useState<FileInfo[]>([]);
+  const { dispatch: dispatchError } = useErrorContext();
+
+  console.log(files);
 
   // Logic for handling image upload
   const fileInputHandler = (event: ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
 
     let selectedFiles: FileList = event.target.files!;
-    let newPreviewElements = [...previewElements];
-
-    const filesLength = files ? files.length : 0;
-
-    const newFiles = new DataTransfer();
-    // This will help to prevent uploading duplicate files
-    const existingFileNames: string[] = [];
 
     // Retain previously selected files
-    if (files) {
-      for (let i = 0; i < filesLength; ++i) {
-        newFiles.items.add(files[i]);
-        existingFileNames.push(files[i].name);
-      }
-    }
+    const newFiles: FileInfo[] = [...files];
+    // This will help to prevent uploading duplicate files
+    const existingFileNames: string[] = files.map((file) => file.name);
 
     // Add files that were selected just recently
     for (let i = 0; i < selectedFiles.length; ++i) {
       // Skip adding photos if there are already present
-      if (!existingFileNames.includes(selectedFiles[i].name)) {
-        newFiles.items.add(selectedFiles[i]);
-        newPreviewElements.push({
-          name: selectedFiles[i].name,
-          size: selectedFiles[i].size,
-          uploadState: UploadState.NotUploading
-        });
-      } else alert('You cannot upload the same file(s) twice!');
+      if (!existingFileNames.includes(selectedFiles[i].name))
+        newFiles.push(new FileInfo(selectedFiles[i]));
+      else alert('You cannot upload the same file(s) twice!');
     }
 
-    setFiles(newFiles.files);
-    setPreviewElements(newPreviewElements);
+    setFiles(newFiles);
   };
 
-  const removeFile = (index: number) => {
+  const removeFile = (fileIndex: number) => {
     // Update file objects
-    if (files && files[index]) {
-      const newFiles = new DataTransfer();
-      for (let i = 0; i < files.length; ++i)
-        if (i !== index) newFiles.items.add(files[i]);
-      setFiles(newFiles.files);
-    }
-
-    // Update preview elements
-    if (previewElements && previewElements[index]) {
-      setPreviewElements((prevElements) => {
-        if (prevElements) {
-          return prevElements.filter(
-            (_, elementIndex) => elementIndex != index
-          );
-        } else {
-          return [];
-        }
-      });
-    }
+    setFiles((prevFiles) => prevFiles.filter((_, index) => index != fileIndex));
   };
 
-  const updateFilePreviewAfterUpload = () => {
-    setPreviewElements((previewElements) =>
-      previewElements
-        .filter(
-          (previewElement) =>
-            previewElement.uploadState === UploadState.UploadFailed
-        )
-        .map((previewElement) => ({
-          ...previewElement,
-          uploadState: UploadState.NotUploading
-        }))
+  const updateFilePreviewAfterUpload = async () => {
+    await wait(3000);
+    setFiles((prevFiles) =>
+      prevFiles
+        .filter((file) => file.uploadState === UploadState.UploadFailed)
+        .map((file) => {
+          file.uploadState = UploadState.NotUploading;
+          return file;
+        })
     );
   };
 
@@ -112,28 +63,25 @@ export default function FileInput() {
     if (files && files.length > 0 && !isLoading) {
       // Each file upload will be handled in a separate promise
       const fileUploads: Promise<any>[] = [];
-      let newPreviewElements: FileInfo[] = [];
 
-      for (let i = 0; i < files.length; ++i) {
-        if (previewElements[i].name === files[i].name) {
-          newPreviewElements.push({
-            ...previewElements[i],
-            uploadState: UploadState.Uploading
-          });
-        }
+      setFiles((files) =>
+        files.map((file) => {
+          file.uploadState = UploadState.Uploading;
+          return file;
+        })
+      );
 
+      files.forEach((file) => {
         fileUploads.push(
           supabase.storage
             .from('documents')
-            .upload(`${user!.id}/${files[i].name}`, files[i], {
+            .upload(`${user!.id}/${file.name}`, file.file, {
               upsert: false
             })
         );
-      }
-      setPreviewElements(newPreviewElements);
+      });
 
-      let newFiles = new DataTransfer();
-      newPreviewElements = [];
+      const updatedFiles: FileInfo[] = [];
 
       const results = await Promise.allSettled(fileUploads);
       results.forEach((result, index) => {
@@ -143,17 +91,13 @@ export default function FileInput() {
             : files[index].name;
 
         let errorMessage = null;
+        const file = files[index];
+        console.log(result);
 
         if (result.status === 'fulfilled') {
           const { error } = result.value;
           if (error) {
-            newFiles.items.add(files[index]);
-            newPreviewElements.push({
-              name: files[index].name,
-              size: files[index].size,
-              uploadState: UploadState.UploadFailed
-            });
-
+            file.uploadState = UploadState.UploadFailed;
             errorMessage =
               error.error === 'Duplicate' ? (
                 <>
@@ -163,26 +107,18 @@ export default function FileInput() {
                 <> Couldn't upload {filename}.</>
               );
           } else {
-            newPreviewElements.push({
-              name: files[index].name,
-              size: files[index].size,
-              uploadState: UploadState.UploadComplete
-            });
+            file.uploadState = UploadState.UploadComplete;
           }
         } else {
-          newFiles.items.add(files[index]);
-          newPreviewElements.push({
-            name: files[index].name,
-            size: files[index].size,
-            uploadState: UploadState.UploadFailed
-          });
-
+          file.uploadState = UploadState.UploadFailed;
           errorMessage = (
             <>
               Couldn't upload <strong>{filename}</strong>.
             </>
           );
         }
+
+        updatedFiles.push(file);
 
         if (errorMessage) {
           const newError = new ErrorAlert(errorMessage);
@@ -197,11 +133,8 @@ export default function FileInput() {
         }
       });
 
-      setFiles(newFiles.files);
-      setPreviewElements(newPreviewElements);
-
-      await wait(3000);
-      updateFilePreviewAfterUpload();
+      setFiles(updatedFiles);
+      await updateFilePreviewAfterUpload();
     }
   };
 
@@ -212,12 +145,12 @@ export default function FileInput() {
         className={classNames(
           'flex flex-col items-center w-full h-64 max-h-64 shadow border',
           'transition transition-duration-150 border-transparent rounded-lg bg-white',
-          'overflow-y-scroll p-4',
+          'p-4',
           isLoading
-            ? 'justify-center'
+            ? 'justify-center overflow-y-hidden'
             : user && (!files || files.length < 1)
-            ? 'justify-center hover:border-teal-400 cursor-pointer'
-            : 'justify-start'
+            ? 'justify-center hover:border-teal-400 cursor-pointer overflow-y-hidden'
+            : 'justify-start overflow-y-scroll'
         )}
       >
         {isLoading ? (
@@ -228,16 +161,16 @@ export default function FileInput() {
             width="3.25rem"
             visible={true}
           />
-        ) : files && files.length > 0 ? (
+        ) : files.length > 0 ? (
           <div
             className={classNames(classes.filePreviewGrid, 'w-full gap-2 grid')}
           >
             <AnimatePresence>
-              {previewElements.map((fileInfo, index) => (
+              {files.map((file, index) => (
                 <FilePreview
-                  name={fileInfo.name}
-                  size={fileInfo.size}
-                  uploadState={fileInfo.uploadState}
+                  name={file.name}
+                  size={file.size}
+                  uploadState={file.uploadState}
                   key={index}
                   index={index}
                   onFileDelete={removeFile}
