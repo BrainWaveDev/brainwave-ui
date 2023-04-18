@@ -24,13 +24,12 @@ export class OpenAIError extends Error {
 export const OpenAIStream = async (
   model: OpenAIModel,
   systemPrompt: string,
-  key: string,
   messages: Message[]
 ) => {
   const res = await fetch(`${OPENAI_API_HOST}/v1/chat/completions`, {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${key ? key : process.env.OPENAI_API_KEY}`,
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       ...(process.env.OPENAI_ORGANIZATION && {
         'OpenAI-Organization': process.env.OPENAI_ORGANIZATION
       })
@@ -39,11 +38,12 @@ export const OpenAIStream = async (
     body: JSON.stringify({
       model: model.id,
       messages: [
+        ...messages.slice(0, messages.length - 1),
         {
           role: 'system',
           content: systemPrompt
         },
-        ...messages
+        messages.at(messages.length - 1)
       ],
       max_tokens: 1000,
       temperature: 1,
@@ -72,7 +72,7 @@ export const OpenAIStream = async (
     }
   }
 
-  const stream = new ReadableStream({
+  return new ReadableStream({
     async start(controller) {
       const onParse = (event: ParsedEvent | ReconnectInterval) => {
         if (event.type === 'event') {
@@ -101,6 +101,4 @@ export const OpenAIStream = async (
       }
     }
   });
-
-  return stream;
 };
