@@ -72,3 +72,11 @@ export const cleanConversationHistory = (history: any[]): Conversation[] => {
     return acc;
   }, []);
 };
+
+export const cleanLocalStorage = () => {
+  // Clear all information saved in local storage
+  localStorage.removeItem('prompts');
+  localStorage.removeItem('selectedConversation');
+  localStorage.removeItem('conversationHistory');
+  localStorage.removeItem('folders');
+};
