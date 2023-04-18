@@ -3,7 +3,8 @@ import ActionsPopover from '@/components/ui/FilesList/ActionsPopover';
 import SearchIcon from '@/components/icons/SearchIcon';
 import classes from './FilesList.module.css';
 import { Document } from 'types';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
+
 interface Props {
   documents: Document[];
 }
@@ -14,7 +15,7 @@ export default function FilesList(props: Props) {
   const [currentPage, setCurrentPage] = useState(0);
   const [filter, setFilter] = useState('');
 
-  const totalPages = Math.ceil(props.documents.length / ONE_PAGE_SIZE) ;
+  const totalPages = Math.ceil(props.documents.length / ONE_PAGE_SIZE);
 
   const splitArray = (array: Document[], chunkSize: number): Document[][] => {
     array = array.filter((doc) => {
@@ -34,7 +35,7 @@ export default function FilesList(props: Props) {
   };
 
   return (
-    <section className="container px-4 mx-auto h-[900px]">
+    <section className="container px-4 mx-auto">
       <div className="sm:flex sm:items-center sm:justify-between">
         <div className={'flex items-center place-self-center'}>
           <FilterPopover />
@@ -55,8 +56,7 @@ export default function FilesList(props: Props) {
               placeholder="Search for files"
               onChange={(e) => {
                 setFilter(e.target.value);
-              }
-              }
+              }}
             />
           </div>
         </div>
@@ -71,12 +71,10 @@ export default function FilesList(props: Props) {
                   {TableHeader()}
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
-                  {splitArray(props.documents, ONE_PAGE_SIZE)[currentPage].map((document) => (
-                    DocumentRow(document)
-                  ))}
-                  <tr>
-                    
-                  </tr>
+                  {splitArray(props.documents, ONE_PAGE_SIZE)[currentPage].map(
+                    (document) => DocumentRow(document)
+                  )}
+                  <tr></tr>
                 </tbody>
               </table>
             </div>
@@ -86,14 +84,12 @@ export default function FilesList(props: Props) {
 
       <div className="flex items-center justify-between mt-6">
         <a
-          onClick={
-            (e) => {
-              e.preventDefault()
-              if (currentPage > 0) {
-                setCurrentPage(currentPage - 1)
-              }
+          onClick={(e) => {
+            e.preventDefault();
+            if (currentPage > 0) {
+              setCurrentPage(currentPage - 1);
             }
-          }
+          }}
           className="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800"
         >
           <svg
@@ -111,22 +107,29 @@ export default function FilesList(props: Props) {
             />
           </svg>
 
-          <span >previous</span>
+          <span>previous</span>
         </a>
 
         <div className="items-center hidden md:flex gap-x-3">
-          <PageIndexComponent totalPages={totalPages} setPage={setCurrentPage} currPage={currentPage}/>
+          <PageIndexComponent
+            totalPages={totalPages}
+            setPage={setCurrentPage}
+            currPage={currentPage}
+          />
         </div>
 
         <a
-           onClick={
-            () => {
-              console.log("clicked next", currentPage, "total pages: ", totalPages)
-              if (currentPage < totalPages-1 ) {
-                setCurrentPage(currentPage + 1)
-              }
+          onClick={() => {
+            console.log(
+              'clicked next',
+              currentPage,
+              'total pages: ',
+              totalPages
+            );
+            if (currentPage < totalPages - 1) {
+              setCurrentPage(currentPage + 1);
             }
-          }
+          }}
           className="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800"
         >
           <span>Next</span>
@@ -152,60 +155,68 @@ export default function FilesList(props: Props) {
 }
 
 function TableHeader() {
-  return <tr>
-    <th
-      scope="col"
-      className="py-3.5 px-4 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 w-1/4"
-    >
-      <div className="flex items-center gap-x-3">
-        <input
-          type="checkbox"
-          className="text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700" />
-        <span>File name</span>
-      </div>
-    </th>
+  return (
+    <tr>
+      <th
+        scope="col"
+        className="py-3.5 px-4 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 w-1/4"
+      >
+        <div className="flex items-center gap-x-3">
+          <input
+            type="checkbox"
+            className="text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700"
+          />
+          <span>File name</span>
+        </div>
+      </th>
 
-    <th
-      scope="col"
-      className="px-12 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-    >
-      File size
-    </th>
+      <th
+        scope="col"
+        className="px-12 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+      >
+        File size
+      </th>
 
-    <th
-      scope="col"
-      className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-    >
-      Date uploaded
-    </th>
+      <th
+        scope="col"
+        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+      >
+        Date uploaded
+      </th>
 
-    <th
-      scope="col"
-      className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-    >
-      Last updated
-    </th>
+      <th
+        scope="col"
+        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+      >
+        Last updated
+      </th>
 
-    <th
-      scope="col"
-      className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-    >
-      Uploaded by
-    </th>
+      <th
+        scope="col"
+        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+      >
+        Uploaded by
+      </th>
 
-    <th scope="col" className="relative py-3.5 px-4">
-      <span className="sr-only">Edit</span>
-    </th>
-  </tr>;
+      <th scope="col" className="relative py-3.5 px-4">
+        <span className="sr-only">Edit</span>
+      </th>
+    </tr>
+  );
 }
 
-function PageIndexComponent(props: { totalPages: number, setPage:  Dispatch<SetStateAction<number>>, currPage: number }) {
-
+function PageIndexComponent(props: {
+  totalPages: number;
+  setPage: Dispatch<SetStateAction<number>>;
+  currPage: number;
+}) {
   const pageNumberBox = (pageNumber: number, selected: boolean) => {
     return (
       <a
         key={`page-${pageNumber}`}
-        className={`px-2 py-1 text-sm text-blue-500 rounded-md dark:bg-gray-800 ${selected ? "bg-blue-100/60" : ""}`}
+        className={`px-2 py-1 text-sm text-blue-500 rounded-md dark:bg-gray-800 ${
+          selected ? 'bg-blue-100/60' : ''
+        }`}
         onClick={(e) => {
           e.preventDefault();
           props.setPage(pageNumber);
@@ -213,11 +224,14 @@ function PageIndexComponent(props: { totalPages: number, setPage:  Dispatch<SetS
       >
         {pageNumber}
       </a>
-    )
-  }
+    );
+  };
 
   const ellipsis = () => (
-    <span key={`ellipsis_${Math.random()}`} className="px-2 py-1 text-sm text-gray-500">
+    <span
+      key={`ellipsis_${Math.random()}`}
+      className="px-2 py-1 text-sm text-gray-500"
+    >
       ...
     </span>
   );
@@ -226,55 +240,59 @@ function PageIndexComponent(props: { totalPages: number, setPage:  Dispatch<SetS
     // display all page numbers
     return (
       <>
-        {Array.from(Array(props.totalPages).keys()).map((pageNumber, index) => {
+        {Array.from(Array(props.totalPages).keys()).map((pageNumber) => {
           return pageNumberBox(pageNumber, pageNumber === props.currPage);
         })}
       </>
-    )
+    );
   } else {
     // display first page, last page, selected index, and ellipses
     const isFirstPageSelected = props.currPage === 0;
-    const isLastPageSelected = props.currPage === props.totalPages -1;
+    const isLastPageSelected = props.currPage === props.totalPages - 1;
     const pages = [
       pageNumberBox(0, isFirstPageSelected),
       !isFirstPageSelected && props.currPage - 1 >= 1 ? ellipsis() : null,
-      isFirstPageSelected || isLastPageSelected ? null : pageNumberBox(props.currPage, true),
-      !isLastPageSelected && props.totalPages - props.currPage > 2 ? ellipsis() : null,
-      pageNumberBox(props.totalPages-1, isLastPageSelected),
+      isFirstPageSelected || isLastPageSelected
+        ? null
+        : pageNumberBox(props.currPage, true),
+      !isLastPageSelected && props.totalPages - props.currPage > 2
+        ? ellipsis()
+        : null,
+      pageNumberBox(props.totalPages - 1, isLastPageSelected)
     ].filter(Boolean); // Remove null values from the array
 
     return <>{pages}</>;
   }
 }
 
-
 function DocumentRow(doc: Document) {
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) {
-      return bytes + " B";
+      return bytes + ' B';
     } else if (bytes < 1048576) {
-      return (bytes / 1024).toFixed(2) + " KB";
+      return (bytes / 1024).toFixed(2) + ' KB';
     } else if (bytes < 1073741824) {
-      return (bytes / 1048576).toFixed(2) + " MB";
+      return (bytes / 1048576).toFixed(2) + ' MB';
     } else {
-      return (bytes / 1073741824).toFixed(2) + " GB";
+      return (bytes / 1073741824).toFixed(2) + ' GB';
     }
-  }
+  };
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
-    const month = date.toLocaleString("default", { month: "long" });
+    const month = date.toLocaleString('default', { month: 'long' });
     const day = date.getDate();
     const year = date.getFullYear();
     return `${month}, ${day}, ${year}`;
-  }
+  };
   return (
     <tr key={doc.id}>
       <td className="px-4 py-4 w-3/10 text-sm font-medium text-gray-700 whitespace-nowrap">
         <div className="inline-flex items-center gap-x-3">
           <input
             type="checkbox"
-            className="text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700" />
+            className="text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700"
+          />
 
           <div className="flex items-center gap-x-2">
             <div className="flex items-center w-8 h-8 text-teal-400 bg-teal-50 rounded-full">
@@ -289,7 +307,8 @@ function DocumentRow(doc: Document) {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                />
               </svg>
             </div>
 
@@ -329,12 +348,11 @@ function DocumentRow(doc: Document) {
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
+              d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
+            />
           </svg>
         </button>
       </td>
-    </tr>);
+    </tr>
+  );
 }
-
-
-
