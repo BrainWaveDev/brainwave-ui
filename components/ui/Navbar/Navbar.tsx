@@ -7,6 +7,7 @@ import { useUser } from 'utils/useUser';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { cleanLocalStorage } from '@/utils/app/clean';
 
 const navigation = [
   { name: 'Files', href: '/', current: true },
@@ -22,6 +23,12 @@ export default function Navbar() {
   const router = useRouter();
   const supabaseClient = useSupabaseClient();
   const { user } = useUser();
+
+  const signOut = async () => {
+    cleanLocalStorage();
+    await supabaseClient.auth.signOut();
+    await router.push('/signin');
+  };
 
   return (
     <Disclosure as="nav" className="bg-gray-800 min-h-[5vh]">
@@ -107,10 +114,7 @@ export default function Navbar() {
                                 active && 'bg-gray-100',
                                 'block px-4 py-2 text-sm text-gray-700 w-full rounded-md text-left'
                               )}
-                              onClick={async () => {
-                                await supabaseClient.auth.signOut();
-                                router.push('/signin');
-                              }}
+                              onClick={signOut}
                             >
                               Sign out
                             </button>
