@@ -7,11 +7,10 @@ export interface Message {
 
 export type Role = 'assistant' | 'user';
 
-export interface ChatBody {
+export interface RequestBody {
+  jwt: string;
   model: OpenAIModel;
   messages: Message[];
-  key: string;
-  prompt: string;
 }
 
 export interface Conversation {

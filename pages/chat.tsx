@@ -1,8 +1,7 @@
 import { Chat } from '@/components/Chat/Chat';
 import { Chatbar } from '@/components/Chatbar/Chatbar';
 import { Navbar } from '@/components/Mobile/Navbar';
-import { Promptbar } from '@/components/Promptbar/Promptbar';
-import { ChatBody, Conversation, Message } from '../types/chat';
+import { RequestBody, Conversation, Message } from '../types/chat';
 import { KeyValuePair } from '../types/data';
 import { ErrorMessage } from '../types/error';
 import { LatestExportFormat, SupportedExportFormats } from '../types/export';
@@ -35,6 +34,7 @@ import Head from 'next/head';
 import { useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import toast from 'react-hot-toast';
+import { supabase } from '@/utils/supabase-client';
 
 interface HomeProps {
   serverSideApiKeyIsSet: boolean;
@@ -101,11 +101,24 @@ const Home: React.FC<HomeProps> = ({
       setLoading(true);
       setMessageIsStreaming(true);
 
-      const chatBody: ChatBody = {
+      const {
+        data: { session },
+        error
+      } = await supabase.auth.getSession();
+
+      if (error || !session || !session.access_token) {
+        setLoading(false);
+        setMessageIsStreaming(false);
+        toast.error(
+          error?.message ? error.message : 'Error getting current user session'
+        );
+        return;
+      }
+
+      const requestBody: RequestBody = {
+        jwt: session.access_token,
         model: updatedConversation.model,
-        messages: updatedConversation.messages,
-        key: apiKey,
-        prompt: updatedConversation.prompt
+        messages: updatedConversation.messages
       };
 
       const controller = new AbortController();
@@ -115,7 +128,7 @@ const Home: React.FC<HomeProps> = ({
           'Content-Type': 'application/json'
         },
         signal: controller.signal,
-        body: JSON.stringify(chatBody)
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -153,7 +166,7 @@ const Home: React.FC<HomeProps> = ({
       let text = '';
 
       while (!done) {
-        if (stopConversationRef.current === true) {
+        if (stopConversationRef.current) {
           controller.abort();
           done = true;
           break;
