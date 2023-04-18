@@ -31,7 +31,7 @@ export default function Navbar() {
   };
 
   return (
-    <Disclosure as="nav" className="bg-gray-800 min-h-[5vh]">
+    <Disclosure as="nav" className="bg-gray-800 h-16 grow-0 shrink basis-16">
       {({
         // @ts-ignore
         open

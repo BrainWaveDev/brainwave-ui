@@ -31,11 +31,3 @@ const Logo = ({ className = '', ...rest }) => (
 );
 
 export default Logo;
-
-/*
-
-<svg xmlns="http://www.w3.org/2000/svg" width="2991" height="1332" viewBox="0 0 2991 1332" fill="none">
-
-</svg>
-
- */

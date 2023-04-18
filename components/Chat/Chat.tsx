@@ -22,6 +22,7 @@ import { ChatMessage } from './ChatMessage';
 import { ErrorMessageDiv } from './ErrorMessageDiv';
 import { ModelSelect } from './ModelSelect';
 import { SystemPrompt } from './SystemPrompt';
+import AppLogo from '@/components/icons/AppLogo';
 
 interface Props {
   conversation: Conversation;
@@ -204,78 +205,33 @@ export const Chat: FC<Props> = memo(
                 <>
                   <div className="mx-auto flex w-[350px] flex-col space-y-10 pt-12 sm:w-[600px]">
                     <div className="text-center text-3xl font-semibold text-gray-800 dark:text-gray-100">
-                      {models.length === 0 ? (
-                        <div>
+                      <div>
+                        {models.length === 0 ? (
                           <Spinner size="16px" className="mx-auto" />
-                        </div>
-                      ) : (
-                        'Chatbot UI'
-                      )}
-                    </div>
-
-                    {models.length > 0 && (
-                      <div className="flex h-full flex-col space-y-4 rounded-lg border border-neutral-200 p-4 dark:border-neutral-600">
-                        <ModelSelect
-                          model={conversation.model}
-                          models={models}
-                          defaultModelId={defaultModelId}
-                          onModelChange={(model) =>
-                            onUpdateConversation(conversation, {
-                              key: 'model',
-                              value: model
-                            })
-                          }
-                        />
-
-                        <SystemPrompt
-                          conversation={conversation}
-                          prompts={prompts}
-                          onChangePrompt={(prompt) =>
-                            onUpdateConversation(conversation, {
-                              key: 'prompt',
-                              value: prompt
-                            })
-                          }
-                        />
+                        ) : (
+                          <>
+                            <div
+                              className={
+                                'flex flex-row items-center place-content-center gap-x-2 mb-2'
+                              }
+                            >
+                              <AppLogo className={'w-10 h-10 mt-0.5'} />
+                              BrainBot
+                            </div>
+                            <div className="text-center text-xl text-gray-500 dark:text-gray-400">
+                              <div className="mb-2 md:whitespace-nowrap">
+                                Start conversation with your documents by typing
+                                a prompt below.
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="flex justify-center border border-b-neutral-300 bg-neutral-100 py-2 text-sm text-neutral-500 dark:border-none dark:bg-[#444654] dark:text-neutral-200">
-                    {t('Model')}: {conversation.model.name}
-                    <button
-                      className="ml-2 cursor-pointer hover:opacity-50"
-                      onClick={handleSettings}
-                    >
-                      <IconSettings size={18} />
-                    </button>
-                    <button
-                      className="ml-2 cursor-pointer hover:opacity-50"
-                      onClick={onClearAll}
-                    >
-                      <IconClearAll size={18} />
-                    </button>
-                  </div>
-                  {showSettings && (
-                    <div className="flex flex-col space-y-10 md:mx-auto md:max-w-xl md:gap-6 md:py-3 md:pt-6 lg:max-w-2xl lg:px-0 xl:max-w-3xl">
-                      <div className="flex h-full flex-col space-y-4 border-b border-neutral-200 p-4 dark:border-neutral-600 md:rounded-lg md:border">
-                        <ModelSelect
-                          model={conversation.model}
-                          models={models}
-                          defaultModelId={defaultModelId}
-                          onModelChange={(model) =>
-                            onUpdateConversation(conversation, {
-                              key: 'model',
-                              value: model
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
-                  )}
-
                   {conversation.messages.map((message, index) => (
                     <ChatMessage
                       key={index}
@@ -284,9 +240,7 @@ export const Chat: FC<Props> = memo(
                       onEditMessage={onEditMessage}
                     />
                   ))}
-
                   {loading && <ChatLoader />}
-
                   <div
                     className="h-[162px] bg-white dark:bg-[#343541]"
                     ref={messagesEndRef}
