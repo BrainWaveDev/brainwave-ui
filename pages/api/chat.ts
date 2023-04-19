@@ -71,14 +71,13 @@ const handler = async (req: Request): Promise<Response> => {
     const { error: matchError, data: documentChunks } = await supabase.rpc(
       'match_document_chunks',
       {
+        user_id: user.id,
         embedding,
         match_count: 10,
-        match_threshold: 0.9,
+        match_threshold: 0.8,
         min_content_length: 50
       }
     );
-
-    '{\n' + '    "text": "."\n' + '}';
 
     if (matchError) {
       console.error(matchError);
@@ -91,13 +90,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     for (let i = 0; i < documentChunks.length; i++) {
       const documentChunk = documentChunks[i];
-      const content = documentChunk.content;
+      const documentName = documentChunk.document_name.split('/')[1];
+      const content = `Document Name: ${documentName}\n Content:\n${documentChunk.content.trim()}\n---\n`;
       const encoded = tokenizer.encode(content);
       tokenCount += encoded.text.length;
 
       if (tokenCount >= 1500) break;
 
-      contextText += `${content.trim()}\n---\n`;
+      contextText += content;
     }
 
     await init((imports) => WebAssembly.instantiate(wasm, imports));
