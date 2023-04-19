@@ -1,5 +1,17 @@
+const plugin = require('tailwindcss/plugin');
 const { fontFamily } = require('tailwindcss/defaultTheme');
 const { blackA, mauve, violet } = require('@radix-ui/colors');
+
+const flip = plugin(function ({ addUtilities }) {
+  addUtilities({
+    '.flip-x': {
+      transform: 'rotateX(180deg)'
+    },
+    '.flip-y': {
+      transform: 'rotateY(180deg)'
+    }
+  });
+});
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -51,5 +63,9 @@ module.exports = {
       }
     }
   },
-  plugins: [require('flowbite/plugin'), require('@tailwindcss/typography')]
+  plugins: [
+    require('flowbite/plugin'),
+    require('@tailwindcss/typography'),
+    flip
+  ]
 };

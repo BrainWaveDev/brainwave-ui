@@ -26,7 +26,6 @@ import {
 import { saveFolders } from '@/utils/app/folders';
 import { exportData, importData } from '@/utils/app/importExport';
 import { savePrompts } from '@/utils/app/prompts';
-import { IconArrowBarLeft, IconArrowBarRight } from '@tabler/icons-react';
 import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -41,7 +40,7 @@ interface HomeProps {
   defaultModelId: OpenAIModelID;
 }
 
-const Home: React.FC<HomeProps> = ({
+const ChatUI: React.FC<HomeProps> = ({
   serverSideApiKeyIsSet,
   defaultModelId
 }) => {
@@ -65,13 +64,13 @@ const Home: React.FC<HomeProps> = ({
     useState<Conversation>();
   const [currentMessage, setCurrentMessage] = useState<Message>();
 
-  const [showSidebar, setShowSidebar] = useState<boolean>(true);
+  const [showSidebar, setShowSidebar] = useState<boolean>(false);
 
   const [prompts, setPrompts] = useState<Prompt[]>([]);
-  const [showPromptbar, setShowPromptbar] = useState<boolean>(true);
 
   // REFS ----------------------------------------------
 
+  const containerRef = useRef<HTMLDivElement>(null);
   const stopConversationRef = useRef<boolean>(false);
 
   // FETCH RESPONSE ----------------------------------------------
@@ -301,11 +300,6 @@ const Home: React.FC<HomeProps> = ({
     localStorage.setItem('showChatbar', JSON.stringify(!showSidebar));
   };
 
-  const handleTogglePromptbar = () => {
-    setShowPromptbar(!showPromptbar);
-    localStorage.setItem('showPromptbar', JSON.stringify(!showPromptbar));
-  };
-
   const handleExportData = () => {
     exportData();
   };
@@ -506,46 +500,9 @@ const Home: React.FC<HomeProps> = ({
     }
   };
 
-  // PROMPT OPERATIONS --------------------------------------------
-
-  const handleCreatePrompt = () => {
-    const lastPrompt = prompts[prompts.length - 1];
-
-    const newPrompt: Prompt = {
-      id: uuidv4(),
-      name: `Prompt ${prompts.length + 1}`,
-      description: '',
-      content: '',
-      model: OpenAIModels[defaultModelId],
-      folderId: null
-    };
-
-    const updatedPrompts = [...prompts, newPrompt];
-
-    setPrompts(updatedPrompts);
-    savePrompts(updatedPrompts);
-  };
-
-  const handleUpdatePrompt = (prompt: Prompt) => {
-    const updatedPrompts = prompts.map((p) => {
-      if (p.id === prompt.id) {
-        return prompt;
-      }
-
-      return p;
-    });
-
-    setPrompts(updatedPrompts);
-    savePrompts(updatedPrompts);
-  };
-
-  const handleDeletePrompt = (prompt: Prompt) => {
-    const updatedPrompts = prompts.filter((p) => p.id !== prompt.id);
-    setPrompts(updatedPrompts);
-    savePrompts(updatedPrompts);
-  };
-
   // EFFECTS  --------------------------------------------
+
+  useEffect(() => {}, []);
 
   useEffect(() => {
     if (currentMessage) {
@@ -589,11 +546,6 @@ const Home: React.FC<HomeProps> = ({
     const showChatbar = localStorage.getItem('showChatbar');
     if (showChatbar) {
       setShowSidebar(showChatbar === 'true');
-    }
-
-    const showPromptbar = localStorage.getItem('showPromptbar');
-    if (showPromptbar) {
-      setShowPromptbar(showPromptbar === 'true');
     }
 
     const folders = localStorage.getItem('folders');
@@ -649,7 +601,7 @@ const Home: React.FC<HomeProps> = ({
       </Head>
       {selectedConversation && (
         <div
-          className={`flex w-screen h-[calc(100vh_-_4rem)] flex-col text-sm text-white dark:text-white ${lightMode}`}
+          className={`flex h-[calc(100vh_-_4rem)] flex-col text-sm text-white dark:text-white ${lightMode}`}
         >
           <div className="fixed top-0 w-full sm:hidden">
             <Navbar
@@ -657,48 +609,38 @@ const Home: React.FC<HomeProps> = ({
               onNewConversation={handleNewConversation}
             />
           </div>
-
-          <div className="flex h-full w-full pt-[48px] sm:pt-0">
-            <div className={'relative'}>
-              {showSidebar ? (
-                <>
-                  <Chatbar
-                    loading={messageIsStreaming}
-                    conversations={conversations}
-                    lightMode={lightMode}
-                    selectedConversation={selectedConversation}
-                    apiKey={apiKey}
-                    folders={folders.filter((folder) => folder.type === 'chat')}
-                    onToggleLightMode={handleLightMode}
-                    onCreateFolder={(name) => handleCreateFolder(name, 'chat')}
-                    onDeleteFolder={handleDeleteFolder}
-                    onUpdateFolder={handleUpdateFolder}
-                    onNewConversation={handleNewConversation}
-                    onSelectConversation={handleSelectConversation}
-                    onDeleteConversation={handleDeleteConversation}
-                    onUpdateConversation={handleUpdateConversation}
-                    onApiKeyChange={handleApiKeyChange}
-                    onClearConversations={handleClearConversations}
-                    onExportConversations={handleExportData}
-                    onImportConversations={handleImportConversations}
-                  />
-                  <button
-                    className="absolute top-5 -right-10 z-50 h-7 w-7 hover:text-gray-400 dark:text-white dark:hover:text-gray-300 sm:h-8 sm:w-8 sm:text-neutral-700"
-                    onClick={handleToggleChatbar}
-                  >
-                    <IconArrowBarLeft />
-                  </button>
-                </>
-              ) : (
-                <button
-                  className="absolute top-5 -right-10 z-50 h-7 w-7 text-white hover:text-gray-400 dark:text-white dark:hover:text-gray-300 sm:h-8 sm:w-8 sm:text-neutral-700"
-                  onClick={handleToggleChatbar}
-                >
-                  <IconArrowBarRight />
-                </button>
-              )}
-            </div>
-            <div className="flex flex-1">
+          <div
+            className="flex h-full w-full pt-[48px] sm:pt-0 relative"
+            ref={containerRef}
+          >
+            <Chatbar
+              loading={messageIsStreaming}
+              conversations={conversations}
+              lightMode={lightMode}
+              selectedConversation={selectedConversation}
+              apiKey={apiKey}
+              folders={folders.filter((folder) => folder.type === 'chat')}
+              showSidebar={showSidebar}
+              handleToggleChatbar={handleToggleChatbar}
+              onToggleLightMode={handleLightMode}
+              onCreateFolder={(name) => handleCreateFolder(name, 'chat')}
+              onDeleteFolder={handleDeleteFolder}
+              onUpdateFolder={handleUpdateFolder}
+              onNewConversation={handleNewConversation}
+              onSelectConversation={handleSelectConversation}
+              onDeleteConversation={handleDeleteConversation}
+              onUpdateConversation={handleUpdateConversation}
+              onApiKeyChange={handleApiKeyChange}
+              onClearConversations={handleClearConversations}
+              onExportConversations={handleExportData}
+              onImportConversations={handleImportConversations}
+            />
+            <div
+              className="flex flex-1 w-full"
+              onClick={() => {
+                if (showSidebar) setShowSidebar(false);
+              }}
+            >
               <Chat
                 conversation={selectedConversation}
                 messageIsStreaming={messageIsStreaming}
@@ -721,7 +663,8 @@ const Home: React.FC<HomeProps> = ({
     </>
   );
 };
-export default Home;
+
+export default ChatUI;
 
 export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
   const defaultModelId =
