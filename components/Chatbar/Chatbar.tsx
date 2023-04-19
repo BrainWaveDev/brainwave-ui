@@ -124,7 +124,7 @@ export const Chatbar: FC<Props> = ({
       )}
     >
       <button
-        className="absolute top-1/2 -right-6 z-50 h-14 min-w-fit w-6 bg-gray-800 rounded-r-lg group"
+        className="absolute top-1/2 -translate-y-1/2 -right-6 z-50 h-14 min-w-fit w-6 bg-gray-800 rounded-r-lg group"
         onClick={handleToggleChatbar}
       >
         <ChevronLeft
