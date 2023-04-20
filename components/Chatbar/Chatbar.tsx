@@ -9,6 +9,8 @@ import { ChatFolders } from '../Folders/Chat/ChatFolders';
 import { Search } from '../Sidebar/Search';
 import { ChatbarSettings } from './ChatbarSettings';
 import { Conversations } from './Conversations';
+import classNames from 'classnames';
+import ChevronLeft from '@/components/icons/ChevronLeft';
 
 interface Props {
   loading: boolean;
@@ -17,6 +19,8 @@ interface Props {
   selectedConversation: Conversation;
   apiKey: string;
   folders: Folder[];
+  showSidebar: boolean;
+  handleToggleChatbar: () => void;
   onCreateFolder: (name: string) => void;
   onDeleteFolder: (folderId: string) => void;
   onUpdateFolder: (folderId: string, name: string) => void;
@@ -41,6 +45,8 @@ export const Chatbar: FC<Props> = ({
   selectedConversation,
   apiKey,
   folders,
+  showSidebar,
+  handleToggleChatbar,
   onCreateFolder,
   onDeleteFolder,
   onUpdateFolder,
@@ -111,8 +117,24 @@ export const Chatbar: FC<Props> = ({
 
   return (
     <div
-      className={`fixed top-0 bottom-0 z-50 flex h-full w-[260px] flex-none flex-col space-y-2 bg-[#202123] p-2 transition-all sm:relative sm:top-0`}
+      className={classNames(
+        'absolute top-0 left-0 z-50 flex flex-col w-[260px] h-full',
+        'space-y-2 bg-gray-800 p-2 transition-all duration-150 transform-gpu',
+        showSidebar ? 'translate-x-0' : '-translate-x-full'
+      )}
     >
+      <button
+        className="absolute top-1/2 -translate-y-1/2 -right-6 z-50 h-14 min-w-fit w-6 bg-gray-800 rounded-r-lg group"
+        onClick={handleToggleChatbar}
+      >
+        <ChevronLeft
+          className={classNames(
+            'w-6 h-6 transition duration-150 fill-white group-hover:fill-teal-200 group-active:fill-teal-200',
+            !showSidebar && 'flip-y'
+          )}
+          strokeWidth={1.5}
+        />
+      </button>
       <div className="flex items-center">
         <button
           className="flex w-[190px] flex-shrink-0 cursor-pointer select-none items-center gap-3 rounded-md border border-white/20 p-3 text-[14px] leading-normal text-white transition-colors duration-200 hover:bg-gray-500/10"

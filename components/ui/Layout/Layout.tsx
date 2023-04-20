@@ -1,19 +1,16 @@
 import { PropsWithChildren } from 'react';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 import Navbar from '../Navbar';
 import classes from './Layout.module.css';
-
+import ErrorList from '@/components/ui/ErrorList/ErrorList';
 import { PageMeta } from '../../../types';
 import classNames from 'classnames';
-import ErrorList from '@/components/ui/ErrorList/ErrorList';
 
 interface Props extends PropsWithChildren {
   meta?: PageMeta;
 }
 
 export default function Layout({ children, meta: pageMeta }: Props) {
-  const router = useRouter();
   const meta = {
     title: 'BrainWave: Intelligent AI Assistance',
     description:
@@ -33,7 +30,10 @@ export default function Layout({ children, meta: pageMeta }: Props) {
       <Navbar />
       <main
         id="skip"
-        className={classNames('min-h-[93vh] bg-gray-100', classes.main)}
+        className={classNames(
+          'min-h-[calc(100vh_-_4rem)] bg-gray-100',
+          classes.main
+        )}
       >
         {children}
       </main>

@@ -1,8 +1,7 @@
 import { Chat } from '@/components/Chat/Chat';
 import { Chatbar } from '@/components/Chatbar/Chatbar';
 import { Navbar } from '@/components/Mobile/Navbar';
-import { Promptbar } from '@/components/Promptbar/Promptbar';
-import { ChatBody, Conversation, Message } from '../types/chat';
+import { RequestBody, Conversation, Message } from '../types/chat';
 import { KeyValuePair } from '../types/data';
 import { ErrorMessage } from '../types/error';
 import { LatestExportFormat, SupportedExportFormats } from '../types/export';
@@ -27,7 +26,6 @@ import {
 import { saveFolders } from '@/utils/app/folders';
 import { exportData, importData } from '@/utils/app/importExport';
 import { savePrompts } from '@/utils/app/prompts';
-import { IconArrowBarLeft, IconArrowBarRight } from '@tabler/icons-react';
 import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -35,13 +33,14 @@ import Head from 'next/head';
 import { useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import toast from 'react-hot-toast';
+import { supabase } from '@/utils/supabase-client';
 
 interface HomeProps {
   serverSideApiKeyIsSet: boolean;
   defaultModelId: OpenAIModelID;
 }
 
-const Home: React.FC<HomeProps> = ({
+const ChatUI: React.FC<HomeProps> = ({
   serverSideApiKeyIsSet,
   defaultModelId
 }) => {
@@ -65,13 +64,13 @@ const Home: React.FC<HomeProps> = ({
     useState<Conversation>();
   const [currentMessage, setCurrentMessage] = useState<Message>();
 
-  const [showSidebar, setShowSidebar] = useState<boolean>(true);
+  const [showSidebar, setShowSidebar] = useState<boolean>(false);
 
   const [prompts, setPrompts] = useState<Prompt[]>([]);
-  const [showPromptbar, setShowPromptbar] = useState<boolean>(true);
 
   // REFS ----------------------------------------------
 
+  const containerRef = useRef<HTMLDivElement>(null);
   const stopConversationRef = useRef<boolean>(false);
 
   // FETCH RESPONSE ----------------------------------------------
@@ -101,11 +100,24 @@ const Home: React.FC<HomeProps> = ({
       setLoading(true);
       setMessageIsStreaming(true);
 
-      const chatBody: ChatBody = {
+      const {
+        data: { session },
+        error
+      } = await supabase.auth.getSession();
+
+      if (error || !session || !session.access_token) {
+        setLoading(false);
+        setMessageIsStreaming(false);
+        toast.error(
+          error?.message ? error.message : 'Error getting current user session'
+        );
+        return;
+      }
+
+      const requestBody: RequestBody = {
+        jwt: session.access_token,
         model: updatedConversation.model,
-        messages: updatedConversation.messages,
-        key: apiKey,
-        prompt: updatedConversation.prompt
+        messages: updatedConversation.messages
       };
 
       const controller = new AbortController();
@@ -115,7 +127,7 @@ const Home: React.FC<HomeProps> = ({
           'Content-Type': 'application/json'
         },
         signal: controller.signal,
-        body: JSON.stringify(chatBody)
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -153,7 +165,7 @@ const Home: React.FC<HomeProps> = ({
       let text = '';
 
       while (!done) {
-        if (stopConversationRef.current === true) {
+        if (stopConversationRef.current) {
           controller.abort();
           done = true;
           break;
@@ -286,11 +298,6 @@ const Home: React.FC<HomeProps> = ({
   const handleToggleChatbar = () => {
     setShowSidebar(!showSidebar);
     localStorage.setItem('showChatbar', JSON.stringify(!showSidebar));
-  };
-
-  const handleTogglePromptbar = () => {
-    setShowPromptbar(!showPromptbar);
-    localStorage.setItem('showPromptbar', JSON.stringify(!showPromptbar));
   };
 
   const handleExportData = () => {
@@ -493,45 +500,6 @@ const Home: React.FC<HomeProps> = ({
     }
   };
 
-  // PROMPT OPERATIONS --------------------------------------------
-
-  const handleCreatePrompt = () => {
-    const lastPrompt = prompts[prompts.length - 1];
-
-    const newPrompt: Prompt = {
-      id: uuidv4(),
-      name: `Prompt ${prompts.length + 1}`,
-      description: '',
-      content: '',
-      model: OpenAIModels[defaultModelId],
-      folderId: null
-    };
-
-    const updatedPrompts = [...prompts, newPrompt];
-
-    setPrompts(updatedPrompts);
-    savePrompts(updatedPrompts);
-  };
-
-  const handleUpdatePrompt = (prompt: Prompt) => {
-    const updatedPrompts = prompts.map((p) => {
-      if (p.id === prompt.id) {
-        return prompt;
-      }
-
-      return p;
-    });
-
-    setPrompts(updatedPrompts);
-    savePrompts(updatedPrompts);
-  };
-
-  const handleDeletePrompt = (prompt: Prompt) => {
-    const updatedPrompts = prompts.filter((p) => p.id !== prompt.id);
-    setPrompts(updatedPrompts);
-    savePrompts(updatedPrompts);
-  };
-
   // EFFECTS  --------------------------------------------
 
   useEffect(() => {
@@ -578,11 +546,6 @@ const Home: React.FC<HomeProps> = ({
       setShowSidebar(showChatbar === 'true');
     }
 
-    const showPromptbar = localStorage.getItem('showPromptbar');
-    if (showPromptbar) {
-      setShowPromptbar(showPromptbar === 'true');
-    }
-
     const folders = localStorage.getItem('folders');
     if (folders) {
       setFolders(JSON.parse(folders));
@@ -626,7 +589,7 @@ const Home: React.FC<HomeProps> = ({
   return (
     <>
       <Head>
-        <title>Chatbot UI</title>
+        <title>BrainBot</title>
         <meta name="description" content="ChatGPT but better." />
         <meta
           name="viewport"
@@ -635,8 +598,8 @@ const Home: React.FC<HomeProps> = ({
         <link rel="icon" href="/favicon.ico" />
       </Head>
       {selectedConversation && (
-        <main
-          className={`flex h-screen w-screen flex-col text-sm text-white dark:text-white ${lightMode}`}
+        <div
+          className={`flex h-[calc(100vh_-_4rem)] flex-col text-sm text-white dark:text-white ${lightMode}`}
         >
           <div className="fixed top-0 w-full sm:hidden">
             <Navbar
@@ -644,52 +607,38 @@ const Home: React.FC<HomeProps> = ({
               onNewConversation={handleNewConversation}
             />
           </div>
-
-          <div className="flex h-full w-full pt-[48px] sm:pt-0">
-            {showSidebar ? (
-              <div>
-                <Chatbar
-                  loading={messageIsStreaming}
-                  conversations={conversations}
-                  lightMode={lightMode}
-                  selectedConversation={selectedConversation}
-                  apiKey={apiKey}
-                  folders={folders.filter((folder) => folder.type === 'chat')}
-                  onToggleLightMode={handleLightMode}
-                  onCreateFolder={(name) => handleCreateFolder(name, 'chat')}
-                  onDeleteFolder={handleDeleteFolder}
-                  onUpdateFolder={handleUpdateFolder}
-                  onNewConversation={handleNewConversation}
-                  onSelectConversation={handleSelectConversation}
-                  onDeleteConversation={handleDeleteConversation}
-                  onUpdateConversation={handleUpdateConversation}
-                  onApiKeyChange={handleApiKeyChange}
-                  onClearConversations={handleClearConversations}
-                  onExportConversations={handleExportData}
-                  onImportConversations={handleImportConversations}
-                />
-
-                <button
-                  className="fixed top-5 left-[270px] z-50 h-7 w-7 hover:text-gray-400 dark:text-white dark:hover:text-gray-300 sm:top-0.5 sm:left-[270px] sm:h-8 sm:w-8 sm:text-neutral-700"
-                  onClick={handleToggleChatbar}
-                >
-                  <IconArrowBarLeft />
-                </button>
-                <div
-                  onClick={handleToggleChatbar}
-                  className="absolute top-0 left-0 z-10 h-full w-full bg-black opacity-70 sm:hidden"
-                ></div>
-              </div>
-            ) : (
-              <button
-                className="fixed top-2.5 left-4 z-50 h-7 w-7 text-white hover:text-gray-400 dark:text-white dark:hover:text-gray-300 sm:top-0.5 sm:left-4 sm:h-8 sm:w-8 sm:text-neutral-700"
-                onClick={handleToggleChatbar}
-              >
-                <IconArrowBarRight />
-              </button>
-            )}
-
-            <div className="flex flex-1">
+          <div
+            className="flex h-full w-full pt-[48px] sm:pt-0 relative"
+            ref={containerRef}
+          >
+            <Chatbar
+              loading={messageIsStreaming}
+              conversations={conversations}
+              lightMode={lightMode}
+              selectedConversation={selectedConversation}
+              apiKey={apiKey}
+              folders={folders.filter((folder) => folder.type === 'chat')}
+              showSidebar={showSidebar}
+              handleToggleChatbar={handleToggleChatbar}
+              onToggleLightMode={handleLightMode}
+              onCreateFolder={(name) => handleCreateFolder(name, 'chat')}
+              onDeleteFolder={handleDeleteFolder}
+              onUpdateFolder={handleUpdateFolder}
+              onNewConversation={handleNewConversation}
+              onSelectConversation={handleSelectConversation}
+              onDeleteConversation={handleDeleteConversation}
+              onUpdateConversation={handleUpdateConversation}
+              onApiKeyChange={handleApiKeyChange}
+              onClearConversations={handleClearConversations}
+              onExportConversations={handleExportData}
+              onImportConversations={handleImportConversations}
+            />
+            <div
+              className="flex flex-1 w-full"
+              onClick={() => {
+                if (showSidebar) setShowSidebar(false);
+              }}
+            >
               <Chat
                 conversation={selectedConversation}
                 messageIsStreaming={messageIsStreaming}
@@ -706,45 +655,14 @@ const Home: React.FC<HomeProps> = ({
                 stopConversationRef={stopConversationRef}
               />
             </div>
-
-            {showPromptbar ? (
-              <div>
-                <Promptbar
-                  prompts={prompts}
-                  folders={folders.filter((folder) => folder.type === 'prompt')}
-                  onCreatePrompt={handleCreatePrompt}
-                  onUpdatePrompt={handleUpdatePrompt}
-                  onDeletePrompt={handleDeletePrompt}
-                  onCreateFolder={(name) => handleCreateFolder(name, 'prompt')}
-                  onDeleteFolder={handleDeleteFolder}
-                  onUpdateFolder={handleUpdateFolder}
-                />
-                <button
-                  className="fixed top-5 right-[270px] z-50 h-7 w-7 hover:text-gray-400 dark:text-white dark:hover:text-gray-300 sm:top-0.5 sm:right-[270px] sm:h-8 sm:w-8 sm:text-neutral-700"
-                  onClick={handleTogglePromptbar}
-                >
-                  <IconArrowBarRight />
-                </button>
-                <div
-                  onClick={handleTogglePromptbar}
-                  className="absolute top-0 left-0 z-10 h-full w-full bg-black opacity-70 sm:hidden"
-                ></div>
-              </div>
-            ) : (
-              <button
-                className="fixed top-2.5 right-4 z-50 h-7 w-7 text-white hover:text-gray-400 dark:text-white dark:hover:text-gray-300 sm:top-0.5 sm:right-4 sm:h-8 sm:w-8 sm:text-neutral-700"
-                onClick={handleTogglePromptbar}
-              >
-                <IconArrowBarLeft />
-              </button>
-            )}
           </div>
-        </main>
+        </div>
       )}
     </>
   );
 };
-export default Home;
+
+export default ChatUI;
 
 export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
   const defaultModelId =

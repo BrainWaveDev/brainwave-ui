@@ -3,18 +3,22 @@ import ActionsPopover from '@/components/ui/FilesList/ActionsPopover';
 import SearchIcon from '@/components/icons/SearchIcon';
 import classes from './FilesList.module.css';
 import { Document } from 'types';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
+import classNames from 'classnames';
+// @ts-ignore
+import { motion, AnimatePresence } from 'framer-motion';
+
 interface Props {
   documents: Document[];
 }
 
-const ONE_PAGE_SIZE = 10;
+const ONE_PAGE_SIZE = 5;
 
 export default function FilesList(props: Props) {
   const [currentPage, setCurrentPage] = useState(0);
   const [filter, setFilter] = useState('');
 
-  const totalPages = Math.ceil(props.documents.length / ONE_PAGE_SIZE) ;
+  const totalPages = Math.ceil(props.documents.length / ONE_PAGE_SIZE);
 
   const splitArray = (array: Document[], chunkSize: number): Document[][] => {
     array = array.filter((doc) => {
@@ -33,8 +37,13 @@ export default function FilesList(props: Props) {
     return result;
   };
 
+  const documentPages = splitArray(props.documents, ONE_PAGE_SIZE);
+  const displayedDocuments = documentPages[currentPage].map((document) =>
+    DocumentRow(document)
+  );
+
   return (
-    <section className="container px-4 mx-auto h-[900px]">
+    <section className="container px-4 mx-auto">
       <div className="sm:flex sm:items-center sm:justify-between">
         <div className={'flex items-center place-self-center'}>
           <FilterPopover />
@@ -55,8 +64,7 @@ export default function FilesList(props: Props) {
               placeholder="Search for files"
               onChange={(e) => {
                 setFilter(e.target.value);
-              }
-              }
+              }}
             />
           </div>
         </div>
@@ -66,17 +74,14 @@ export default function FilesList(props: Props) {
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
             <div className="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed ">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   {TableHeader()}
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
-                  {splitArray(props.documents, ONE_PAGE_SIZE)[currentPage].map((document) => (
-                    DocumentRow(document)
-                  ))}
-                  <tr>
-                    
-                  </tr>
+                  <AnimatePresence initial={false}>
+                    {displayedDocuments}
+                  </AnimatePresence>
                 </tbody>
               </table>
             </div>
@@ -85,16 +90,19 @@ export default function FilesList(props: Props) {
       </div>
 
       <div className="flex items-center justify-between mt-6">
-        <a
-          onClick={
-            (e) => {
-              e.preventDefault()
-              if (currentPage > 0) {
-                setCurrentPage(currentPage - 1)
-              }
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            if (currentPage > 0) {
+              setCurrentPage(currentPage - 1);
             }
-          }
-          className="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800"
+          }}
+          className={classNames(
+            'flex items-center px-5 py-2 text-sm text-gray-700 capitalize',
+            'transition-colors duration-200 bg-white border rounded-md gap-x-2',
+            'hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200',
+            'dark:border-gray-700 dark:hover:bg-gray-800 cursor-pointer'
+          )}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -110,27 +118,31 @@ export default function FilesList(props: Props) {
               d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18"
             />
           </svg>
-
-          <span >previous</span>
-        </a>
+          <span>previous</span>
+        </button>
 
         <div className="items-center hidden md:flex gap-x-3">
-          <PageIndexComponent totalPages={totalPages} setPage={setCurrentPage} currPage={currentPage}/>
+          <PageIndexComponent
+            totalPages={totalPages}
+            setPage={setCurrentPage}
+            currPage={currentPage}
+          />
         </div>
 
-        <a
-           onClick={
-            () => {
-              console.log("clicked next", currentPage, "total pages: ", totalPages)
-              if (currentPage < totalPages-1 ) {
-                setCurrentPage(currentPage + 1)
-              }
+        <button
+          onClick={() => {
+            if (currentPage < totalPages - 1) {
+              setCurrentPage(currentPage + 1);
             }
-          }
-          className="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800"
+          }}
+          className={classNames(
+            'flex items-center px-5 py-2 text-sm text-gray-700 capitalize',
+            'transition-colors duration-200 bg-white border rounded-md gap-x-2',
+            'hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200',
+            'dark:border-gray-700 dark:hover:bg-gray-800 cursor-pointer'
+          )}
         >
           <span>Next</span>
-
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -145,79 +157,85 @@ export default function FilesList(props: Props) {
               d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
             />
           </svg>
-        </a>
+        </button>
       </div>
     </section>
   );
 }
 
 function TableHeader() {
-  return <tr>
-    <th
-      scope="col"
-      className="py-3.5 px-4 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 w-1/4"
-    >
-      <div className="flex items-center gap-x-3">
-        <input
-          type="checkbox"
-          className="text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700" />
-        <span>File name</span>
-      </div>
-    </th>
+  return (
+    <tr>
+      <th
+        scope="col"
+        className="py-3.5 px-4 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 w-1/4"
+      >
+        <div className="flex items-center gap-x-3">
+          <input
+            type="checkbox"
+            className="mr-2 text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700"
+          />
+          <span>File name</span>
+        </div>
+      </th>
 
-    <th
-      scope="col"
-      className="px-12 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-    >
-      File size
-    </th>
+      <th
+        scope="col"
+        className="px-12 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+      >
+        File size
+      </th>
 
-    <th
-      scope="col"
-      className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-    >
-      Date uploaded
-    </th>
+      <th
+        scope="col"
+        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+      >
+        Date uploaded
+      </th>
 
-    <th
-      scope="col"
-      className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-    >
-      Last updated
-    </th>
+      <th
+        scope="col"
+        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+      >
+        Last updated
+      </th>
 
-    <th
-      scope="col"
-      className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-    >
-      Uploaded by
-    </th>
-
-    <th scope="col" className="relative py-3.5 px-4">
-      <span className="sr-only">Edit</span>
-    </th>
-  </tr>;
+      <th scope="col" className="relative py-3.5">
+        <span className="sr-only">Edit</span>
+      </th>
+    </tr>
+  );
 }
 
-function PageIndexComponent(props: { totalPages: number, setPage:  Dispatch<SetStateAction<number>>, currPage: number }) {
-
+function PageIndexComponent(props: {
+  totalPages: number;
+  setPage: Dispatch<SetStateAction<number>>;
+  currPage: number;
+}) {
   const pageNumberBox = (pageNumber: number, selected: boolean) => {
     return (
-      <a
+      <button
         key={`page-${pageNumber}`}
-        className={`px-2 py-1 text-sm text-blue-500 rounded-md dark:bg-gray-800 ${selected ? "bg-blue-100/60" : ""}`}
+        className={classNames(
+          'px-2 py-1 text-sm text-teal-500 rounded-md dark:bg-gray-800',
+          'cursor-pointer transition duration-100',
+          selected && 'bg-teal-200/50'
+        )}
         onClick={(e) => {
           e.preventDefault();
           props.setPage(pageNumber);
         }}
       >
-        {pageNumber}
-      </a>
-    )
-  }
+        {pageNumber + 1}
+      </button>
+    );
+  };
 
   const ellipsis = () => (
-    <span key={`ellipsis_${Math.random()}`} className="px-2 py-1 text-sm text-gray-500">
+    <span
+      key={`ellipsis_${Math.random()}`}
+      className="px-2 py-1 text-sm text-gray-500"
+    >
       ...
     </span>
   );
@@ -226,55 +244,78 @@ function PageIndexComponent(props: { totalPages: number, setPage:  Dispatch<SetS
     // display all page numbers
     return (
       <>
-        {Array.from(Array(props.totalPages).keys()).map((pageNumber, index) => {
+        {Array.from(Array(props.totalPages).keys()).map((pageNumber) => {
           return pageNumberBox(pageNumber, pageNumber === props.currPage);
         })}
       </>
-    )
+    );
   } else {
     // display first page, last page, selected index, and ellipses
     const isFirstPageSelected = props.currPage === 0;
-    const isLastPageSelected = props.currPage === props.totalPages -1;
+    const isLastPageSelected = props.currPage === props.totalPages - 1;
     const pages = [
       pageNumberBox(0, isFirstPageSelected),
       !isFirstPageSelected && props.currPage - 1 >= 1 ? ellipsis() : null,
-      isFirstPageSelected || isLastPageSelected ? null : pageNumberBox(props.currPage, true),
-      !isLastPageSelected && props.totalPages - props.currPage > 2 ? ellipsis() : null,
-      pageNumberBox(props.totalPages-1, isLastPageSelected),
+      isFirstPageSelected || isLastPageSelected
+        ? null
+        : pageNumberBox(props.currPage, true),
+      !isLastPageSelected && props.totalPages - props.currPage > 2
+        ? ellipsis()
+        : null,
+      pageNumberBox(props.totalPages - 1, isLastPageSelected)
     ].filter(Boolean); // Remove null values from the array
 
     return <>{pages}</>;
   }
 }
 
-
 function DocumentRow(doc: Document) {
+  // Shorten document name is it is too long
+  const formatDocumentName = (name: string) => {
+    const documentName = name.split('/').pop();
+    if (!documentName) return '';
+
+    if (documentName.length < 55)
+      return <p className={'inline m-0'}>{documentName}</p>;
+    else
+      return (
+        <p title={documentName}>{`${documentName.substring(0, 55)}...`}</p>
+      );
+  };
+
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) {
-      return bytes + " B";
+      return bytes + ' B';
     } else if (bytes < 1048576) {
-      return (bytes / 1024).toFixed(2) + " KB";
+      return (bytes / 1024).toFixed(2) + ' KB';
     } else if (bytes < 1073741824) {
-      return (bytes / 1048576).toFixed(2) + " MB";
+      return (bytes / 1048576).toFixed(2) + ' MB';
     } else {
-      return (bytes / 1073741824).toFixed(2) + " GB";
+      return (bytes / 1073741824).toFixed(2) + ' GB';
     }
-  }
+  };
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
-    const month = date.toLocaleString("default", { month: "long" });
+    const month = date.toLocaleString('default', { month: 'long' });
     const day = date.getDate();
     const year = date.getFullYear();
     return `${month}, ${day}, ${year}`;
-  }
+  };
   return (
-    <tr key={doc.id}>
-      <td className="px-4 py-4 w-3/10 text-sm font-medium text-gray-700 whitespace-nowrap">
+    <motion.tr
+      key={doc.id}
+      initial={{ opacity: 0, display: 'none' }}
+      animate={{ opacity: 1, display: 'table-row' }}
+      exit={{ opacity: 0, display: 'none' }}
+      transition={{ duration: 0.15 }}
+    >
+      <td className="inline-block px-4 py-4 w-[33rem] text-sm font-medium text-gray-700 whitespace-nowrap overflow-hidden">
         <div className="inline-flex items-center gap-x-3">
           <input
             type="checkbox"
-            className="text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700" />
+            className="mr-2 text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700"
+          />
 
           <div className="flex items-center gap-x-2">
             <div className="flex items-center w-8 h-8 text-teal-400 bg-teal-50 rounded-full">
@@ -289,34 +330,26 @@ function DocumentRow(doc: Document) {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                />
               </svg>
             </div>
-
-            <div>
-              <h2 className="font-normal text-gray-800 dark:text-white ">
-                {doc.name.split('/').pop()}
-              </h2>
-              <p className="text-xs font-normal text-gray-500 dark:text-gray-400">
-                {formatBytes(doc.metadata.size)}
-              </p>
-            </div>
+            <h2 className="font-normal text-gray-800 dark:text-white ">
+              {formatDocumentName(doc.name)}
+            </h2>
           </div>
         </div>
       </td>
-      <td className="px-12 py-4 text-sm font-normal text-gray-700 whitespace-nowrap">
+      <td className="px-12 py-4 w-52 text-sm font-normal text-gray-700 whitespace-nowrap">
         {formatBytes(doc.metadata.size)}
       </td>
-      <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
         {formatDate(doc.metadata.lastModified)}
       </td>
-      <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
         {formatDate(doc.metadata.lastModified)}
       </td>
-      <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-        {doc.owner}
-      </td>
-      <td className="px-4 py-4 text-sm whitespace-nowrap">
+      <td className="px-0 py-4 text-sm whitespace-nowrap">
         <button className="px-1 py-1 text-gray-500 transition-colors duration-200 rounded-lg dark:text-gray-300 hover:bg-gray-100">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -329,12 +362,11 @@ function DocumentRow(doc: Document) {
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
+              d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
+            />
           </svg>
         </button>
       </td>
-    </tr>);
+    </motion.tr>
+  );
 }
-
-
-

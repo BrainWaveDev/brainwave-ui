@@ -3,7 +3,6 @@ import { IconFileExport, IconMoon, IconSun } from '@tabler/icons-react';
 import { useTranslation } from 'next-i18next';
 import { FC } from 'react';
 import { Import } from '../Settings/Import';
-import { Key } from '../Settings/Key';
 import { SidebarButton } from '../Sidebar/SidebarButton';
 import { ClearConversations } from './ClearConversations';
 
@@ -35,13 +34,13 @@ export const ChatbarSettings: FC<Props> = ({
         <ClearConversations onClearConversations={onClearConversations} />
       ) : null}
 
-      <Import onImport={onImportConversations} />
-
-      <SidebarButton
-        text={t('Export data')}
-        icon={<IconFileExport size={18} />}
-        onClick={() => onExportConversations()}
-      />
+      {/* TODO: Re-enable import and exports of conversations */}
+      {/*<Import onImport={onImportConversations} />*/}
+      {/*<SidebarButton*/}
+      {/*  text={t('Export data')}*/}
+      {/*  icon={<IconFileExport size={18} />}*/}
+      {/*  onClick={() => onExportConversations()}*/}
+      {/*/>*/}
 
       <SidebarButton
         text={lightMode === 'light' ? t('Dark mode') : t('Light mode')}
@@ -52,8 +51,6 @@ export const ChatbarSettings: FC<Props> = ({
           onToggleLightMode(lightMode === 'light' ? 'dark' : 'light')
         }
       />
-
-      <Key apiKey={apiKey} onApiKeyChange={onApiKeyChange} />
     </div>
   );
 };
