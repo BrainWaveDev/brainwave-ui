@@ -502,8 +502,6 @@ const ChatUI: React.FC<HomeProps> = ({
 
   // EFFECTS  --------------------------------------------
 
-  useEffect(() => {}, []);
-
   useEffect(() => {
     if (currentMessage) {
       handleSend(currentMessage);
