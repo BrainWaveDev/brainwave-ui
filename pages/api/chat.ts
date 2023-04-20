@@ -131,8 +131,6 @@ const handler = async (req: Request): Promise<Response> => {
     if (error instanceof OpenAIError || error instanceof Error) {
       return new Response('Error', { status: 400, statusText: error.message });
     } else {
-      // Print out unexpected errors as is to help with debugging
-      console.error(error);
       return new Response('Error', {
         status: 500,
         statusText: 'There was an error processing your request'
