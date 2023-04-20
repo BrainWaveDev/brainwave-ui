@@ -4,12 +4,15 @@ import SearchIcon from '@/components/icons/SearchIcon';
 import classes from './FilesList.module.css';
 import { Document } from 'types';
 import { Dispatch, SetStateAction, useState } from 'react';
+import classNames from 'classnames';
+// @ts-ignore
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
   documents: Document[];
 }
 
-const ONE_PAGE_SIZE = 10;
+const ONE_PAGE_SIZE = 5;
 
 export default function FilesList(props: Props) {
   const [currentPage, setCurrentPage] = useState(0);
@@ -33,6 +36,11 @@ export default function FilesList(props: Props) {
     }
     return result;
   };
+
+  const documentPages = splitArray(props.documents, ONE_PAGE_SIZE);
+  const displayedDocuments = documentPages[currentPage].map((document) =>
+    DocumentRow(document)
+  );
 
   return (
     <section className="container px-4 mx-auto">
@@ -66,15 +74,14 @@ export default function FilesList(props: Props) {
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
             <div className="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed ">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   {TableHeader()}
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
-                  {splitArray(props.documents, ONE_PAGE_SIZE)[currentPage].map(
-                    (document) => DocumentRow(document)
-                  )}
-                  <tr></tr>
+                  <AnimatePresence initial={false}>
+                    {displayedDocuments}
+                  </AnimatePresence>
                 </tbody>
               </table>
             </div>
@@ -83,14 +90,19 @@ export default function FilesList(props: Props) {
       </div>
 
       <div className="flex items-center justify-between mt-6">
-        <a
+        <button
           onClick={(e) => {
             e.preventDefault();
             if (currentPage > 0) {
               setCurrentPage(currentPage - 1);
             }
           }}
-          className="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800"
+          className={classNames(
+            'flex items-center px-5 py-2 text-sm text-gray-700 capitalize',
+            'transition-colors duration-200 bg-white border rounded-md gap-x-2',
+            'hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200',
+            'dark:border-gray-700 dark:hover:bg-gray-800 cursor-pointer'
+          )}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -106,9 +118,8 @@ export default function FilesList(props: Props) {
               d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18"
             />
           </svg>
-
           <span>previous</span>
-        </a>
+        </button>
 
         <div className="items-center hidden md:flex gap-x-3">
           <PageIndexComponent
@@ -118,22 +129,20 @@ export default function FilesList(props: Props) {
           />
         </div>
 
-        <a
+        <button
           onClick={() => {
-            console.log(
-              'clicked next',
-              currentPage,
-              'total pages: ',
-              totalPages
-            );
             if (currentPage < totalPages - 1) {
               setCurrentPage(currentPage + 1);
             }
           }}
-          className="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800"
+          className={classNames(
+            'flex items-center px-5 py-2 text-sm text-gray-700 capitalize',
+            'transition-colors duration-200 bg-white border rounded-md gap-x-2',
+            'hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200',
+            'dark:border-gray-700 dark:hover:bg-gray-800 cursor-pointer'
+          )}
         >
           <span>Next</span>
-
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -148,7 +157,7 @@ export default function FilesList(props: Props) {
               d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
             />
           </svg>
-        </a>
+        </button>
       </div>
     </section>
   );
@@ -164,7 +173,7 @@ function TableHeader() {
         <div className="flex items-center gap-x-3">
           <input
             type="checkbox"
-            className="text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700"
+            className="mr-2 text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700"
           />
           <span>File name</span>
         </div>
@@ -191,14 +200,7 @@ function TableHeader() {
         Last updated
       </th>
 
-      <th
-        scope="col"
-        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-      >
-        Uploaded by
-      </th>
-
-      <th scope="col" className="relative py-3.5 px-4">
+      <th scope="col" className="relative py-3.5">
         <span className="sr-only">Edit</span>
       </th>
     </tr>
@@ -212,18 +214,20 @@ function PageIndexComponent(props: {
 }) {
   const pageNumberBox = (pageNumber: number, selected: boolean) => {
     return (
-      <a
+      <button
         key={`page-${pageNumber}`}
-        className={`px-2 py-1 text-sm text-blue-500 rounded-md dark:bg-gray-800 ${
-          selected ? 'bg-blue-100/60' : ''
-        }`}
+        className={classNames(
+          'px-2 py-1 text-sm text-teal-500 rounded-md dark:bg-gray-800',
+          'cursor-pointer transition duration-100',
+          selected && 'bg-teal-200/50'
+        )}
         onClick={(e) => {
           e.preventDefault();
           props.setPage(pageNumber);
         }}
       >
-        {pageNumber}
-      </a>
+        {pageNumber + 1}
+      </button>
     );
   };
 
@@ -266,6 +270,19 @@ function PageIndexComponent(props: {
 }
 
 function DocumentRow(doc: Document) {
+  // Shorten document name is it is too long
+  const formatDocumentName = (name: string) => {
+    const documentName = name.split('/').pop();
+    if (!documentName) return '';
+
+    if (documentName.length < 55)
+      return <p className={'inline m-0'}>{documentName}</p>;
+    else
+      return (
+        <p title={documentName}>{`${documentName.substring(0, 55)}...`}</p>
+      );
+  };
+
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) {
       return bytes + ' B';
@@ -286,12 +303,18 @@ function DocumentRow(doc: Document) {
     return `${month}, ${day}, ${year}`;
   };
   return (
-    <tr key={doc.id}>
-      <td className="px-4 py-4 w-3/10 text-sm font-medium text-gray-700 whitespace-nowrap">
+    <motion.tr
+      key={doc.id}
+      initial={{ opacity: 0, display: 'none' }}
+      animate={{ opacity: 1, display: 'table-row' }}
+      exit={{ opacity: 0, display: 'none' }}
+      transition={{ duration: 0.15 }}
+    >
+      <td className="inline-block px-4 py-4 w-[33rem] text-sm font-medium text-gray-700 whitespace-nowrap overflow-hidden">
         <div className="inline-flex items-center gap-x-3">
           <input
             type="checkbox"
-            className="text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700"
+            className="mr-2 text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700"
           />
 
           <div className="flex items-center gap-x-2">
@@ -311,31 +334,22 @@ function DocumentRow(doc: Document) {
                 />
               </svg>
             </div>
-
-            <div>
-              <h2 className="font-normal text-gray-800 dark:text-white ">
-                {doc.name.split('/').pop()}
-              </h2>
-              <p className="text-xs font-normal text-gray-500 dark:text-gray-400">
-                {formatBytes(doc.metadata.size)}
-              </p>
-            </div>
+            <h2 className="font-normal text-gray-800 dark:text-white ">
+              {formatDocumentName(doc.name)}
+            </h2>
           </div>
         </div>
       </td>
-      <td className="px-12 py-4 text-sm font-normal text-gray-700 whitespace-nowrap">
+      <td className="px-12 py-4 w-52 text-sm font-normal text-gray-700 whitespace-nowrap">
         {formatBytes(doc.metadata.size)}
       </td>
-      <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
         {formatDate(doc.metadata.lastModified)}
       </td>
-      <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
         {formatDate(doc.metadata.lastModified)}
       </td>
-      <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-        {doc.owner}
-      </td>
-      <td className="px-4 py-4 text-sm whitespace-nowrap">
+      <td className="px-0 py-4 text-sm whitespace-nowrap">
         <button className="px-1 py-1 text-gray-500 transition-colors duration-200 rounded-lg dark:text-gray-300 hover:bg-gray-100">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -353,6 +367,6 @@ function DocumentRow(doc: Document) {
           </svg>
         </button>
       </td>
-    </tr>
+    </motion.tr>
   );
 }
