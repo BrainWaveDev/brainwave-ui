@@ -199,7 +199,7 @@ export default function FileInput(
                 and drop
               </p>
               <p className="text-xs text-gray-700 dark:text-gray-900">
-                TXT, PDF, or DOCS (MAX. 50MB)
+                TXT, PDF, or DOCX (MAX. 50MB)
               </p>
             </div>
             <input
@@ -208,7 +208,9 @@ export default function FileInput(
               className="hidden"
               multiple
               onChange={fileInputHandler}
-              accept={'.txt, .pdf, .docs'}
+              accept={
+                'text/plain, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+              }
             />
           </>
         )}
@@ -236,7 +238,9 @@ export default function FileInput(
               type="file"
               multiple
               onChange={fileInputHandler}
-              accept={'.txt, .pdf, .docs'}
+              accept={
+                'text/plain, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+              }
               hidden
             />
             <button
