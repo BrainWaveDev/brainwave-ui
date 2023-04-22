@@ -5,11 +5,10 @@ import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
 import { Document } from '../types';
 import { supabase } from '@/utils/supabase-client';
 import { useEffect, useState } from 'react';
+import { DocMetadata, Document } from '../types';
+import { Database } from '../types/supabase';
 
 export default function HomePage() {
-  const { documentsList, refreshDocuments,setDocumentsList } = useDocuments();
-
-  
   const handleFileDelete = (names: string[]) => {
     const stashDocuments = [...documentsList];
     // remove all docs with name from given names
@@ -23,14 +22,10 @@ export default function HomePage() {
       if(data.status !== 204){
         // if delete failed, restore documents
         setDocumentsList(stashDocuments);
-      } else {
-        // Refresh documentsList after successful deletion
-        refreshDocuments();
       }
     })
 
   };
-
   return (
     <>
       <header className="bg-white shadow">
@@ -41,12 +36,9 @@ export default function HomePage() {
         </div>
       </header>
       <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <FileInput afterUpload={
-          async () => refreshDocuments()
-        }/>
+        <FileInput />
       </div>
-      
-      <div className="mx-auto max-w-7xl pt-2 pb-6 sm:px-6 lg:px-8 ">
+      <div className="mx-auto max-w-7xl pt-2 pb-6 sm:px-6 lg:px-8">
         <FilesList documents={documentsList} deleteDocumentAction={handleFileDelete} />
       </div>
     </>
@@ -56,7 +48,7 @@ export default function HomePage() {
 export const getServerSideProps = async (
   context: GetServerSidePropsContext
 ) => {
-  const supabase = createServerSupabaseClient(context);
+  const supabase = createServerSupabaseClient<Database>(context);
   const {
     data: { session }
   } = await supabase.auth.getSession();
@@ -69,39 +61,26 @@ export const getServerSideProps = async (
       }
     };
 
+  const { data } = await supabase.from('document').select();
+  // Default sorting by date
+  let documents: Document[] = [];
+  if (data && data.length > 0) {
+    documents = data
+      .map((document) => ({
+        ...document,
+        id: document.id.toString(),
+        // @ts-ignore
+        metadata: document.metadata as DocMetadata
+      }))
+      .sort((a, b) =>
+        new Date(a.metadata.lastModified) > new Date(b.metadata.lastModified)
+          ? -1
+          : 1
+      );
+  }
   return {
     props: {
-      placeHolder: 'placeholder'
+      documents
     }
-  }
-};
-
-
-const useDocuments = () => {
-  const [documentsList, setDocumentsList] = useState<Document[]>([]);
-
-  const fetchDocuments = async () => {
-    const { data, error } = await supabase.from('document').select();
-    if (error) {
-      throw error;
-    }
-    return data as Document[];
   };
-
-  const refreshDocuments = () => {
-    fetchDocuments()
-      .then((data) => {
-        setDocumentsList(data);
-      })
-      .catch((error) => {
-        // TODO: handle error
-        console.log(error);
-      });
-  };
-
-  useEffect(() => {
-    refreshDocuments();
-  }, []);
-
-  return { documentsList, refreshDocuments,setDocumentsList};
 };
