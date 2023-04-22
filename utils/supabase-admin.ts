@@ -4,8 +4,8 @@ import Stripe from 'stripe';
 import { stripe } from './stripe';
 import { toDateTime } from './helpers';
 
-import { Customer, UserDetails, Price, Product } from 'types';
-import type { Database } from 'types_db';
+import { Price, Product } from '../types';
+import type { Database } from 'types/supabase';
 
 // Note: supabaseAdmin uses the SERVICE_ROLE_KEY which you must only use in a secure server-side context
 // as it has admin priviliges and overwrites RLS policies!
@@ -124,6 +124,7 @@ const manageSubscriptionStatusChange = async (
     expand: ['default_payment_method']
   });
   // Upsert the latest status of the subscription object.
+  // @ts-ignore
   const subscriptionData: Database['public']['Tables']['subscriptions']['Insert'] =
     {
       id: subscription.id,

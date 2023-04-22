@@ -3,12 +3,12 @@ import {
   User
 } from '@supabase/auth-helpers-nextjs';
 
-import { ProductWithPrice,Document } from 'types';
-import { Database } from 'types/database.types';
+import { ProductWithPrice, Document } from '../types';
+import type { Database } from 'types/supabase';
 
 export const supabase = createBrowserSupabaseClient<Database>();
 
-export const getDocuments = async():Promise<Document[]> => {
+export const getDocuments = async (): Promise<Document[]> => {
   const { data, error } = await supabase
     .from('documents')
     .select('*')
@@ -17,8 +17,8 @@ export const getDocuments = async():Promise<Document[]> => {
   if (error) {
     console.log(error.message);
   }
-  return data as any || [];
-}
+  return (data as any) || [];
+};
 
 export const getActiveProductsWithPrices = async (): Promise<
   ProductWithPrice[]
