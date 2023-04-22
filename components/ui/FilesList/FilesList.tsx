@@ -5,6 +5,7 @@ import classes from './FilesList.module.css';
 import { Document } from 'types';
 import classNames from 'classnames';
 import { motion, AnimatePresence } from 'framer-motion';
+import PageIndex from '@/components/ui/FileInput/PageIndex';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import RowPopover from './RowPopover';
 
@@ -163,13 +164,11 @@ export default function FilesList(props: Props) {
           <span>Previous</span>
         </button>
 
-        <div className="items-center hidden md:flex gap-x-3">
-          <PageIndexComponent
-            totalPages={totalPages}
-            setPage={setCurrentPage}
-            currPage={currentPage}
-          />
-        </div>
+        <PageIndex
+          totalPages={totalPages}
+          setPage={setCurrentPage}
+          currPage={currentPage}
+        />
 
         <button
           onClick={() => {
@@ -253,69 +252,7 @@ function TableHeader() {
   );
 }
 
-function PageIndexComponent(props: {
-  totalPages: number;
-  setPage: Dispatch<SetStateAction<number>>;
-  currPage: number;
-}) {
-  const pageNumberBox = (pageNumber: number, selected: boolean) => {
-    return (
-      <button
-        key={`page-${pageNumber}`}
-        className={classNames(
-          'px-2 py-1 text-sm text-teal-500 rounded-md dark:bg-gray-800',
-          'cursor-pointer transition duration-100',
-          selected && 'bg-teal-200/50'
-        )}
-        onClick={(e) => {
-          e.preventDefault();
-          props.setPage(pageNumber);
-        }}
-      >
-        {pageNumber + 1}
-      </button>
-    );
-  };
-
-  const ellipsis = () => (
-    <span
-      key={`ellipsis_${Math.random()}`}
-      className="px-2 py-1 text-sm text-gray-500"
-    >
-      ...
-    </span>
-  );
-
-  if (props.totalPages <= 5) {
-    // display all page numbers
-    return (
-      <>
-        {Array.from(Array(props.totalPages).keys()).map((pageNumber) => {
-          return pageNumberBox(pageNumber, pageNumber === props.currPage);
-        })}
-      </>
-    );
-  } else {
-    // display first page, last page, selected index, and ellipses
-    const isFirstPageSelected = props.currPage === 0;
-    const isLastPageSelected = props.currPage === props.totalPages - 1;
-    const pages = [
-      pageNumberBox(0, isFirstPageSelected),
-      !isFirstPageSelected && props.currPage - 1 >= 1 ? ellipsis() : null,
-      isFirstPageSelected || isLastPageSelected
-        ? null
-        : pageNumberBox(props.currPage, true),
-      !isLastPageSelected && props.totalPages - props.currPage > 2
-        ? ellipsis()
-        : null,
-      pageNumberBox(props.totalPages - 1, isLastPageSelected)
-    ].filter(Boolean); // Remove null values from the array
-
-    return <>{pages}</>;
-  }
-}
-
-function DocumentRow(doc: Document, handleDelete: () => void) {
+function DocumentRow(doc: Document) {
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) {
       return bytes + ' B';
