@@ -3,13 +3,13 @@ import ActionsPopover from '@/components/ui/FilesList/ActionsPopover';
 import SearchIcon from '@/components/icons/SearchIcon';
 import classes from './FilesList.module.css';
 import { Document } from 'types';
-import { Dispatch, SetStateAction, useState } from 'react';
 import classNames from 'classnames';
-// @ts-ignore
 import { motion, AnimatePresence } from 'framer-motion';
-
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import RowPopover from './RowPopover';
 interface Props {
   documents: Document[];
+  deleteDocumentAction: (ids: string[]) => void;
 }
 
 const ONE_PAGE_SIZE = 5;
@@ -38,8 +38,10 @@ export default function FilesList(props: Props) {
   };
 
   const documentPages = splitArray(props.documents, ONE_PAGE_SIZE);
-  const displayedDocuments = documentPages[currentPage].map((document) =>
-    DocumentRow(document)
+  const displayednamesDocuments = documentPages[currentPage].map((document) =>
+    DocumentRow(document, () => {
+      props.deleteDocumentAction([document.name]);
+    })
   );
 
   return (
@@ -80,8 +82,16 @@ export default function FilesList(props: Props) {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
                   <AnimatePresence initial={false}>
-                    {displayedDocuments}
+                    {displayednamesDocuments}
                   </AnimatePresence>
+                  {splitArray(props.documents, ONE_PAGE_SIZE)[currentPage].map((document) => (
+                    DocumentRow(document, () => {
+                      props.deleteDocumentAction([document.name])
+                    })
+                  ))}
+                  <tr>
+
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -256,33 +266,17 @@ function PageIndexComponent(props: {
     const pages = [
       pageNumberBox(0, isFirstPageSelected),
       !isFirstPageSelected && props.currPage - 1 >= 1 ? ellipsis() : null,
-      isFirstPageSelected || isLastPageSelected
-        ? null
-        : pageNumberBox(props.currPage, true),
-      !isLastPageSelected && props.totalPages - props.currPage > 2
-        ? ellipsis()
-        : null,
-      pageNumberBox(props.totalPages - 1, isLastPageSelected)
+      isFirstPageSelected || isLastPageSelected ? null : pageNumberBox(props.currPage, true),
+      !isLastPageSelected && props.totalPages - props.currPage > 2 ? ellipsis() : null,
+      pageNumberBox(props.totalPages - 1, isLastPageSelected),
     ].filter(Boolean); // Remove null values from the array
 
     return <>{pages}</>;
   }
 }
 
-function DocumentRow(doc: Document) {
-  // Shorten document name is it is too long
-  const formatDocumentName = (name: string) => {
-    const documentName = name.split('/').pop();
-    if (!documentName) return '';
 
-    if (documentName.length < 55)
-      return <p className={'inline m-0'}>{documentName}</p>;
-    else
-      return (
-        <p title={documentName}>{`${documentName.substring(0, 55)}...`}</p>
-      );
-  };
-
+function DocumentRow(doc: Document, handleDelete: () => void) {
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) {
       return bytes + ' B';
@@ -302,6 +296,10 @@ function DocumentRow(doc: Document) {
     const year = date.getFullYear();
     return `${month}, ${day}, ${year}`;
   };
+  function formatDocumentName(name: string): import("react").ReactNode {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <motion.tr
       key={doc.id}
@@ -366,6 +364,9 @@ function DocumentRow(doc: Document) {
             />
           </svg>
         </button>
+      </td>
+      <td className="px-4 py-4 text-sm whitespace-nowrap">
+        <RowPopover handleDelete={handleDelete}/>
       </td>
     </motion.tr>
   );
