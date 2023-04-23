@@ -3,13 +3,13 @@ import ActionsPopover from '@/components/ui/FilesList/ActionsPopover';
 import SearchIcon from '@/components/icons/SearchIcon';
 import classes from './FilesList.module.css';
 import { Document } from 'types';
-import { Dispatch, SetStateAction, useState } from 'react';
 import classNames from 'classnames';
-// @ts-ignore
 import { motion, AnimatePresence } from 'framer-motion';
-
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import RowPopover from './RowPopover';
 interface Props {
   documents: Document[];
+  deleteDocumentAction: (ids: string[]) => void;
 }
 
 const ONE_PAGE_SIZE = 5;
@@ -38,8 +38,10 @@ export default function FilesList(props: Props) {
   };
 
   const documentPages = splitArray(props.documents, ONE_PAGE_SIZE);
-  const displayedDocuments = documentPages[currentPage].map((document) =>
-    DocumentRow(document)
+  const displayednamesDocuments = documentPages[currentPage].map((document) =>
+    DocumentRow(document, () => {
+      props.deleteDocumentAction([document.name]);
+    })
   );
 
   return (
@@ -80,8 +82,16 @@ export default function FilesList(props: Props) {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
                   <AnimatePresence initial={false}>
-                    {displayedDocuments}
+                    {displayednamesDocuments}
                   </AnimatePresence>
+                  {splitArray(props.documents, ONE_PAGE_SIZE)[currentPage].map((document) => (
+                    DocumentRow(document, () => {
+                      props.deleteDocumentAction([document.name])
+                    })
+                  ))}
+                  <tr>
+
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -256,33 +266,17 @@ function PageIndexComponent(props: {
     const pages = [
       pageNumberBox(0, isFirstPageSelected),
       !isFirstPageSelected && props.currPage - 1 >= 1 ? ellipsis() : null,
-      isFirstPageSelected || isLastPageSelected
-        ? null
-        : pageNumberBox(props.currPage, true),
-      !isLastPageSelected && props.totalPages - props.currPage > 2
-        ? ellipsis()
-        : null,
-      pageNumberBox(props.totalPages - 1, isLastPageSelected)
+      isFirstPageSelected || isLastPageSelected ? null : pageNumberBox(props.currPage, true),
+      !isLastPageSelected && props.totalPages - props.currPage > 2 ? ellipsis() : null,
+      pageNumberBox(props.totalPages - 1, isLastPageSelected),
     ].filter(Boolean); // Remove null values from the array
 
     return <>{pages}</>;
   }
 }
 
-function DocumentRow(doc: Document) {
-  // Shorten document name is it is too long
-  const formatDocumentName = (name: string) => {
-    const documentName = name.split('/').pop();
-    if (!documentName) return '';
 
-    if (documentName.length < 55)
-      return <p className={'inline m-0'}>{documentName}</p>;
-    else
-      return (
-        <p title={documentName}>{`${documentName.substring(0, 55)}...`}</p>
-      );
-  };
-
+function DocumentRow(doc: Document, handleDelete: () => void) {
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) {
       return bytes + ' B';
@@ -302,6 +296,19 @@ function DocumentRow(doc: Document) {
     const year = date.getFullYear();
     return `${month}, ${day}, ${year}`;
   };
+  // Shorten document name is it is too long
+  const formatDocumentName = (name: string) => {
+    const documentName = name.split('/').pop();
+    if (!documentName) return '';
+
+    if (documentName.length < 55)
+      return <p className={'inline m-0'}>{documentName}</p>;
+    else
+      return (
+        <p title={documentName}>{`${documentName.substring(0, 55)}...`}</p>
+      );
+  };
+
   return (
     <motion.tr
       key={doc.id}
@@ -349,23 +356,8 @@ function DocumentRow(doc: Document) {
       <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
         {formatDate(doc.metadata.lastModified)}
       </td>
-      <td className="px-0 py-4 text-sm whitespace-nowrap">
-        <button className="px-1 py-1 text-gray-500 transition-colors duration-200 rounded-lg dark:text-gray-300 hover:bg-gray-100">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-            className="w-6 h-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
-            />
-          </svg>
-        </button>
+      <td className="px-4 py-4 text-sm whitespace-nowrap">
+        <RowPopover handleDelete={handleDelete}/>
       </td>
     </motion.tr>
   );

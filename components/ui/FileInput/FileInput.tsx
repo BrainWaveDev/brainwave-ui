@@ -18,8 +18,6 @@ export default function FileInput() {
   // const [previewElements, setPreviewElements] = useState<FileInfo[]>([]);
   const { dispatch: dispatchError } = useErrorContext();
 
-  console.log(files);
-
   // Logic for handling image upload
   const fileInputHandler = (event: ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
