@@ -2,12 +2,13 @@ import FilterPopover from '@/components/ui/FilesList/FilterPopover';
 import ActionsPopover from '@/components/ui/FilesList/ActionsPopover';
 import SearchIcon from '@/components/icons/SearchIcon';
 import classes from './FilesList.module.css';
-import { Document } from 'types';
+import { Document } from '../../../types';
 import classNames from 'classnames';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageIndex from '@/components/ui/FileInput/PageIndex';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import RowPopover from './RowPopover';
+import TableHeader from '@/components/ui/FileInput/TableHeader';
 
 interface Props {
   documents: Document[];
@@ -16,9 +17,89 @@ interface Props {
 
 const ONE_PAGE_SIZE = 5;
 
+const FileType = (mimetype: string) => {
+  switch (mimetype) {
+    case 'text/plain':
+      return 'TXT';
+    case 'text/csv':
+      return 'CSV';
+    case 'application/pdf':
+      return 'PDF';
+    case 'application/msword':
+      return 'DOC';
+    case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+      return 'DOCX';
+    default:
+      return '';
+  }
+};
+
+export const enum Columns {
+  name,
+  size,
+  kind,
+  dateUploaded,
+  status
+}
+
 export default function FilesList(props: Props) {
   const [currentPage, setCurrentPage] = useState(0);
   const [filter, setFilter] = useState('');
+  const [sortByColumn, setSortByColumn] = useState<number | null>(null);
+  const [sortAscending, setSortAscending] = useState(true);
+
+  const handleColumnClick = (column: number) => {
+    if (sortByColumn !== column) {
+      setSortByColumn(column);
+      setSortAscending(true);
+    } else {
+      setSortAscending((prevState) => !prevState);
+    }
+  };
+
+  const sortAndFilterDocuments = (documents: Document[]) => {
+    const filteredDocuments = documents.filter((document) =>
+      document.name.toLowerCase().includes(filter.trim().toLowerCase())
+    );
+    if (sortByColumn !== null) {
+      filteredDocuments.sort((a, b) => {
+        let returnValue;
+        switch (sortByColumn) {
+          case Columns.name:
+            returnValue =
+              a.name.split('/').pop()! > b.name.split('/').pop()! ? 1 : -1;
+            break;
+          case Columns.size:
+            returnValue = a.metadata.size > b.metadata.size ? 1 : -1;
+            break;
+          case Columns.kind:
+            returnValue =
+              FileType(a.metadata.mimetype) > FileType(b.metadata.mimetype)
+                ? 1
+                : -1;
+            break;
+          case Columns.dateUploaded:
+            returnValue =
+              new Date(a.metadata.lastModified) >
+              new Date(b.metadata.lastModified)
+                ? 1
+                : -1;
+            break;
+          case Columns.status:
+            // TODO: Fix sorting by file status
+            returnValue = 1;
+            break;
+          default:
+            return new Date(a.metadata.lastModified) >
+              new Date(b.metadata.lastModified)
+              ? -1
+              : 1;
+        }
+        return sortAscending ? returnValue : returnValue * -1;
+      });
+    }
+    return filteredDocuments;
+  };
 
   const splitArray = (array: Document[], chunkSize: number): Document[][] => {
     const result: Document[][] = [];
@@ -52,10 +133,8 @@ export default function FilesList(props: Props) {
     }
   };
 
-  const filteredDocuments = props.documents.filter((doc) => {
-    return doc.name.toLowerCase().includes(filter.trim().toLowerCase());
-  });
-  const documentPages = splitArray(filteredDocuments, ONE_PAGE_SIZE);
+  const sortedAndFilteredDocuments = sortAndFilterDocuments(props.documents);
+  const documentPages = splitArray(sortedAndFilteredDocuments, ONE_PAGE_SIZE);
   const totalPages = documentPages.length;
   const displayedDocuments = selectDisplayedDocuments(
     documentPages,
@@ -96,7 +175,11 @@ export default function FilesList(props: Props) {
             <div className="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed">
                 <thead className="bg-gray-50 dark:bg-gray-800">
-                  {TableHeader()}
+                  <TableHeader
+                    sortByColumn={sortByColumn}
+                    sortAscending={sortAscending}
+                    handleColumnClick={handleColumnClick}
+                  />
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
                   <AnimatePresence initial={false}>
@@ -208,51 +291,20 @@ export default function FilesList(props: Props) {
   );
 }
 
-function TableHeader() {
-  return (
-    <tr>
-      <th
-        scope="col"
-        className="py-3.5 px-4 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 w-1/4"
-      >
-        <div className="flex items-center gap-x-3">
-          <input
-            type="checkbox"
-            className="mr-2 text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700"
-          />
-          <span>File name</span>
-        </div>
-      </th>
-
-      <th
-        scope="col"
-        className="px-12 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-      >
-        File size
-      </th>
-
-      <th
-        scope="col"
-        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-      >
-        Date uploaded
-      </th>
-
-      <th
-        scope="col"
-        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-      >
-        Last updated
-      </th>
-
-      <th scope="col" className="relative py-3.5">
-        <span className="sr-only">Edit</span>
-      </th>
-    </tr>
-  );
-}
-
 function DocumentRow(doc: Document) {
+  // Shorten document name is it is too long
+  const formatDocumentName = (name: string) => {
+    const documentName = name.split('/').pop();
+    if (!documentName) return '';
+
+    if (documentName.length < 55)
+      return <p className={'inline m-0'}>{documentName}</p>;
+    else
+      return (
+        <p title={documentName}>{`${documentName.substring(0, 55)}...`}</p>
+      );
+  };
+
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) {
       return bytes + ' B';
@@ -270,20 +322,7 @@ function DocumentRow(doc: Document) {
     const month = date.toLocaleString('default', { month: 'long' });
     const day = date.getDate();
     const year = date.getFullYear();
-    return `${month}, ${day}, ${year}`;
-  };
-
-  // Shorten document name is it is too long
-  const formatDocumentName = (name: string) => {
-    const documentName = name.split('/').pop();
-    if (!documentName) return '';
-
-    if (documentName.length < 55)
-      return <p className={'inline m-0'}>{documentName}</p>;
-    else
-      return (
-        <p title={documentName}>{`${documentName.substring(0, 55)}...`}</p>
-      );
+    return `${month} ${day}, ${year}`;
   };
 
   return (
@@ -328,13 +367,17 @@ function DocumentRow(doc: Document) {
         {formatBytes(doc.metadata.size)}
       </td>
       <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-        {formatDate(doc.metadata.lastModified)}
+        {FileType(doc.metadata.mimetype)}
       </td>
       <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
         {formatDate(doc.metadata.lastModified)}
       </td>
-      <td className="px-4 py-4 text-sm whitespace-nowrap">
-        <RowPopover handleDelete={handleDelete} />
+      <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+        {/* TODO: Display actual parsing status */}
+        <div className={'flex flex-row gap-x-1.5 items-center'}>
+          <div className={'w-2.5 h-2.5 rounded-full bg-green-400'} />
+          Parsed
+        </div>
       </td>
     </motion.tr>
   );
