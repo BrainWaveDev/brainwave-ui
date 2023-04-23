@@ -35,15 +35,10 @@ export default function HomePage() {
 
     console.log(names);
     // remove from db
-    supabase.storage.from('document').remove(names)
+    supabase.from('document').delete().in('name', names)
     .then((data) => {
       console.log(data,"deleted successfully");
-      
     })
-    .catch((error) => {
-      setDocumentsList(stashDocuments)
-      console.log(error);
-    });
 
   };
   return (
