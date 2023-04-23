@@ -296,9 +296,18 @@ function DocumentRow(doc: Document, handleDelete: () => void) {
     const year = date.getFullYear();
     return `${month}, ${day}, ${year}`;
   };
-  function formatDocumentName(name: string): import("react").ReactNode {
-    throw new Error('Function not implemented.');
-  }
+  // Shorten document name is it is too long
+  const formatDocumentName = (name: string) => {
+    const documentName = name.split('/').pop();
+    if (!documentName) return '';
+
+    if (documentName.length < 55)
+      return <p className={'inline m-0'}>{documentName}</p>;
+    else
+      return (
+        <p title={documentName}>{`${documentName.substring(0, 55)}...`}</p>
+      );
+  };
 
   return (
     <motion.tr
@@ -346,24 +355,6 @@ function DocumentRow(doc: Document, handleDelete: () => void) {
       </td>
       <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
         {formatDate(doc.metadata.lastModified)}
-      </td>
-      <td className="px-0 py-4 text-sm whitespace-nowrap">
-        <button className="px-1 py-1 text-gray-500 transition-colors duration-200 rounded-lg dark:text-gray-300 hover:bg-gray-100">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-            className="w-6 h-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
-            />
-          </svg>
-        </button>
       </td>
       <td className="px-4 py-4 text-sm whitespace-nowrap">
         <RowPopover handleDelete={handleDelete}/>

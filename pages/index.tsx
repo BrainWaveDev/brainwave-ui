@@ -7,6 +7,7 @@ import { supabase } from '@/utils/supabase-client';
 import { useEffect, useState } from 'react';
 
 export default function HomePage() {
+
   const [documentsList, setDocumentsList] = useState<Document[]>([]);
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -16,13 +17,13 @@ export default function HomePage() {
       }
       return data as Document[];
     }
-    const session = supabase.auth.getSession();
-    session.then((data) => {
-      console.log(data);
-    })
-
-    fetchDocuments().then((data) => {
+    
+    fetchDocuments()
+    .then((data) => {
       setDocumentsList(data);
+    }).catch((error) => {
+      // TODO: handle error
+      console.log(error);
     });
   }, []);
 
@@ -37,7 +38,10 @@ export default function HomePage() {
     // remove from db
     supabase.from('document').delete().in('name', names)
     .then((data) => {
-      console.log(data,"deleted successfully");
+      if(data.status !== 204){
+        // if delete failed, restore documents
+        setDocumentsList(stashDocuments);
+      }
     })
 
   };
