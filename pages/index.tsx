@@ -2,29 +2,32 @@ import { GetServerSidePropsContext } from 'next';
 import FileInput from '@/components/ui/FileInput/FileInput';
 import FilesList from '@/components/ui/FilesList';
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
-import { Document } from '../types';
 import { supabase } from '@/utils/supabase-client';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { DocMetadata, Document } from '../types';
 import { Database } from '../types/supabase';
 
-export default function HomePage() {
+export default function HomePage({ documents }: { documents: Document[] }) {
+  const [documentsList, setDocumentsList] = useState<Document[]>(documents);
   const handleFileDelete = (names: string[]) => {
     const stashDocuments = [...documentsList];
     // remove all docs with name from given names
-    const newDocumentsList = documentsList.filter((doc) => !names.includes(doc.name));
+    const newDocumentsList = documentsList.filter(
+      (doc) => !names.includes(doc.name)
+    );
     setDocumentsList(newDocumentsList);
 
-    console.log(names);
     // remove from db
-    supabase.from('document').delete().in('name', names)
-    .then((data) => {
-      if(data.status !== 204){
-        // if delete failed, restore documents
-        setDocumentsList(stashDocuments);
-      }
-    })
-
+    supabase
+      .from('document')
+      .delete()
+      .in('name', names)
+      .then((data) => {
+        if (data.status !== 204) {
+          // if delete failed, restore documents
+          setDocumentsList(stashDocuments);
+        }
+      });
   };
   return (
     <>
@@ -39,7 +42,10 @@ export default function HomePage() {
         <FileInput />
       </div>
       <div className="mx-auto max-w-7xl pt-2 pb-6 sm:px-6 lg:px-8">
-        <FilesList documents={documentsList} deleteDocumentAction={handleFileDelete} />
+        <FilesList
+          documents={documentsList}
+          deleteDocumentAction={handleFileDelete}
+        />
       </div>
     </>
   );
