@@ -7,25 +7,7 @@ import { supabase } from '@/utils/supabase-client';
 import { useEffect, useState } from 'react';
 
 export default function HomePage() {
-
-  const [documentsList, setDocumentsList] = useState<Document[]>([]);
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      const { data,error } = await supabase.from('document').select();
-      if (error) {
-        throw error;
-      }
-      return data as Document[];
-    }
-    
-    fetchDocuments()
-    .then((data) => {
-      setDocumentsList(data);
-    }).catch((error) => {
-      // TODO: handle error
-      console.log(error);
-    });
-  }, []);
+  const { documentsList, refreshDocuments,setDocumentsList } = useDocuments();
 
   
   const handleFileDelete = (names: string[]) => {
@@ -41,10 +23,14 @@ export default function HomePage() {
       if(data.status !== 204){
         // if delete failed, restore documents
         setDocumentsList(stashDocuments);
+      } else {
+        // Refresh documentsList after successful deletion
+        refreshDocuments();
       }
     })
 
   };
+
   return (
     <>
       <header className="bg-white shadow">
@@ -58,7 +44,7 @@ export default function HomePage() {
         <FileInput />
       </div>
       
-      <div className="mx-auto max-w-7xl pt-2 pb-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl pt-2 pb-6 sm:px-6 lg:px-8 ">
         <FilesList documents={documentsList} deleteDocumentAction={handleFileDelete} />
       </div>
     </>
@@ -86,4 +72,34 @@ export const getServerSideProps = async (
       placeHolder: 'placeholder'
     }
   }
+};
+
+
+const useDocuments = () => {
+  const [documentsList, setDocumentsList] = useState<Document[]>([]);
+
+  const fetchDocuments = async () => {
+    const { data, error } = await supabase.from('document').select();
+    if (error) {
+      throw error;
+    }
+    return data as Document[];
+  };
+
+  const refreshDocuments = () => {
+    fetchDocuments()
+      .then((data) => {
+        setDocumentsList(data);
+      })
+      .catch((error) => {
+        // TODO: handle error
+        console.log(error);
+      });
+  };
+
+  useEffect(() => {
+    refreshDocuments();
+  }, []);
+
+  return { documentsList, refreshDocuments,setDocumentsList};
 };
