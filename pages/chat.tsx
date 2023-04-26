@@ -290,10 +290,7 @@ const ChatUI: React.FC<HomeProps> = ({
     localStorage.setItem('theme', mode);
   };
 
-  const handleApiKeyChange = (apiKey: string) => {
-    setApiKey(apiKey);
-    localStorage.setItem('apiKey', apiKey);
-  };
+
 
   const handleToggleChatbar = () => {
     setShowSidebar(!showSidebar);
@@ -616,7 +613,6 @@ const ChatUI: React.FC<HomeProps> = ({
               conversations={conversations}
               lightMode={lightMode}
               selectedConversation={selectedConversation}
-              apiKey={apiKey}
               folders={folders.filter((folder) => folder.type === 'chat')}
               showSidebar={showSidebar}
               handleToggleChatbar={handleToggleChatbar}
@@ -628,10 +624,7 @@ const ChatUI: React.FC<HomeProps> = ({
               onSelectConversation={handleSelectConversation}
               onDeleteConversation={handleDeleteConversation}
               onUpdateConversation={handleUpdateConversation}
-              onApiKeyChange={handleApiKeyChange}
               onClearConversations={handleClearConversations}
-              onExportConversations={handleExportData}
-              onImportConversations={handleImportConversations}
             />
             <div
               className="flex flex-1 w-full"

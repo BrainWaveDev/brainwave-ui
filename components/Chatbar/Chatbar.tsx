@@ -1,6 +1,5 @@
 import { Conversation } from '../../types/chat';
 import { KeyValuePair } from '../../types/data';
-import { SupportedExportFormats } from '../../types/export';
 import { Folder } from '../../types/folder';
 import { IconFolderPlus, IconMessagesOff, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'next-i18next';
@@ -17,7 +16,6 @@ interface Props {
   conversations: Conversation[];
   lightMode: 'light' | 'dark';
   selectedConversation: Conversation;
-  apiKey: string;
   folders: Folder[];
   showSidebar: boolean;
   handleToggleChatbar: () => void;
@@ -32,10 +30,7 @@ interface Props {
     conversation: Conversation,
     data: KeyValuePair
   ) => void;
-  onApiKeyChange: (apiKey: string) => void;
   onClearConversations: () => void;
-  onExportConversations: () => void;
-  onImportConversations: (data: SupportedExportFormats) => void;
 }
 
 export const Chatbar: FC<Props> = ({
@@ -43,7 +38,6 @@ export const Chatbar: FC<Props> = ({
   conversations,
   lightMode,
   selectedConversation,
-  apiKey,
   folders,
   showSidebar,
   handleToggleChatbar,
@@ -55,10 +49,7 @@ export const Chatbar: FC<Props> = ({
   onSelectConversation,
   onDeleteConversation,
   onUpdateConversation,
-  onApiKeyChange,
   onClearConversations,
-  onExportConversations,
-  onImportConversations
 }) => {
   const { t } = useTranslation('sidebar');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -212,13 +203,9 @@ export const Chatbar: FC<Props> = ({
 
       <ChatbarSettings
         lightMode={lightMode}
-        apiKey={apiKey}
         conversationsCount={conversations.length}
         onToggleLightMode={onToggleLightMode}
-        onApiKeyChange={onApiKeyChange}
         onClearConversations={onClearConversations}
-        onExportConversations={onExportConversations}
-        onImportConversations={onImportConversations}
       />
     </div>
   );

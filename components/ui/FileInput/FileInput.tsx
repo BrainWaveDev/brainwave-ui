@@ -12,7 +12,13 @@ import { supabase } from '@/utils/supabase-client';
 import { wait } from '@/utils/helpers';
 import { ErrorAlert, useErrorContext } from '../../../context/ErrorContext';
 
-export default function FileInput() {
+interface FileInputProps {
+  afterUpload?: () => Promise<void>;
+}
+
+export default function FileInput(
+  { afterUpload }: FileInputProps,
+) {
   const { user, isLoading } = useUser();
   const [files, setFiles] = useState<FileInfo[]>([]);
   // const [previewElements, setPreviewElements] = useState<FileInfo[]>([]);
@@ -133,6 +139,9 @@ export default function FileInput() {
 
       setFiles(updatedFiles);
       await updateFilePreviewAfterUpload();
+
+      // after upload callback
+      afterUpload && await afterUpload();
     }
   };
 
