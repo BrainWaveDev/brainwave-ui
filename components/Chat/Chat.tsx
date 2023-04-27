@@ -10,13 +10,18 @@ import {
   FC,
   memo,
   MutableRefObject,
+  useCallback,
   useEffect,
   useRef,
   useState
 } from 'react';
+import { Spinner } from '../Global/Spinner';
 import { ChatInput } from './ChatInput';
 import { ChatLoader } from './ChatLoader';
 import { ChatMessage } from './ChatMessage';
+import { ErrorMessageDiv } from './ErrorMessageDiv';
+import { ModelSelect } from './ModelSelect';
+import { SystemPrompt } from './SystemPrompt';
 import AppLogo from '@/components/icons/AppLogo';
 
 interface Props {

@@ -36,12 +36,10 @@ import toast from 'react-hot-toast';
 import { supabase } from '@/utils/supabase-client';
 
 interface HomeProps {
-  serverSideApiKeyIsSet: boolean;
   defaultModelId: OpenAIModelID;
 }
 
 const ChatUI: React.FC<HomeProps> = ({
-  serverSideApiKeyIsSet,
   defaultModelId
 }) => {
   const { t } = useTranslation('chat');
@@ -70,165 +68,146 @@ const ChatUI: React.FC<HomeProps> = ({
 
   // FETCH RESPONSE ----------------------------------------------
 
-  const handleSend = async (message: Message, deleteCount = 0) => {
-    if (selectedConversation) {
-      let updatedConversation: Conversation;
+  const handleSend = async (message: Message) => {
+    if (!selectedConversation) return;
 
-      if (deleteCount) {
-        const updatedMessages = [...selectedConversation.messages];
-        for (let i = 0; i < deleteCount; i++) {
-          updatedMessages.pop();
-        }
+    let updatedConversation = {
+      ...selectedConversation,
+      messages: [...selectedConversation.messages, message]
+    };
 
-        updatedConversation = {
-          ...selectedConversation,
-          messages: [...updatedMessages, message]
-        };
-      } else {
-        updatedConversation = {
-          ...selectedConversation,
-          messages: [...selectedConversation.messages, message]
-        };
-      }
+    setSelectedConversation(updatedConversation);
+    setLoading(true);
+    setMessageIsStreaming(true);
 
-      setSelectedConversation(updatedConversation);
-      setLoading(true);
-      setMessageIsStreaming(true);
+    const {
+      data: { session },
+      error
+    } = await supabase.auth.getSession();
 
-      const {
-        data: { session },
-        error
-      } = await supabase.auth.getSession();
+    if (error || !session || !session.access_token) {
+      setLoading(false);
+      setMessageIsStreaming(false);
+      toast.error(
+        error?.message ? error.message : 'Error getting current user session'
+      );
+      return;
+    }
 
-      if (error || !session || !session.access_token) {
-        setLoading(false);
-        setMessageIsStreaming(false);
-        toast.error(
-          error?.message ? error.message : 'Error getting current user session'
-        );
-        return;
-      }
+    const requestBody: RequestBody = {
+      jwt: session.access_token,
+      model: updatedConversation.model,
+      messages: updatedConversation.messages
+    };
 
-      const requestBody: RequestBody = {
-        jwt: session.access_token,
-        model: updatedConversation.model,
-        messages: updatedConversation.messages
+    const controller = new AbortController();
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      signal: controller.signal,
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok || !response.body) {
+      setLoading(false);
+      setMessageIsStreaming(false);
+      if (!response.ok) toast.error(response.statusText);
+      return;
+    }
+
+    const data = response.body;
+
+    if (updatedConversation.messages.length === 1) {
+      const { content } = message;
+      const customName =
+        content.length > 30 ? content.substring(0, 30) + '...' : content;
+
+      updatedConversation = {
+        ...updatedConversation,
+        name: customName
       };
+    }
 
-      const controller = new AbortController();
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        signal: controller.signal,
-        body: JSON.stringify(requestBody)
-      });
+    setLoading(false);
 
-      if (!response.ok) {
-        setLoading(false);
-        setMessageIsStreaming(false);
-        toast.error(response.statusText);
-        return;
+    const reader = data.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+    let isFirst = true;
+    let text = '';
+
+    while (!done) {
+      if (stopConversationRef.current) {
+        controller.abort();
+        done = true;
+        break;
       }
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunkValue = decoder.decode(value);
 
-      const data = response.body;
+      text += chunkValue;
 
-      if (!data) {
-        setLoading(false);
-        setMessageIsStreaming(false);
-        return;
-      }
-
-      if (updatedConversation.messages.length === 1) {
-        const { content } = message;
-        const customName =
-          content.length > 30 ? content.substring(0, 30) + '...' : content;
+      if (isFirst) {
+        isFirst = false;
+        const updatedMessages: Message[] = [
+          ...updatedConversation.messages,
+          { role: 'assistant', content: chunkValue }
+        ];
 
         updatedConversation = {
           ...updatedConversation,
-          name: customName
+          messages: updatedMessages
         };
-      }
 
-      setLoading(false);
-
-      const reader = data.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-      let isFirst = true;
-      let text = '';
-
-      while (!done) {
-        if (stopConversationRef.current) {
-          controller.abort();
-          done = true;
-          break;
-        }
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        const chunkValue = decoder.decode(value);
-
-        text += chunkValue;
-
-        if (isFirst) {
-          isFirst = false;
-          const updatedMessages: Message[] = [
-            ...updatedConversation.messages,
-            { role: 'assistant', content: chunkValue }
-          ];
-
-          updatedConversation = {
-            ...updatedConversation,
-            messages: updatedMessages
-          };
-
-          setSelectedConversation(updatedConversation);
-        } else {
-          const updatedMessages: Message[] = updatedConversation.messages.map(
-            (message, index) => {
-              if (index === updatedConversation.messages.length - 1) {
-                return {
-                  ...message,
-                  content: text
-                };
-              }
-
-              return message;
+        setSelectedConversation(updatedConversation);
+      } else {
+        const updatedMessages: Message[] = updatedConversation.messages.map(
+          (message, index) => {
+            if (index === updatedConversation.messages.length - 1) {
+              return {
+                ...message,
+                content: text
+              };
             }
-          );
 
-          updatedConversation = {
-            ...updatedConversation,
-            messages: updatedMessages
-          };
-
-          setSelectedConversation(updatedConversation);
-        }
-      }
-
-      saveConversation(updatedConversation);
-
-      const updatedConversations: Conversation[] = conversations.map(
-        (conversation) => {
-          if (conversation.id === selectedConversation.id) {
-            return updatedConversation;
+            return message;
           }
+        );
 
-          return conversation;
-        }
-      );
+        updatedConversation = {
+          ...updatedConversation,
+          messages: updatedMessages
+        };
 
-      if (updatedConversations.length === 0) {
-        updatedConversations.push(updatedConversation);
+        setSelectedConversation(updatedConversation);
       }
-
-      setConversations(updatedConversations);
-
-      saveConversations(updatedConversations);
-
-      setMessageIsStreaming(false);
     }
+
+    saveConversation(updatedConversation);
+
+    const updatedConversations: Conversation[] = conversations.map(
+      (conversation) => {
+        if (conversation.id === selectedConversation.id) {
+          return updatedConversation;
+        }
+
+        return conversation;
+      }
+    );
+
+    if (updatedConversations.length === 0) {
+      updatedConversations.push(updatedConversation);
+    }
+
+    setConversations(updatedConversations);
+
+    saveConversations(updatedConversations);
+
+    setMessageIsStreaming(false);
+
   };
 
 
@@ -315,6 +294,7 @@ const ChatUI: React.FC<HomeProps> = ({
   // CONVERSATION OPERATIONS  --------------------------------------------
 
   const handleNewConversation = () => {
+    console.log('handleNewConversation');
     const lastConversation = conversations[conversations.length - 1];
 
     const newConversation: Conversation = {
@@ -405,39 +385,42 @@ const ChatUI: React.FC<HomeProps> = ({
   };
 
   const handleEditMessage = (message: Message, messageIndex: number) => {
-    if (selectedConversation) {
-      const updatedMessages = selectedConversation.messages
-        .map((m, i) => {
-          if (i < messageIndex) {
-            return m;
-          }
-        })
-        .filter((m) => m) as Message[];
-
-      const updatedConversation = {
-        ...selectedConversation,
-        messages: updatedMessages
-      };
-
-      const { single, all } = updateConversation(
-        updatedConversation,
-        conversations
-      );
-
-      setSelectedConversation(single);
-      setConversations(all);
-
-      setCurrentMessage(message);
+    if (!selectedConversation) {
+      return;
     }
+    const updatedMessages = selectedConversation.messages
+      .map((m, i) => {
+        if (i < messageIndex) {
+          return m;
+        }
+      })
+      .filter((m) => m) as Message[];
+
+    const updatedConversation = {
+      ...selectedConversation,
+      messages: updatedMessages
+    };
+
+    const { single, all } = updateConversation(
+      updatedConversation,
+      conversations
+    );
+
+    setSelectedConversation(single);
+    setConversations(all);
+
+    setCurrentMessage(message);
+
   };
 
   // EFFECTS  --------------------------------------------
 
   useEffect(() => {
-    if (currentMessage) {
-      handleSend(currentMessage);
-      setCurrentMessage(undefined);
+    if (!currentMessage) {
+      return;
     }
+    handleSend(currentMessage);
+    setCurrentMessage(undefined);
   }, [currentMessage]);
 
   useEffect(() => {
@@ -502,7 +485,7 @@ const ChatUI: React.FC<HomeProps> = ({
         folderId: null
       });
     }
-  }, [serverSideApiKeyIsSet]);
+  }, []);
 
   return (
     <>
