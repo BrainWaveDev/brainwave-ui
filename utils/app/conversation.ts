@@ -22,9 +22,11 @@ export const updateConversation = (
 };
 
 export const saveConversation = (conversation: Conversation) => {
+  console.log('saving conversation', conversation);
   localStorage.setItem('selectedConversation', JSON.stringify(conversation));
 };
 
 export const saveConversations = (conversations: Conversation[]) => {
+  console.log('saving conversations', conversations);
   localStorage.setItem('conversationHistory', JSON.stringify(conversations));
 };
