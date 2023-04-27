@@ -48,14 +48,9 @@ const ChatUI: React.FC<HomeProps> = ({
 
   // STATE ----------------------------------------------
 
-  const [apiKey, setApiKey] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [lightMode, setLightMode] = useState<'dark' | 'light'>('dark');
   const [messageIsStreaming, setMessageIsStreaming] = useState<boolean>(false);
-
-  const [modelError, setModelError] = useState<ErrorMessage | null>(null);
-
-  const [models, setModels] = useState<OpenAIModel[]>([]);
 
   const [folders, setFolders] = useState<Folder[]>([]);
 
@@ -236,52 +231,6 @@ const ChatUI: React.FC<HomeProps> = ({
     }
   };
 
-  // FETCH MODELS ----------------------------------------------
-
-  const fetchModels = async (key: string) => {
-    const error = {
-      title: t('Error fetching models.'),
-      code: null,
-      messageLines: [
-        t(
-          'Make sure your OpenAI API key is set in the bottom left of the sidebar.'
-        ),
-        t('If you completed this step, OpenAI may be experiencing issues.')
-      ]
-    } as ErrorMessage;
-
-    const response = await fetch('/api/models', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        key
-      })
-    });
-
-    if (!response.ok) {
-      try {
-        const data = await response.json();
-        Object.assign(error, {
-          code: data.error?.code,
-          messageLines: [data.error?.message]
-        });
-      } catch (e) {}
-      setModelError(error);
-      return;
-    }
-
-    const data = await response.json();
-
-    if (!data) {
-      setModelError(error);
-      return;
-    }
-
-    setModels(data);
-    setModelError(null);
-  };
 
   // BASIC HANDLERS --------------------------------------------
 
@@ -290,24 +239,9 @@ const ChatUI: React.FC<HomeProps> = ({
     localStorage.setItem('theme', mode);
   };
 
-
-
   const handleToggleChatbar = () => {
     setShowSidebar(!showSidebar);
     localStorage.setItem('showChatbar', JSON.stringify(!showSidebar));
-  };
-
-  const handleExportData = () => {
-    exportData();
-  };
-
-  const handleImportConversations = (data: SupportedExportFormats) => {
-    const { history, folders, prompts }: LatestExportFormat = importData(data);
-
-    setConversations(history);
-    setSelectedConversation(history[history.length - 1]);
-    setFolders(folders);
-    setPrompts(prompts);
   };
 
   const handleSelectConversation = (conversation: Conversation) => {
@@ -512,11 +446,6 @@ const ChatUI: React.FC<HomeProps> = ({
     }
   }, [selectedConversation]);
 
-  useEffect(() => {
-    if (apiKey) {
-      fetchModels(apiKey);
-    }
-  }, [apiKey]);
 
   // ON LOAD --------------------------------------------
 
@@ -524,14 +453,6 @@ const ChatUI: React.FC<HomeProps> = ({
     const theme = localStorage.getItem('theme');
     if (theme) {
       setLightMode(theme as 'dark' | 'light');
-    }
-
-    const apiKey = localStorage.getItem('apiKey');
-    if (apiKey) {
-      setApiKey(apiKey);
-      fetchModels(apiKey);
-    } else if (serverSideApiKeyIsSet) {
-      fetchModels('');
     }
 
     if (window.innerWidth < 640) {
@@ -635,11 +556,6 @@ const ChatUI: React.FC<HomeProps> = ({
               <Chat
                 conversation={selectedConversation}
                 messageIsStreaming={messageIsStreaming}
-                apiKey={apiKey}
-                serverSideApiKeyIsSet={serverSideApiKeyIsSet}
-                defaultModelId={defaultModelId}
-                modelError={modelError}
-                models={models}
                 loading={loading}
                 prompts={prompts}
                 onSend={handleSend}
