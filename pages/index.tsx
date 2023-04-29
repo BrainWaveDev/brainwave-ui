@@ -71,6 +71,7 @@ export const getServerSideProps = async (
   // Default sorting by date
   let documents: Document[] = [];
   if (data && data.length > 0) {
+    // @ts-ignore
     documents = data
       .map((document) => ({
         ...document,
