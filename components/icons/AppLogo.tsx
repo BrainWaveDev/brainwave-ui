@@ -1,12 +1,12 @@
-import { CSSProperties } from 'react'
+import { CSSProperties } from 'react';
 
 export default function AppLogo(
   props: {
-    className?: string
-    style?: CSSProperties
+    className?: string;
+    style?: CSSProperties;
   } & any
 ) {
-  const { className, style, ...rest } = props
+  const { className, style, ...rest } = props;
   return (
     <svg
       width="170"
@@ -112,7 +112,7 @@ export default function AppLogo(
           width="147"
           height="86"
           filterUnits="userSpaceOnUse"
-          colorInterpolationFilters ="sRGB"
+          colorInterpolationFilters="sRGB"
         >
           <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feColorMatrix
@@ -237,5 +237,5 @@ export default function AppLogo(
         </linearGradient>
       </defs>
     </svg>
-  )
+  );
 }
