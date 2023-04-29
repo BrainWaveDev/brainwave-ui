@@ -16,11 +16,12 @@ import {
 } from '@/utils/app/clean';
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const';
 import {
+  createConversation,
   saveConversation,
   saveConversations,
   updateConversation
 } from '@/utils/app/conversation';
-import { deleteFolder, randomFolderId, retrieveListOfFolders, saveFolder, updateFolder } from '@/utils/app/folders';
+import { deleteFolder, retrieveListOfFolders, saveFolder, updateFolder } from '@/utils/app/folders';
 import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -31,6 +32,7 @@ import toast from 'react-hot-toast';
 import { supabase } from '@/utils/supabase-client';
 import { useRouter } from 'next/router';
 import { useSessionContext, useUser } from '@supabase/auth-helpers-react';
+import { randomNumberId } from '@/utils/app/createDBOperation';
 
 interface HomeProps {
   defaultModelId: OpenAIModelID;
@@ -60,19 +62,19 @@ const ChatUI: React.FC<HomeProps> = ({
   const { isLoading, session, error } = useSessionContext();
   useEffect(() => {
     // loading after login
-    if (isLoading || error) {return}
+    if (isLoading || error) { return }
     const user = session?.user;
     retrieveListOfFolders(user?.id!)
-    .onSuccess((data) => {
-      setFolders(data);
-    })
-    .onError((error) => {
-      console.log(error);
-    }).execute()
+      .onSuccess((data) => {
+        setFolders(data);
+      })
+      .onError((error) => {
+        console.log(error);
+      }).execute()
 
   }, [isLoading, error]);
 
-  
+
   // REFS ----------------------------------------------
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -243,7 +245,7 @@ const ChatUI: React.FC<HomeProps> = ({
   // FOLDER OPERATIONS  --------------------------------------------
 
   const handleCreateFolder = (name: string) => {
-    const tempId = randomFolderId();
+    const tempId = randomNumberId();
     const newFolder: Folder = {
       user_id: session?.user?.id!,
       id: tempId,
@@ -299,10 +301,10 @@ const ChatUI: React.FC<HomeProps> = ({
     setFolders(updatedFolders);
     updatedFolder.name = name;
     updateFolder(updatedFolder)
-    .onError((error) => {
-      setFolders(folders);
-    }).execute()
-    
+      .onError((error) => {
+        setFolders(folders);
+      }).execute()
+
   };
 
   // CONVERSATION OPERATIONS  --------------------------------------------
@@ -317,7 +319,7 @@ const ChatUI: React.FC<HomeProps> = ({
     const lastConversation = conversations[conversations.length - 1];
 
     const newConversation: Conversation = {
-      id: uuidv4(),
+      id: randomNumberId(),
       name: `${t('New Conversation')}`,
       messages: [],
       model: lastConversation?.model || defaultModel,
@@ -330,7 +332,19 @@ const ChatUI: React.FC<HomeProps> = ({
     setSelectedConversation(newConversation);
     setConversations(updatedConversations);
 
-    saveConversation(newConversation);
+    createConversation(newConversation, session?.user!)
+      .onError((error) => { setConversations(conversations) })
+      .onSuccess((data: Conversation) => {
+        setConversations(updatedConversations.map((c) => {
+          if (c.id === newConversation.id) {
+            return {
+              ...c,
+              id: data.id
+            };
+          }
+          return c;
+        }))
+      }).execute()
 
     setLoading(false);
   };
@@ -349,7 +363,7 @@ const ChatUI: React.FC<HomeProps> = ({
       saveConversation(updatedConversations[updatedConversations.length - 1]);
     } else {
       setSelectedConversation({
-        id: uuidv4(),
+        id: randomNumberId(),
         name: 'New conversation',
         messages: [],
         model: OpenAIModels[defaultModelId],
@@ -384,7 +398,7 @@ const ChatUI: React.FC<HomeProps> = ({
     localStorage.removeItem('conversationHistory');
 
     setSelectedConversation({
-      id: uuidv4(),
+      id: randomNumberId(),
       name: 'New conversation',
       messages: [],
       model: OpenAIModels[defaultModelId],
@@ -487,7 +501,7 @@ const ChatUI: React.FC<HomeProps> = ({
       setSelectedConversation(cleanedSelectedConversation);
     } else {
       setSelectedConversation({
-        id: uuidv4(),
+        id: randomNumberId(),
         name: 'New conversation',
         messages: [],
         model: OpenAIModels[defaultModelId],

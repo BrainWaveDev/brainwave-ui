@@ -14,7 +14,7 @@ export interface RequestBody {
 }
 
 export interface Conversation {
-  id: string;
+  id: number;
   name: string;
   messages: Message[];
   model: OpenAIModel;
