@@ -2,14 +2,21 @@ import SearchIcon from '@/components/icons/SearchIcon';
 import classes from './FilesList.module.css';
 import { Document } from '../../../types';
 import classNames from 'classnames';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import PageIndex from '@/components/ui/FileInput/PageIndex';
-import { Dispatch, SetStateAction, useState } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import TableHeader from '@/components/ui/FilesList/TableHeader';
+import { RotatingLines } from 'react-loader-spinner';
+import AlertModal, {
+  ModalState,
+  ModalType,
+  setModalOpen
+} from '@/components/ui/AlertModal';
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
 
 interface Props {
   documents: Document[];
-  deleteDocumentAction: (ids: string[]) => void;
+  deleteDocumentAction: (ids: string[]) => Promise<boolean>;
 }
 
 const ONE_PAGE_SIZE = 5;
@@ -48,6 +55,61 @@ export default function FilesList(props: Props) {
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(
     new Set<string>()
   );
+  const [deletingDocuments, setDeletingDocuments] = useState(false);
+  const [modalState, setModalState] = useState<ModalState | null>(null);
+
+  console.log('=========== SELECTED DOCUMENTS ===========');
+  console.log(selectedDocuments);
+
+  // ===================================================
+  // Modal
+  // ===================================================
+  const ModalActionButtons = (
+    <>
+      <AlertDialog.Action
+        asChild
+        onClick={() => setModalState(setModalOpen(false))}
+      >
+        <button className="text-mauve11 bg-mauve4 hover:bg-mauve5 focus:shadow-mauve7 inline-flex h-[35px] items-center justify-center rounded-[4px] px-[15px] font-medium leading-none outline-none focus:shadow-[0_0_0_2px]">
+          Cancel
+        </button>
+      </AlertDialog.Action>
+      <AlertDialog.Action
+        asChild
+        onClick={async () => {
+          setModalState(setModalOpen(false));
+          setDeletingDocuments(true);
+          const filesRemoved = await props.deleteDocumentAction(
+            Array.from(selectedDocuments)
+          );
+          if (filesRemoved) {
+            setSelectedDocuments(new Set<string>());
+          }
+          setDeletingDocuments(false);
+        }}
+      >
+        <button className="text-red11 bg-red4 hover:bg-red5 focus:shadow-red7 inline-flex h-[35px] items-center justify-center rounded-[4px] px-[15px] font-medium leading-none outline-none focus:shadow-[0_0_0_2px]">
+          Confirm
+        </button>
+      </AlertDialog.Action>
+    </>
+  );
+
+  // ===================================================
+  // Document removal
+  // ===================================================
+  const deleteDocuments = async () => {
+    if (selectedDocuments.size === 0) return;
+
+    setModalState({
+      open: true,
+      title: 'Confirm deletion',
+      description: `This action cannot be reverted. Are you want to delete selected document${
+        selectedDocuments.size > 1 ? 's' : ''
+      }?`,
+      type: ModalType.Alert
+    });
+  };
 
   const selectAllDocuments = (selectAll: boolean) => {
     if (selectAll) {
@@ -59,6 +121,9 @@ export default function FilesList(props: Props) {
     }
   };
 
+  // ===================================================
+  // Document filter and sorting
+  // ===================================================
   const handleColumnClick = (column: number) => {
     if (sortByColumn !== column) {
       setSortByColumn(column);
@@ -97,8 +162,7 @@ export default function FilesList(props: Props) {
                 : -1;
             break;
           case Columns.status:
-            // TODO: Fix sorting by file status
-            returnValue = 1;
+            returnValue = (a.status ?? '') > (a.status ?? '') ? 1 : -1;
             break;
           default:
             return new Date(a.metadata.lastModified) >
@@ -138,6 +202,7 @@ export default function FilesList(props: Props) {
         DocumentRow(
           document,
           selectedDocuments.has(document.id),
+          deletingDocuments && selectedDocuments.has(document.id),
           setSelectedDocuments
         )
       );
@@ -146,6 +211,7 @@ export default function FilesList(props: Props) {
         DocumentRow(
           document,
           selectedDocuments.has(document.id),
+          deletingDocuments && selectedDocuments.has(document.id),
           setSelectedDocuments
         )
       );
@@ -161,175 +227,190 @@ export default function FilesList(props: Props) {
   );
 
   return (
-    <section className="container px-4 mx-auto">
-      <div className="sm:flex sm:items-center sm:justify-between">
-        <div className={'flex items-center place-self-center'}>
-          <AnimatePresence>
-            {selectedDocuments.size > 0 && (
-              <motion.button
-                className={classNames(
-                  'font-semibold text-white rounded-lg text-sm px-3 py-1.5 inline-flex shadow',
-                  'items-center justify-center bg-red-500 hover:bg-teal-500/[0.9] cursor-pointer outline-none',
-                  'transition duration-150'
-                )}
-                aria-label="Delete file(s)"
-                key={'FileDeleteButton'}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                Delete
-              </motion.button>
-            )}
-          </AnimatePresence>
-        </div>
-        <div className="flex items-center my-auto gap-x-3">
-          <label htmlFor="table-search" className="sr-only">
-            Search
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <SearchIcon className="w-5 h-5 text-gray-600" />
-            </div>
-            <input
-              type="text"
-              id="table-search-users"
-              className={classes.input}
-              placeholder="Search for files"
-              onChange={(e) => {
-                setFilter(e.target.value);
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col mt-6">
-        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-            <div className="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed">
-                <thead className="bg-gray-50 dark:bg-gray-800">
-                  <TableHeader
-                    sortByColumn={sortByColumn}
-                    sortAscending={sortAscending}
-                    handleColumnClick={handleColumnClick}
-                    selectAllDocuments={selectAllDocuments}
-                  />
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
-                  <AnimatePresence initial={false}>
-                    {displayedDocuments.length > 0 ? (
-                      displayedDocuments
-                    ) : (
-                      <motion.tr
-                        key={'NoDataToDisplay'}
-                        initial={{ opacity: 0, display: 'none' }}
-                        animate={{ opacity: 1, display: 'table-row' }}
-                        exit={{ opacity: 0, display: 'none' }}
-                        transition={{ duration: 0.15 }}
-                      >
-                        <td
-                          colSpan={1000}
-                          className={
-                            'px-4 py-4 text-sm text-gray-700 whitespace-nowrap'
-                          }
-                        >
-                          <h2 className="font-normal text-gray-800 dark:text-white ">
-                            No data to display.
-                          </h2>
-                        </td>
-                      </motion.tr>
-                    )}
-                  </AnimatePresence>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between mt-6">
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            if (currentPage > 0) {
-              setCurrentPage(currentPage - 1);
-            }
-          }}
-          className={classNames(
-            'flex items-center px-5 py-2 text-sm text-gray-700 capitalize',
-            'transition-colors duration-200 bg-white border rounded-md gap-x-2',
-            'hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200',
-            'dark:border-gray-700 dark:hover:bg-gray-800 cursor-pointer',
-            'transition duration-150',
-            totalPages > 1 && currentPage > 0 ? 'opacity-100' : 'opacity-0'
-          )}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-            className="w-5 h-5 rtl:-scale-x-100"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18"
-            />
-          </svg>
-          <span>Previous</span>
-        </button>
-
-        <PageIndex
-          totalPages={totalPages}
-          setPage={setCurrentPage}
-          currPage={currentPage}
+    <>
+      {modalState && (
+        <AlertModal
+          modalState={modalState}
+          setModalState={setModalState}
+          actionButtons={ModalActionButtons}
         />
+      )}
+      <section className="container px-4 mx-auto">
+        <div className="sm:flex sm:items-center sm:justify-between">
+          <div className={'flex items-center place-self-center'}>
+            <AnimatePresence>
+              {selectedDocuments.size > 0 && (
+                <motion.button
+                  className={classNames(
+                    'font-semibold text-white rounded-lg text-sm px-3 py-1.5 inline-flex shadow',
+                    'items-center justify-center bg-red-500 hover:bg-red-500/[0.9] cursor-pointer outline-none',
+                    'transition duration-150'
+                  )}
+                  aria-label="Delete file(s)"
+                  key={'FileDeleteButton'}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={deleteDocuments}
+                >
+                  Delete
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+          <div className="flex items-center my-auto gap-x-3">
+            <label htmlFor="table-search" className="sr-only">
+              Search
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <SearchIcon className="w-5 h-5 text-gray-600" />
+              </div>
+              <input
+                type="text"
+                id="table-search-users"
+                className={classes.input}
+                placeholder="Search for files"
+                onChange={(e) => {
+                  setFilter(e.target.value);
+                }}
+              />
+            </div>
+          </div>
+        </div>
 
-        <button
-          onClick={() => {
-            if (currentPage < totalPages - 1) {
-              setCurrentPage(currentPage + 1);
-            }
-          }}
-          className={classNames(
-            'flex items-center px-5 py-2 text-sm text-gray-700 capitalize',
-            'transition-colors duration-200 bg-white border rounded-md gap-x-2',
-            'hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200',
-            'dark:border-gray-700 dark:hover:bg-gray-800 cursor-pointer',
-            'transition duration-150',
-            totalPages > 1 && currentPage < totalPages - 1
-              ? 'opacity-100'
-              : 'opacity-0'
-          )}
-        >
-          <span>Next</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-            className="w-5 h-5 rtl:-scale-x-100"
+        <div className="flex flex-col mt-6">
+          <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+              <div className="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed">
+                  <thead className="bg-gray-50 dark:bg-gray-800">
+                    <TableHeader
+                      sortByColumn={sortByColumn}
+                      sortAscending={sortAscending}
+                      handleColumnClick={handleColumnClick}
+                      allDocumentsSelected={
+                        props.documents.length > 0 &&
+                        selectedDocuments.size === props.documents.length
+                      }
+                      selectAllDocuments={selectAllDocuments}
+                    />
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+                    <AnimatePresence initial={false}>
+                      {displayedDocuments.length > 0 ? (
+                        displayedDocuments
+                      ) : (
+                        <motion.tr
+                          key={'NoDataToDisplay'}
+                          initial={{ opacity: 0, display: 'none' }}
+                          animate={{ opacity: 1, display: 'table-row' }}
+                          exit={{ opacity: 0, display: 'none' }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          <td
+                            colSpan={1000}
+                            className={
+                              'px-4 py-4 text-sm text-gray-700 whitespace-nowrap'
+                            }
+                          >
+                            <h2 className="font-normal text-gray-800 dark:text-white ">
+                              No data to display.
+                            </h2>
+                          </td>
+                        </motion.tr>
+                      )}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-6">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              if (currentPage > 0) {
+                setCurrentPage(currentPage - 1);
+              }
+            }}
+            className={classNames(
+              'flex items-center px-5 py-2 text-sm text-gray-700 capitalize',
+              'transition-colors duration-200 bg-white border rounded-md gap-x-2',
+              'hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200',
+              'dark:border-gray-700 dark:hover:bg-gray-800 cursor-pointer',
+              'transition duration-150',
+              totalPages > 1 && currentPage > 0 ? 'opacity-100' : 'opacity-0'
+            )}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
-            />
-          </svg>
-        </button>
-      </div>
-    </section>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+              className="w-5 h-5 rtl:-scale-x-100"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18"
+              />
+            </svg>
+            <span>Previous</span>
+          </button>
+
+          <PageIndex
+            totalPages={totalPages}
+            setPage={setCurrentPage}
+            currPage={currentPage}
+          />
+
+          <button
+            onClick={() => {
+              if (currentPage < totalPages - 1) {
+                setCurrentPage(currentPage + 1);
+              }
+            }}
+            className={classNames(
+              'flex items-center px-5 py-2 text-sm text-gray-700 capitalize',
+              'transition-colors duration-200 bg-white border rounded-md gap-x-2',
+              'hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200',
+              'dark:border-gray-700 dark:hover:bg-gray-800 cursor-pointer',
+              'transition duration-150',
+              totalPages > 1 && currentPage < totalPages - 1
+                ? 'opacity-100'
+                : 'opacity-0'
+            )}
+          >
+            <span>Next</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+              className="w-5 h-5 rtl:-scale-x-100"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
+              />
+            </svg>
+          </button>
+        </div>
+      </section>
+    </>
   );
 }
 
 function DocumentRow(
   doc: Document,
   selected: boolean,
+  loading: boolean,
   setSelectedDocuments: Dispatch<SetStateAction<Set<string>>>
 ) {
   // Shorten document name is it is too long
@@ -373,100 +454,107 @@ function DocumentRow(
         selectedDocuments.add(documentId);
       }
       return new Set(selectedDocuments);
-      // const documentIndex = selectedDocuments.findIndex(
-      //   (selectedDocument) => selectedDocument.id === document.id
-      // );
-      // console.log('Document Index: ' + documentIndex);
-      // if (select) {
-      //   if (documentIndex === -1) {
-      //     return [...selectedDocuments, document];
-      //   } else {
-      //     return selectedDocuments;
-      //   }
-      // } else {
-      //   if (documentIndex !== -1) {
-      //     if (selectedDocuments.length == 1) {
-      //       return [];
-      //     } else {
-      //       selectedDocuments.splice(documentIndex, 1);
-      //       return selectedDocuments;
-      //     }
-      //   }
-      // }
-      // return selectedDocuments;
     });
   };
 
-  return (
+  const LoadingRow = (
     <motion.tr
-      key={doc.id}
+      key={'loading_' + doc.id}
       initial={{ opacity: 0, display: 'none' }}
       animate={{ opacity: 1, display: 'table-row' }}
       exit={{ opacity: 0, display: 'none' }}
-      transition={{ duration: 0.15 }}
+      transition={{ duration: 0.5 }}
     >
-      <td className="inline-block px-4 py-4 w-[33rem] text-sm font-medium text-gray-700 whitespace-nowrap overflow-hidden">
-        <div className="inline-flex items-center gap-x-3">
-          <input
-            type="checkbox"
-            className={classNames(
-              'mr-2 text-teal-400 border-gray-300 rounded cursor-pointer',
-              'focus:outline-teal-400 active:outline-teal-400'
-            )}
-            checked={selected}
-            onChange={(event) => selectDocument(event.target.checked, doc.id)}
+      <td colSpan={1000}>
+        <div
+          className={
+            'h-fit py-3.5 w-full flex items-center place-content-center'
+          }
+        >
+          <RotatingLines
+            strokeColor="#9ca3af"
+            strokeWidth="2"
+            animationDuration="1"
+            width="2.15rem"
+            visible={true}
           />
-
-          <div className="flex items-center gap-x-2">
-            <div className="flex items-center w-8 h-8 text-teal-400 bg-teal-50 rounded-full">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="w-5 h-5 mx-auto"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                />
-              </svg>
-            </div>
-            <h2 className="font-normal text-gray-800 dark:text-white ">
-              {formatDocumentName(doc.name)}
-            </h2>
-          </div>
-        </div>
-      </td>
-      <td className="px-12 py-4 w-52 text-sm font-normal text-gray-700 whitespace-nowrap">
-        {formatBytes(doc.metadata.size)}
-      </td>
-      <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-        {FileType(doc.metadata.mimetype)}
-      </td>
-      <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-        {formatDate(doc.metadata.lastModified)}
-      </td>
-      <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-        {/* TODO: Display actual parsing status */}
-        <div className={'flex flex-row gap-x-1.5 items-center'}>
-          {doc.status && (
-            <>
-              <div
-                className={classNames(
-                  'w-2.5 h-2.5 rounded-full',
-                  doc.status == 'Parsed' && 'bg-green-400',
-                  doc.status == 'Parsing' && 'bg-yellow-400',
-                  doc.status == 'Error' && 'bg-red-500'
-                )}
-              />
-              {doc.status}
-            </>
-          )}
         </div>
       </td>
     </motion.tr>
   );
+
+  if (loading) {
+    return LoadingRow;
+  } else
+    return (
+      <motion.tr
+        key={doc.id}
+        initial={{ opacity: 0, display: 'none' }}
+        animate={{ opacity: 1, display: 'table-row' }}
+        exit={{ opacity: 0, display: 'none' }}
+        transition={{ duration: 0.5 }}
+      >
+        <td className="inline-block px-4 py-4 w-[33rem] text-sm font-medium text-gray-700 whitespace-nowrap overflow-hidden">
+          <div className="inline-flex items-center gap-x-3">
+            <input
+              type="checkbox"
+              className={classNames(
+                'mr-2 text-teal-400 border-gray-300 rounded cursor-pointer',
+                'focus:outline-teal-400 active:outline-teal-400'
+              )}
+              checked={selected}
+              onChange={(event) => selectDocument(event.target.checked, doc.id)}
+            />
+
+            <div className="flex items-center gap-x-2">
+              <div className="flex items-center w-8 h-8 text-teal-400 bg-teal-50 rounded-full">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="w-5 h-5 mx-auto"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                  />
+                </svg>
+              </div>
+              <h2 className="font-normal text-gray-800 dark:text-white ">
+                {formatDocumentName(doc.name)}
+              </h2>
+            </div>
+          </div>
+        </td>
+        <td className="px-12 py-4 w-52 text-sm font-normal text-gray-700 whitespace-nowrap">
+          {formatBytes(doc.metadata.size)}
+        </td>
+        <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+          {FileType(doc.metadata.mimetype)}
+        </td>
+        <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+          {formatDate(doc.metadata.lastModified)}
+        </td>
+        <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+          <div className={'flex flex-row gap-x-1.5 items-center'}>
+            {doc.status && (
+              <>
+                <div
+                  className={classNames(
+                    'w-2.5 h-2.5 rounded-full',
+                    doc.status == 'Parsed' && 'bg-green-400',
+                    doc.status == 'Parsing' && 'bg-yellow-400',
+                    doc.status == 'Error' && 'bg-red-500'
+                  )}
+                />
+                {doc.status}
+              </>
+            )}
+          </div>
+        </td>
+      </motion.tr>
+    );
 }

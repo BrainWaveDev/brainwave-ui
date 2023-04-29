@@ -55,11 +55,13 @@ export default function TableHeader({
   sortByColumn = null,
   sortAscending,
   handleColumnClick,
+  allDocumentsSelected,
   selectAllDocuments
 }: {
   sortByColumn: number | null;
   sortAscending: boolean;
   handleColumnClick: (column: number) => void;
+  allDocumentsSelected: boolean;
   selectAllDocuments: (selectAll: boolean) => void;
 }) {
   return (
@@ -76,6 +78,7 @@ export default function TableHeader({
               'focus:outline-teal-400 active:outline-teal-400'
             )}
             onChange={(event) => selectAllDocuments(event.target.checked)}
+            checked={allDocumentsSelected}
           />
           <ColumnName
             name={'Name'}

@@ -9,25 +9,22 @@ import { Database } from '../types/supabase';
 
 export default function HomePage({ documents }: { documents: Document[] }) {
   const [documentsList, setDocumentsList] = useState<Document[]>(documents);
-  const handleFileDelete = (names: string[]) => {
-    const stashDocuments = [...documentsList];
-    // remove all docs with name from given names
-    const newDocumentsList = documentsList.filter(
-      (doc) => !names.includes(doc.name)
-    );
-    setDocumentsList(newDocumentsList);
-
+  const handleFileDelete = async (documentIds: string[]) => {
     // remove from db
-    supabase
+    const { error } = await supabase
       .from('document')
       .delete()
-      .in('name', names)
-      .then((data) => {
-        if (data.status !== 204) {
-          // if delete failed, restore documents
-          setDocumentsList(stashDocuments);
-        }
-      });
+      .in('id', documentIds);
+    if (error) {
+      // TODO: Handle failed file removal
+      return false;
+    } else {
+      // remove all docs with name from given names
+      setDocumentsList(
+        documentsList.filter((doc) => !documentIds.includes(doc.id))
+      );
+      return true;
+    }
   };
   return (
     <>

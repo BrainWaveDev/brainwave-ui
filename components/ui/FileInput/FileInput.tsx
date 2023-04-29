@@ -7,11 +7,15 @@ import FilePreview from '@/components/ui/FileInput/FilePreview';
 import classes from './FileInput.module.css';
 import { FileInfo, UploadState } from '../../../lib/classes';
 // @ts-ignore
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '@/utils/supabase-client';
 import { wait } from '@/utils/helpers';
 import { ErrorAlert, useErrorContext } from '../../../context/ErrorContext';
-import AlertModal, { ModalState, ModalType } from '@/components/ui/AlertModal';
+import AlertModal, {
+  ModalState,
+  ModalType,
+  setModalOpen
+} from '@/components/ui/AlertModal';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 
 // Valid file type
@@ -33,20 +37,13 @@ export default function FileInput(
   const [files, setFiles] = useState<FileInfo[]>([]);
   // const [previewElements, setPreviewElements] = useState<FileInfo[]>([]);
   const { dispatch: dispatchError } = useErrorContext();
-  const [modalState, setModalState] = useState<ModalState>({
-    open: false,
-    title: '',
-    description: '',
-    type: ModalType.Alert
-  });
+  const [modalState, setModalState] = useState<ModalState | null>(null);
 
   const ModalActionButtons = (
     <>
       <AlertDialog.Action
         asChild
-        onClick={() =>
-          setModalState((prevState) => ({ ...prevState, open: false }))
-        }
+        onClick={() => setModalState(setModalOpen(false))}
       >
         <button className="text-mauve11 bg-mauve4 hover:bg-mauve5 focus:shadow-mauve7 inline-flex h-[35px] items-center justify-center rounded-[4px] px-[15px] font-medium leading-none outline-none focus:shadow-[0_0_0_2px]">
           OK
@@ -202,7 +199,13 @@ export default function FileInput(
 
   return (
     <>
-      <AlertModal modalState={modalState} actionButtons={ModalActionButtons} />
+      {modalState && (
+        <AlertModal
+          modalState={modalState}
+          setModalState={setModalState}
+          actionButtons={ModalActionButtons}
+        />
+      )}
       <div className="flex items-center justify-center flex-col w-full px-4">
         <label
           htmlFor="dropzone-file"
@@ -226,7 +229,7 @@ export default function FileInput(
               visible={true}
             />
           ) : files.length > 0 ? (
-            <div
+            <motion.div
               className={classNames(
                 classes.filePreviewGrid,
                 'w-full gap-2 grid'
@@ -244,7 +247,7 @@ export default function FileInput(
                   />
                 ))}
               </AnimatePresence>
-            </div>
+            </motion.div>
           ) : (
             <>
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
