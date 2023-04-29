@@ -25,7 +25,6 @@ export const updateConversation = (
 export const saveConversation = (conversation: Conversation) => {
   console.log('saving conversation', conversation);
   supabase.from('conversation').upsert({
-    id: conversation.db_id? conversation.db_id : null,
     name: conversation.name,
     folder_id: conversation.folderId,
   }).then((res) => {

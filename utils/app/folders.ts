@@ -1,5 +1,5 @@
-import { PostgrestError } from '@supabase/supabase-js';
 import { Folder } from '../../types/folder';
+import { createDatabaseOperation } from './createDBOperation';
 import { supabase } from '../supabase-client';
 
 
@@ -11,41 +11,9 @@ export const randomFolderId = () => {
 
   return Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
 } 
-const createDatabaseOperation = (operation: () => any) => {
-  let errorCallBack = (error: any) => {};
-  let successCallBack = (data: any) => {};
 
-  const executeOperation = async () => {
-    const { data, error } = await operation();
-    if (error) {
-      errorCallBack(error);
-    }else{
-      successCallBack(data);
-    }
-  };
 
-  const registerErrorCallBack = (callback: (error: PostgrestError | null) => void) => {
-    errorCallBack = callback;
-    return {
-      onSuccess: registerSuccessCallBack,
-      execute: () => executeOperation(),
-    };
-  };
 
-  const registerSuccessCallBack = (callback: (data: any) => void) => {
-    successCallBack = callback;
-    return {
-      onError: registerErrorCallBack,
-      execute: () => executeOperation(),
-    };
-  };
-
-  return {
-    onError: registerErrorCallBack,
-    onSuccess: registerSuccessCallBack,
-    execute: () => executeOperation(),
-  };
-};
 
 export const saveFolder = (folder: Folder) => {
   const operation = () => supabase.from("folder").insert({

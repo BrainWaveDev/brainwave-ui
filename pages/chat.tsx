@@ -3,12 +3,9 @@ import { Chatbar } from '@/components/Chatbar/Chatbar';
 import { Navbar } from '@/components/Mobile/Navbar';
 import { RequestBody, Conversation, Message } from '../types/chat';
 import { KeyValuePair } from '../types/data';
-import { ErrorMessage } from '../types/error';
-import { LatestExportFormat, SupportedExportFormats } from '../types/export';
 import { Folder } from '../types/folder';
 import {
   fallbackModelID,
-  OpenAIModel,
   OpenAIModelID,
   OpenAIModels
 } from '../types/openai';
@@ -24,7 +21,6 @@ import {
   updateConversation
 } from '@/utils/app/conversation';
 import { deleteFolder, randomFolderId, retrieveListOfFolders, saveFolder, updateFolder } from '@/utils/app/folders';
-import { savePrompts } from '@/utils/app/prompts';
 import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -33,6 +29,7 @@ import { useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import toast from 'react-hot-toast';
 import { supabase } from '@/utils/supabase-client';
+import { useRouter } from 'next/router';
 import { useSessionContext, useUser } from '@supabase/auth-helpers-react';
 
 interface HomeProps {
@@ -60,12 +57,22 @@ const ChatUI: React.FC<HomeProps> = ({
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
 
   const [prompts, setPrompts] = useState<Prompt[]>([]);
-  const {
-    session,
-    isLoading: isLoadingUser,
-    supabaseClient: supabase
-  } = useSessionContext();
+  const { isLoading, session, error } = useSessionContext();
+  useEffect(() => {
+    // loading after login
+    if (isLoading || error) {return}
+    const user = session?.user;
+    retrieveListOfFolders(user?.id!)
+    .onSuccess((data) => {
+      setFolders(data);
+    })
+    .onError((error) => {
+      console.log(error);
+    }).execute()
 
+  }, [isLoading, error]);
+
+  
   // REFS ----------------------------------------------
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -237,9 +244,8 @@ const ChatUI: React.FC<HomeProps> = ({
 
   const handleCreateFolder = (name: string) => {
     const tempId = randomFolderId();
-    console.log("handleCreateFolder -> tempId", tempId)
     const newFolder: Folder = {
-      user_id: session?.user?.id,
+      user_id: session?.user?.id!,
       id: tempId,
       name,
     };
@@ -358,18 +364,19 @@ const ChatUI: React.FC<HomeProps> = ({
     conversation: Conversation,
     data: KeyValuePair
   ) => {
-    const updatedConversation = {
-      ...conversation,
-      [data.key]: data.value
-    };
+    debugger
+    // const updatedConversation = {
+    //   ...conversation,
+    //   [data.key]: data.value
+    // };
 
-    const { single, all } = updateConversation(
-      updatedConversation,
-      conversations
-    );
+    // const { single, all } = updateConversation(
+    //   updatedConversation,
+    //   conversations
+    // );
 
-    setSelectedConversation(single);
-    setConversations(all);
+    // setSelectedConversation(single);
+    // setConversations(all);
   };
 
   const handleClearConversations = () => {
@@ -452,22 +459,7 @@ const ChatUI: React.FC<HomeProps> = ({
       setShowSidebar(showChatbar === 'true');
     }
 
-    supabase.auth.getSession().then((session) => {
-      if (!session) {
-        return;
-      }
-      const user = session.data?.session?.user;
-      if (!user) {
-        return;
-      }
-      retrieveListOfFolders(user.id)
-        .onSuccess((data) => {
-          setFolders(data);
-        })
-        .onError((error) => {
-          console.log(error);
-        }).execute()
-    });
+
 
 
     const prompts = localStorage.getItem('prompts');
