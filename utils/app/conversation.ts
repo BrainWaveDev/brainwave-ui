@@ -1,4 +1,5 @@
 import { Conversation } from '../../types/chat';
+import { supabase } from '../supabase-client';
 
 export const updateConversation = (
   updatedConversation: Conversation,
@@ -23,7 +24,13 @@ export const updateConversation = (
 
 export const saveConversation = (conversation: Conversation) => {
   console.log('saving conversation', conversation);
-  localStorage.setItem('selectedConversation', JSON.stringify(conversation));
+  supabase.from('conversation').upsert({
+    id: conversation.db_id? conversation.db_id : null,
+    name: conversation.name,
+    folder_id: conversation.folderId,
+  }).then((res) => {
+    console.log(res);
+  })
 };
 
 export const saveConversations = (conversations: Conversation[]) => {

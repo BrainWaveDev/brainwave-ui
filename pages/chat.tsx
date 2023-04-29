@@ -5,7 +5,7 @@ import { RequestBody, Conversation, Message } from '../types/chat';
 import { KeyValuePair } from '../types/data';
 import { ErrorMessage } from '../types/error';
 import { LatestExportFormat, SupportedExportFormats } from '../types/export';
-import { Folder, FolderType } from '../types/folder';
+import { Folder } from '../types/folder';
 import {
   fallbackModelID,
   OpenAIModel,
@@ -23,8 +23,7 @@ import {
   saveConversations,
   updateConversation
 } from '@/utils/app/conversation';
-import { saveFolders } from '@/utils/app/folders';
-import { exportData, importData } from '@/utils/app/importExport';
+import { deleteFolder, randomFolderId, retrieveListOfFolders, saveFolder, updateFolder } from '@/utils/app/folders';
 import { savePrompts } from '@/utils/app/prompts';
 import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
@@ -230,52 +229,52 @@ const ChatUI: React.FC<HomeProps> = ({
 
   // FOLDER OPERATIONS  --------------------------------------------
 
-  const handleCreateFolder = (name: string, type: FolderType) => {
+  const handleCreateFolder = (name: string) => {
+    const tempId = randomFolderId();
+    console.log("handleCreateFolder -> tempId", tempId)
     const newFolder: Folder = {
-      id: uuidv4(),
+      id: tempId,
       name,
-      type
     };
 
     const updatedFolders = [...folders, newFolder];
-
+    console.log("handleCreateFolder -> updatedFolders", updatedFolders)
     setFolders(updatedFolders);
-    saveFolders(updatedFolders);
+    saveFolder(newFolder)
+      .onError((error) => {
+        console.log(error);
+        // reset folders
+        setFolders(folders);
+      })
+      .onSuccess((data: Folder) => {
+        console.log("handleCreateFolder -> data", data)
+        setFolders(updatedFolders.map((f) => {
+          if (f.id === tempId) {
+            return {
+              ...f,
+              id: data.id
+            };
+          }
+
+          return f;
+        }));
+      })
+      .execute()
   };
 
-  const handleDeleteFolder = (folderId: string) => {
+  const handleDeleteFolder = (folderId: number) => {
     const updatedFolders = folders.filter((f) => f.id !== folderId);
     setFolders(updatedFolders);
-    saveFolders(updatedFolders);
-
-    const updatedConversations: Conversation[] = conversations.map((c) => {
-      if (c.folderId === folderId) {
-        return {
-          ...c,
-          folderId: null
-        };
-      }
-
-      return c;
-    });
-    setConversations(updatedConversations);
-    saveConversations(updatedConversations);
-
-    const updatedPrompts: Prompt[] = prompts.map((p) => {
-      if (p.folderId === folderId) {
-        return {
-          ...p,
-          folderId: null
-        };
-      }
-
-      return p;
-    });
-    setPrompts(updatedPrompts);
-    savePrompts(updatedPrompts);
+    deleteFolder(folderId)
+      .onError((error) => {
+        console.log(error);
+        setFolders(folders);
+      }).execute()
   };
 
-  const handleUpdateFolder = (folderId: string, name: string) => {
+  const handleUpdateFolder = (folderId: number, name: string) => {
+    var updatedFolder = folders.find((f) => f.id === folderId);
+    if (!updatedFolder) return;
     const updatedFolders = folders.map((f) => {
       if (f.id === folderId) {
         return {
@@ -283,30 +282,34 @@ const ChatUI: React.FC<HomeProps> = ({
           name
         };
       }
-
       return f;
     });
 
     setFolders(updatedFolders);
-    saveFolders(updatedFolders);
+    updatedFolder.name = name;
+    updateFolder(updatedFolder)
+    .onError((error) => {
+      setFolders(folders);
+    }).execute()
+    
   };
 
   // CONVERSATION OPERATIONS  --------------------------------------------
 
   const handleNewConversation = () => {
-    console.log('handleNewConversation');
+    const defaultModel = {
+      id: OpenAIModels[defaultModelId].id,
+      name: OpenAIModels[defaultModelId].name,
+      maxLength: OpenAIModels[defaultModelId].maxLength,
+      tokenLimit: OpenAIModels[defaultModelId].tokenLimit
+    }
     const lastConversation = conversations[conversations.length - 1];
 
     const newConversation: Conversation = {
       id: uuidv4(),
       name: `${t('New Conversation')}`,
       messages: [],
-      model: lastConversation?.model || {
-        id: OpenAIModels[defaultModelId].id,
-        name: OpenAIModels[defaultModelId].name,
-        maxLength: OpenAIModels[defaultModelId].maxLength,
-        tokenLimit: OpenAIModels[defaultModelId].tokenLimit
-      },
+      model: lastConversation?.model || defaultModel,
       prompt: DEFAULT_SYSTEM_PROMPT,
       folderId: null
     };
@@ -317,7 +320,6 @@ const ChatUI: React.FC<HomeProps> = ({
     setConversations(updatedConversations);
 
     saveConversation(newConversation);
-    saveConversations(updatedConversations);
 
     setLoading(false);
   };
@@ -379,9 +381,7 @@ const ChatUI: React.FC<HomeProps> = ({
     });
     localStorage.removeItem('selectedConversation');
 
-    const updatedFolders = folders.filter((f) => f.type !== 'chat');
-    setFolders(updatedFolders);
-    saveFolders(updatedFolders);
+    // TODO: update converstation and folder in db
   };
 
   const handleEditMessage = (message: Message, messageIndex: number) => {
@@ -447,10 +447,23 @@ const ChatUI: React.FC<HomeProps> = ({
       setShowSidebar(showChatbar === 'true');
     }
 
-    const folders = localStorage.getItem('folders');
-    if (folders) {
-      setFolders(JSON.parse(folders));
-    }
+    supabase.auth.getSession().then((session) => {
+      if (!session) {
+        return;
+      }
+      const user = session.data?.session?.user;
+      if (!user) {
+        return;
+      }
+      retrieveListOfFolders(user.id)
+        .onSuccess((data) => {
+          setFolders(data);
+        })
+        .onError((error) => {
+          console.log(error);
+        }).execute()
+    });
+
 
     const prompts = localStorage.getItem('prompts');
     if (prompts) {
@@ -517,11 +530,11 @@ const ChatUI: React.FC<HomeProps> = ({
               conversations={conversations}
               lightMode={lightMode}
               selectedConversation={selectedConversation}
-              folders={folders.filter((folder) => folder.type === 'chat')}
+              folders={folders}
               showSidebar={showSidebar}
               handleToggleChatbar={handleToggleChatbar}
               onToggleLightMode={handleLightMode}
-              onCreateFolder={(name) => handleCreateFolder(name, 'chat')}
+              onCreateFolder={(name) => handleCreateFolder(name)}
               onDeleteFolder={handleDeleteFolder}
               onUpdateFolder={handleUpdateFolder}
               onNewConversation={handleNewConversation}

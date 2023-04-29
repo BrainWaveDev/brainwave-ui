@@ -20,8 +20,8 @@ interface Props {
   showSidebar: boolean;
   handleToggleChatbar: () => void;
   onCreateFolder: (name: string) => void;
-  onDeleteFolder: (folderId: string) => void;
-  onUpdateFolder: (folderId: string, name: string) => void;
+  onDeleteFolder: (folderId: number) => void;
+  onUpdateFolder: (folderId: number, name: string) => void;
   onNewConversation: () => void;
   onToggleLightMode: (mode: 'light' | 'dark') => void;
   onSelectConversation: (conversation: Conversation) => void;
