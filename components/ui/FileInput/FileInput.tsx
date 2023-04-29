@@ -259,7 +259,7 @@ export default function FileInput(
                   and drop
                 </p>
                 <p className="text-xs text-gray-700 dark:text-gray-900">
-                  TXT, PDF, or DOCX (MAX. 50MB)
+                  TXT, PDF, DOC or DOCX (MAX. 50MB)
                 </p>
               </div>
               <input
