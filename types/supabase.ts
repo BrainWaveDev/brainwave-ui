@@ -9,27 +9,71 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      conversation: {
+        Row: {
+          created_at: string | null
+          folder_id: number | null
+          id: number
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          folder_id?: number | null
+          id?: number
+          name?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          folder_id?: number | null
+          id?: number
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+      }
       document: {
         Row: {
+          date_uploaded: string | null
           id: number
           metadata: Json
           name: string
           object_id: string
           owner: string
+          parse_attempts: number | null
+          status: Database["public"]["Enums"]["document_status_enum"] | null
+          status_message:
+            | Database["public"]["Enums"]["document_status_message"]
+            | null
         }
         Insert: {
+          date_uploaded?: string | null
           id?: number
           metadata: Json
           name: string
           object_id: string
           owner: string
+          parse_attempts?: number | null
+          status?: Database["public"]["Enums"]["document_status_enum"] | null
+          status_message?:
+            | Database["public"]["Enums"]["document_status_message"]
+            | null
         }
         Update: {
+          date_uploaded?: string | null
           id?: number
           metadata?: Json
           name?: string
           object_id?: string
           owner?: string
+          parse_attempts?: number | null
+          status?: Database["public"]["Enums"]["document_status_enum"] | null
+          status_message?:
+            | Database["public"]["Enums"]["document_status_message"]
+            | null
         }
       }
       document_chunk: {
@@ -52,18 +96,82 @@ export interface Database {
           id?: string
         }
       }
+      folder: {
+        Row: {
+          created_at: string | null
+          id: number
+          name: string
+          updated_ad: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          name?: string
+          updated_ad?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          name?: string
+          updated_ad?: string | null
+          user_id?: string
+        }
+      }
+      message: {
+        Row: {
+          content: string | null
+          conversation_id: number
+          created_at: string | null
+          id: number
+          sender: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          conversation_id: number
+          created_at?: string | null
+          id?: number
+          sender: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          conversation_id?: number
+          created_at?: string | null
+          id?: number
+          sender?: string
+          user_id?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      check_document_status: {
+        Args: {
+          document_id: number
+          parse_attempts: number
+        }
+        Returns: undefined
+      }
       delete_storage_item: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
-      hello_world: {
-        Args: Record<PropertyKey, never>
+      hello: {
+        Args: {
+          json_input: Json
+        }
         Returns: string
+      }
+      insert_document_chunks: {
+        Args: {
+          chunks: Json
+        }
+        Returns: Json
       }
       ivfflathandler: {
         Args: {
@@ -85,6 +193,37 @@ export interface Database {
           content: string
           similarity: number
         }[]
+      }
+      reparse_file_request: {
+        Args: {
+          document_id: number
+        }
+        Returns: undefined
+      }
+      set_document_status:
+        | {
+            Args: {
+              doc_id: number
+              s: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              doc_id: number
+              s: Database["public"]["Enums"]["document_status_enum"]
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              s: string
+            }
+            Returns: undefined
+          }
+      update_document_status: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       vector_avg: {
         Args: {
@@ -124,7 +263,12 @@ export interface Database {
       }
     }
     Enums: {
-      [_ in never]: never
+      document_status_enum: "Parsed" | "Parsing" | "Error"
+      document_status_message:
+        | "The document is currently being parsed"
+        | "The document was fully parsed"
+        | "An error occured while parsing the document"
+        | "The document has an invalid file type"
     }
     CompositeTypes: {
       [_ in never]: never
