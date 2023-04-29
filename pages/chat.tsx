@@ -33,6 +33,7 @@ import { useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import toast from 'react-hot-toast';
 import { supabase } from '@/utils/supabase-client';
+import { useSessionContext, useUser } from '@supabase/auth-helpers-react';
 
 interface HomeProps {
   defaultModelId: OpenAIModelID;
@@ -59,6 +60,11 @@ const ChatUI: React.FC<HomeProps> = ({
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
 
   const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const {
+    session,
+    isLoading: isLoadingUser,
+    supabaseClient: supabase
+  } = useSessionContext();
 
   // REFS ----------------------------------------------
 
@@ -233,12 +239,12 @@ const ChatUI: React.FC<HomeProps> = ({
     const tempId = randomFolderId();
     console.log("handleCreateFolder -> tempId", tempId)
     const newFolder: Folder = {
+      user_id: session?.user?.id,
       id: tempId,
       name,
     };
 
     const updatedFolders = [...folders, newFolder];
-    console.log("handleCreateFolder -> updatedFolders", updatedFolders)
     setFolders(updatedFolders);
     saveFolder(newFolder)
       .onError((error) => {
@@ -255,7 +261,6 @@ const ChatUI: React.FC<HomeProps> = ({
               id: data.id
             };
           }
-
           return f;
         }));
       })
