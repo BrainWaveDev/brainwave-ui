@@ -4,8 +4,8 @@ import { Document } from '../../../types';
 import classNames from 'classnames';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageIndex from '@/components/ui/FileInput/PageIndex';
-import { useState } from 'react';
-import TableHeader from '@/components/ui/FileInput/TableHeader';
+import { Dispatch, SetStateAction, useState } from 'react';
+import TableHeader from '@/components/ui/FilesList/TableHeader';
 
 interface Props {
   documents: Document[];
@@ -44,6 +44,20 @@ export default function FilesList(props: Props) {
   const [filter, setFilter] = useState('');
   const [sortByColumn, setSortByColumn] = useState<number | null>(null);
   const [sortAscending, setSortAscending] = useState(true);
+  // List of document ids that were selected with input checkmarks in the document table
+  const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(
+    new Set<string>()
+  );
+
+  const selectAllDocuments = (selectAll: boolean) => {
+    if (selectAll) {
+      setSelectedDocuments(
+        new Set<string>(props.documents.map((document) => document.id))
+      );
+    } else {
+      setSelectedDocuments(new Set<string>());
+    }
+  };
 
   const handleColumnClick = (column: number) => {
     if (sortByColumn !== column) {
@@ -121,11 +135,19 @@ export default function FilesList(props: Props) {
       const adjustedPageIndex = totalPages > 0 ? totalPages - 1 : 0;
       setCurrentPage(adjustedPageIndex);
       return documentPages[adjustedPageIndex].map((document) =>
-        DocumentRow(document)
+        DocumentRow(
+          document,
+          selectedDocuments.has(document.id),
+          setSelectedDocuments
+        )
       );
     } else {
       return documentPages[currentPage].map((document) =>
-        DocumentRow(document)
+        DocumentRow(
+          document,
+          selectedDocuments.has(document.id),
+          setSelectedDocuments
+        )
       );
     }
   };
@@ -142,16 +164,24 @@ export default function FilesList(props: Props) {
     <section className="container px-4 mx-auto">
       <div className="sm:flex sm:items-center sm:justify-between">
         <div className={'flex items-center place-self-center'}>
-          <button
-            className={classNames(
-              'font-semibold text-white rounded-lg text-sm px-3 py-1.5 inline-flex shadow',
-              'items-center justify-center bg-teal-400 hover:bg-teal-500/[0.9] cursor-pointer outline-none',
-              'transition duration-150'
+          <AnimatePresence>
+            {selectedDocuments.size > 0 && (
+              <motion.button
+                className={classNames(
+                  'font-semibold text-white rounded-lg text-sm px-3 py-1.5 inline-flex shadow',
+                  'items-center justify-center bg-red-500 hover:bg-teal-500/[0.9] cursor-pointer outline-none',
+                  'transition duration-150'
+                )}
+                aria-label="Delete file(s)"
+                key={'FileDeleteButton'}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                Delete
+              </motion.button>
             )}
-            aria-label="Delete file"
-          >
-            Delete
-          </button>
+          </AnimatePresence>
         </div>
         <div className="flex items-center my-auto gap-x-3">
           <label htmlFor="table-search" className="sr-only">
@@ -184,6 +214,7 @@ export default function FilesList(props: Props) {
                     sortByColumn={sortByColumn}
                     sortAscending={sortAscending}
                     handleColumnClick={handleColumnClick}
+                    selectAllDocuments={selectAllDocuments}
                   />
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
@@ -296,7 +327,11 @@ export default function FilesList(props: Props) {
   );
 }
 
-function DocumentRow(doc: Document) {
+function DocumentRow(
+  doc: Document,
+  selected: boolean,
+  setSelectedDocuments: Dispatch<SetStateAction<Set<string>>>
+) {
   // Shorten document name is it is too long
   const formatDocumentName = (name: string) => {
     const documentName = name.split('/').pop();
@@ -330,6 +365,38 @@ function DocumentRow(doc: Document) {
     return `${month} ${day}, ${year}`;
   };
 
+  const selectDocument = (select: boolean, documentId: string) => {
+    setSelectedDocuments((selectedDocuments) => {
+      if (selectedDocuments.has(documentId)) {
+        selectedDocuments.delete(documentId);
+      } else {
+        selectedDocuments.add(documentId);
+      }
+      return new Set(selectedDocuments);
+      // const documentIndex = selectedDocuments.findIndex(
+      //   (selectedDocument) => selectedDocument.id === document.id
+      // );
+      // console.log('Document Index: ' + documentIndex);
+      // if (select) {
+      //   if (documentIndex === -1) {
+      //     return [...selectedDocuments, document];
+      //   } else {
+      //     return selectedDocuments;
+      //   }
+      // } else {
+      //   if (documentIndex !== -1) {
+      //     if (selectedDocuments.length == 1) {
+      //       return [];
+      //     } else {
+      //       selectedDocuments.splice(documentIndex, 1);
+      //       return selectedDocuments;
+      //     }
+      //   }
+      // }
+      // return selectedDocuments;
+    });
+  };
+
   return (
     <motion.tr
       key={doc.id}
@@ -346,6 +413,8 @@ function DocumentRow(doc: Document) {
               'mr-2 text-teal-400 border-gray-300 rounded cursor-pointer',
               'focus:outline-teal-400 active:outline-teal-400'
             )}
+            checked={selected}
+            onChange={(event) => selectDocument(event.target.checked, doc.id)}
           />
 
           <div className="flex items-center gap-x-2">

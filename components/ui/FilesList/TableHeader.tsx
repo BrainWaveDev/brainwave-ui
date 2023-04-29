@@ -54,11 +54,13 @@ const ColumnName = ({
 export default function TableHeader({
   sortByColumn = null,
   sortAscending,
-  handleColumnClick
+  handleColumnClick,
+  selectAllDocuments
 }: {
   sortByColumn: number | null;
   sortAscending: boolean;
   handleColumnClick: (column: number) => void;
+  selectAllDocuments: (selectAll: boolean) => void;
 }) {
   return (
     <tr>
@@ -73,6 +75,7 @@ export default function TableHeader({
               'mr-2 text-teal-400 border-gray-300 rounded cursor-pointer',
               'focus:outline-teal-400 active:outline-teal-400'
             )}
+            onChange={(event) => selectAllDocuments(event.target.checked)}
           />
           <ColumnName
             name={'Name'}
