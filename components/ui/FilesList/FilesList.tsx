@@ -1,13 +1,10 @@
-import FilterPopover from '@/components/ui/FilesList/FilterPopover';
-import ActionsPopover from '@/components/ui/FilesList/ActionsPopover';
 import SearchIcon from '@/components/icons/SearchIcon';
 import classes from './FilesList.module.css';
 import { Document } from '../../../types';
 import classNames from 'classnames';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageIndex from '@/components/ui/FileInput/PageIndex';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import RowPopover from './RowPopover';
+import { useState } from 'react';
 import TableHeader from '@/components/ui/FileInput/TableHeader';
 
 interface Props {
@@ -124,11 +121,11 @@ export default function FilesList(props: Props) {
       const adjustedPageIndex = totalPages > 0 ? totalPages - 1 : 0;
       setCurrentPage(adjustedPageIndex);
       return documentPages[adjustedPageIndex].map((document) =>
-        DocumentRow(document, () => props.deleteDocumentAction([document.name]))
+        DocumentRow(document)
       );
     } else {
       return documentPages[currentPage].map((document) =>
-        DocumentRow(document, () => props.deleteDocumentAction([document.name]))
+        DocumentRow(document)
       );
     }
   };
@@ -145,8 +142,16 @@ export default function FilesList(props: Props) {
     <section className="container px-4 mx-auto">
       <div className="sm:flex sm:items-center sm:justify-between">
         <div className={'flex items-center place-self-center'}>
-          <FilterPopover />
-          <ActionsPopover />
+          <button
+            className={classNames(
+              'font-semibold text-white rounded-lg text-sm px-3 py-1.5 inline-flex shadow',
+              'items-center justify-center bg-teal-400 hover:bg-teal-500/[0.9] cursor-pointer outline-none',
+              'transition duration-150'
+            )}
+            aria-label="Delete file"
+          >
+            Delete
+          </button>
         </div>
         <div className="flex items-center my-auto gap-x-3">
           <label htmlFor="table-search" className="sr-only">
@@ -337,7 +342,10 @@ function DocumentRow(doc: Document) {
         <div className="inline-flex items-center gap-x-3">
           <input
             type="checkbox"
-            className="mr-2 text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700"
+            className={classNames(
+              'mr-2 text-teal-400 border-gray-300 rounded cursor-pointer',
+              'focus:outline-teal-400 active:outline-teal-400'
+            )}
           />
 
           <div className="flex items-center gap-x-2">
@@ -375,8 +383,19 @@ function DocumentRow(doc: Document) {
       <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
         {/* TODO: Display actual parsing status */}
         <div className={'flex flex-row gap-x-1.5 items-center'}>
-          <div className={'w-2.5 h-2.5 rounded-full bg-green-400'} />
-          Parsed
+          {doc.status && (
+            <>
+              <div
+                className={classNames(
+                  'w-2.5 h-2.5 rounded-full',
+                  doc.status == 'Parsed' && 'bg-green-400',
+                  doc.status == 'Parsing' && 'bg-yellow-400',
+                  doc.status == 'Error' && 'bg-red-500'
+                )}
+              />
+              {doc.status}
+            </>
+          )}
         </div>
       </td>
     </motion.tr>

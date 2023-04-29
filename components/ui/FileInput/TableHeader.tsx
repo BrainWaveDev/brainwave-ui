@@ -69,7 +69,10 @@ export default function TableHeader({
         <div className="flex items-center gap-x-3">
           <input
             type="checkbox"
-            className="mr-2 text-blue-500 border-gray-300 rounded dark:bg-gray-900 dark:ring-offset-gray-900 dark:border-gray-700"
+            className={classNames(
+              'mr-2 text-teal-400 border-gray-300 rounded cursor-pointer',
+              'focus:outline-teal-400 active:outline-teal-400'
+            )}
           />
           <ColumnName
             name={'Name'}
