@@ -2,7 +2,7 @@ import FileUpload from '@/components/icons/FileUpload';
 import { useUser } from '@/utils/useUser';
 import { RotatingLines } from 'react-loader-spinner';
 import classNames from 'classnames';
-import React, { ChangeEvent, useState } from 'react';
+import React, { useState } from 'react';
 import FilePreview from '@/components/ui/FileInput/FilePreview';
 import classes from './FileInput.module.css';
 import { FileInfo, UploadState } from '../../../lib/classes';
@@ -17,6 +17,7 @@ import AlertModal, {
   setModalOpen
 } from '@/components/ui/AlertModal';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
+import Dropzone from 'react-dropzone';
 
 // Valid file type
 const validFileTypes = [
@@ -38,6 +39,7 @@ export default function FileInput(
   // const [previewElements, setPreviewElements] = useState<FileInfo[]>([]);
   const { dispatch: dispatchError } = useErrorContext();
   const [modalState, setModalState] = useState<ModalState | null>(null);
+  const [displayFileUpload, setDisplayFileUpload] = useState(true);
 
   const ModalActionButtons = (
     <>
@@ -53,10 +55,14 @@ export default function FileInput(
   );
 
   // Logic for handling image upload
-  const fileInputHandler = (event: ChangeEvent<HTMLInputElement>) => {
-    event.preventDefault();
+  const fileInputHandler = (selectedFiles: File[] | FileList) => {
+    // event.preventDefault();
 
-    let selectedFiles: FileList = event.target.files!;
+    // let selectedFiles: FileList = event.target.files!;
+
+    setDisplayFileUpload(false);
+
+    console.log(selectedFiles);
 
     // Retain previously selected files
     const newFiles: FileInfo[] = [...files];
@@ -117,6 +123,8 @@ export default function FileInput(
 
   const uploadFiles = async () => {
     if (files && files.length > 0 && !isLoading) {
+      setDisplayFileUpload(false);
+
       // Each file upload will be handled in a separate promise
       const fileUploads: Promise<any>[] = [];
 
@@ -148,7 +156,6 @@ export default function FileInput(
 
         let errorMessage = null;
         const file = files[index];
-        console.log(result);
 
         if (result.status === 'fulfilled') {
           const { error } = result.value;
@@ -210,7 +217,7 @@ export default function FileInput(
         <label
           htmlFor="dropzone-file"
           className={classNames(
-            'flex flex-col items-center w-full h-64 max-h-64 shadow border',
+            'flex flex-col items-center w-full h-64 max-h-64 shadow border relative',
             'transition transition-duration-150 border-transparent rounded-lg bg-white',
             'p-4',
             isLoading
@@ -228,54 +235,74 @@ export default function FileInput(
               width="3.25rem"
               visible={true}
             />
-          ) : files.length > 0 ? (
-            <motion.div
-              className={classNames(
-                classes.filePreviewGrid,
-                'w-full gap-2 grid'
-              )}
-            >
-              <AnimatePresence>
-                {files.map((file, index) => (
-                  <FilePreview
-                    name={file.name}
-                    size={file.size}
-                    uploadState={file.uploadState}
-                    key={index}
-                    index={index}
-                    onFileDelete={removeFile}
-                  />
-                ))}
-              </AnimatePresence>
-            </motion.div>
-          ) : (
+          ) : !displayFileUpload && files.length > 0 ? (
             <>
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <div className={'bg-gray-100 mb-4 rounded-[50%]'}>
-                  <FileUpload
-                    className={'w-12 h-12 stroke-gray-700 p-2'}
-                    strokeWidth={1}
+              <motion.div
+                className={classNames(
+                  classes.filePreviewGrid,
+                  'w-full gap-2 grid'
+                )}
+              >
+                <AnimatePresence>
+                  {files.map((file, index) => (
+                    <FilePreview
+                      name={file.name}
+                      size={file.size}
+                      uploadState={file.uploadState}
+                      key={index}
+                      index={index}
+                      onFileDelete={removeFile}
+                    />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            </>
+          ) : (
+            <Dropzone onDrop={fileInputHandler}>
+              {({ getRootProps, getInputProps, isDragActive }) => (
+                <div
+                  className="flex flex-col items-center justify-center w-full h-full focus:ring-0 active:ring-0"
+                  {...getRootProps()}
+                >
+                  <div className={'bg-gray-100 mb-4 rounded-[50%]'}>
+                    <FileUpload
+                      className={classNames(
+                        'w-12 h-12 p-2',
+                        isDragActive ? 'stroke-teal-400' : 'stroke-gray-700'
+                      )}
+                      strokeWidth={1}
+                    />
+                  </div>
+                  {isDragActive ? (
+                    <p className="mb-2 text-sm text-gray-700 dark:text-gray-400">
+                      Drop the files{' '}
+                      <span className="font-semibold text-teal-400">here</span>
+                    </p>
+                  ) : (
+                    <>
+                      <p className="mb-2 text-sm text-gray-700 dark:text-gray-400">
+                        <span className="font-semibold">Click to upload</span>{' '}
+                        or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-700 dark:text-gray-900">
+                        TXT, PDF, DOC or DOCX (MAX. 50MB)
+                      </p>
+                    </>
+                  )}
+                  <input
+                    id="dropzone-file"
+                    type="file"
+                    className="hidden"
+                    multiple
+                    // onChange={fileInputHandler}
+                    accept={
+                      'text/plain, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                    }
+                    {...getInputProps()}
                   />
                 </div>
-                <p className="mb-2 text-sm text-gray-700 dark:text-gray-400">
-                  <span className="font-semibold">Click to upload</span> or drag
-                  and drop
-                </p>
-                <p className="text-xs text-gray-700 dark:text-gray-900">
-                  TXT, PDF, DOC or DOCX (MAX. 50MB)
-                </p>
-              </div>
-              <input
-                id="dropzone-file"
-                type="file"
-                className="hidden"
-                multiple
-                onChange={fileInputHandler}
-                accept={
-                  'text/plain, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                }
-              />
-            </>
+              )}
+            </Dropzone>
           )}
         </label>
         <div
@@ -285,27 +312,32 @@ export default function FileInput(
         >
           {files && files.length > 0 && (
             <>
-              <label
-                htmlFor={'add-file-button'}
+              <button
+                // htmlFor={'add-file-button'}
                 className={classNames(
                   'font-base text-gray-600 rounded-lg text-sm px-3 py-1.5 inline-flex shadow',
                   ' items-center justify-center bg-white hover:bg-teal-50/[0.5] cursor-pointer outline-none',
                   'transition duration-150'
                 )}
+                onClick={() => setDisplayFileUpload((prevState) => !prevState)}
               >
-                {' '}
-                Add files
-              </label>
-              <input
-                id="add-file-button"
-                type="file"
-                multiple
-                onChange={fileInputHandler}
-                accept={
-                  'text/plain, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                }
-                hidden
-              />
+                {displayFileUpload ? 'Cancel' : 'Add files'}
+              </button>
+              {/*<input*/}
+              {/*  id="add-file-button"*/}
+              {/*  type="file"*/}
+              {/*  multiple*/}
+              {/*  onChange={(event) => {*/}
+              {/*    event.preventDefault();*/}
+              {/*    if (event.target.files && event.target.files.length > 0) {*/}
+              {/*      fileInputHandler(event.target.files!);*/}
+              {/*    }*/}
+              {/*  }}*/}
+              {/*  accept={*/}
+              {/*    'text/plain, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document'*/}
+              {/*  }*/}
+              {/*  hidden*/}
+              {/*/>*/}
               <button
                 className={classNames(
                   'font-semibold text-white rounded-lg text-sm px-3 py-1.5 inline-flex shadow',
