@@ -187,7 +187,7 @@ const ChatUI: React.FC<HomeProps> = ({
         isFirst = false;
         const updatedMessages: Message[] = [
           ...updatedConversation.messages,
-          { role: 'assistant', content: chunkValue }
+          { id:undefined,role: 'assistant', content: chunkValue }
         ];
 
         updatedConversation = {
@@ -219,7 +219,10 @@ const ChatUI: React.FC<HomeProps> = ({
       }
     }
 
-    saveConversation(updatedConversation);
+    saveConversation(updatedConversation, session.user.id!)
+    .catch((error) => {
+      console.error(error);
+    })
 
     const updatedConversations: ConversationSummary[] = conversations.map(
       (conversation) => {
@@ -236,8 +239,6 @@ const ChatUI: React.FC<HomeProps> = ({
     }
 
     setConversations(updatedConversations);
-
-    saveConversations(updatedConversations);
 
     setMessageIsStreaming(false);
 
@@ -344,6 +345,7 @@ const ChatUI: React.FC<HomeProps> = ({
     setSelectedConversation(newConversation);
     setConversations(updatedConversations);
 
+    // if success, update the conversation with the database id
     createConversation(newConversation, session?.user!)
     .then((data) => {
       setConversations(updatedConversations.map((c) => {
@@ -369,6 +371,7 @@ const ChatUI: React.FC<HomeProps> = ({
     setConversations(updatedConversations);
     deleteConversation(conversation.id!)
     .catch((_) => {
+      // if error, restore the conversation
       setConversations(conversations);
     })
   };

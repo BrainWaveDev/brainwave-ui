@@ -1,6 +1,7 @@
 import { OpenAIModel } from './openai';
 
 export interface Message {
+  id?: number;
   role: Role;
   content: string;
 }
@@ -26,7 +27,9 @@ export interface ConversationSummary extends ConversationIdentifiable {
 
 
 export interface Conversation extends ConversationSummary{
+  id: number;
   messages: Message[];
+  isPlaceholder?: boolean;
 }
 
 
