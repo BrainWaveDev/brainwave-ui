@@ -25,19 +25,20 @@ export const updateConversation = (
   };
 };
 
-export const createConversation = (conversation: Conversation,user:User) => {
-  const operation = () => {
+export const createConversation = (conversation: ConversationIdentifiable,user:User) => {
+  const operation = () => 
     supabase.from('conversation').insert({
       user_id : user?.id,
       name    : conversation.name,
-    }).select();
-  }
+    })
+    .select('id');
+  
 
   return createDatabaseOperation(operation);
 };
 
 export const updateConversationWithNewMessage = (conversation:ConversationIdentifiable,message:Message) => {
-  const operation = () => {
+  const operation = () => 
     supabase.from('conversation').update({
       name : conversation.name,
     }).eq('id',conversation.id);
@@ -47,7 +48,7 @@ export const updateConversationWithNewMessage = (conversation:ConversationIdenti
       content         : message.content,
       role            : message.role,
     }).eq('id',conversation.id);
-  }
+  
 
   return createDatabaseOperation(operation);
 }
