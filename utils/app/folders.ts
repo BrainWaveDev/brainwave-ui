@@ -1,37 +1,60 @@
 import { Folder } from '../../types/folder';
-import { createDatabaseOperation } from './createDBOperation';
 import { supabase } from '../supabase-client';
 
-export const saveFolder = (folder: Folder) => {
-  const operation = () => supabase.from("folder").insert({
+export const saveFolder = async (folder: Folder) => {
+  const { data, error } = await supabase.from("folder").insert({
     name: folder.name,
     user_id: folder.user_id!,
-  }).select();
+  })
+  .select()
+  .single();
 
-  return createDatabaseOperation(operation);
+  if (error) {
+    throw error;
+  }
+
+  return data;
+
 };
 
-export const deleteFolder = (folderId: number) => {
-  const operation = () => supabase.from("folder").delete().eq("id", folderId);
+export const deleteFolder = async (folderId: number) => {
+  const { data, error } = await supabase.from("folder").delete().eq("id", folderId);
 
-  return createDatabaseOperation(operation);
+  if (error) {
+    throw error;
+  }
+
+  return data;
 };
 
-export const retrieveFolder = (folderId: number) => {
-  const operation = () => supabase.from("folder").select("*").eq("id", folderId).single();
-  return createDatabaseOperation(operation);
+export const retrieveFolder = async (folderId: number) => {
+  const { data, error } = await supabase.from("folder").select("*").eq("id", folderId).single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 };
 
-export const retrieveListOfFolders = (userId: string) => {
-  const operation = () => supabase.from("folder").select("*").eq("user_id", userId);
-  return createDatabaseOperation(operation);
+export const retrieveListOfFolders = async (userId: string) => {
+  const { data, error } = await supabase.from("folder").select("*").eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 };
 
-
-export const updateFolder = (folder: Folder) => {
-  const operation = () => supabase.from("folder").update({
+export const updateFolder = async (folder: Folder) => {
+  const { data, error } = await supabase.from("folder").update({
     name: folder.name,
   }).eq("id", folder.id);
 
-  return createDatabaseOperation(operation);
+  if (error) {
+    throw error;
+  }
+
+  return data;
 };

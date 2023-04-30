@@ -65,12 +65,18 @@ const ChatUI: React.FC<HomeProps> = ({
     if (isLoading || error) { return }
     const user = session?.user;
     retrieveListOfFolders(user?.id!)
-      .onSuccess((data) => {
-        setFolders(data);
+      .then((data) => {
+        setFolders(data.map((dbFolder) =>{
+          return {
+            id: dbFolder.id,
+            name: dbFolder.name,
+            user_id: dbFolder.user_id,
+          }
+        }));
       })
-      .onError((error) => {
+      .catch((error) => {
         console.log(error);
-      }).execute()
+      })
 
   }, [isLoading, error]);
 
@@ -255,34 +261,29 @@ const ChatUI: React.FC<HomeProps> = ({
     const updatedFolders = [...folders, newFolder];
     setFolders(updatedFolders);
     saveFolder(newFolder)
-      .onError((error) => {
-        console.log(error);
-        // reset folders
-        setFolders(folders);
-      })
-      .onSuccess((data: Folder) => {
-        console.log("handleCreateFolder -> data", data)
+      .then((data) => {
         setFolders(updatedFolders.map((f) => {
           if (f.id === tempId) {
             return {
               ...f,
-              id: data.id
+              id: data.id,
             };
           }
           return f;
         }));
       })
-      .execute()
+      .catch((_) => {
+        setFolders(folders);
+      })
   };
 
   const handleDeleteFolder = (folderId: number) => {
     const updatedFolders = folders.filter((f) => f.id !== folderId);
     setFolders(updatedFolders);
     deleteFolder(folderId)
-      .onError((error) => {
-        console.log(error);
-        setFolders(folders);
-      }).execute()
+    .catch((_) => {
+      setFolders(folders);
+    })
   };
 
   const handleUpdateFolder = (folderId: number, name: string) => {
@@ -301,9 +302,9 @@ const ChatUI: React.FC<HomeProps> = ({
     setFolders(updatedFolders);
     updatedFolder.name = name;
     updateFolder(updatedFolder)
-      .onError((error) => {
+      .catch((_) => {
         setFolders(folders);
-      }).execute()
+      })
 
   };
 
