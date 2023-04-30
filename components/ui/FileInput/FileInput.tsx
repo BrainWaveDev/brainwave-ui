@@ -27,13 +27,11 @@ const validFileTypes = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 ];
 
-interface FileInputProps {
-  afterUpload?: () => Promise<void>;
-}
-
-export default function FileInput(
-  { afterUpload }: FileInputProps,
-) {
+export default function FileInput({
+  updateDocumentList
+}: {
+  updateDocumentList: () => Promise<void>;
+}) {
   const { user, isLoading } = useUser();
   const [files, setFiles] = useState<FileInfo[]>([]);
   // const [previewElements, setPreviewElements] = useState<FileInfo[]>([]);
@@ -56,13 +54,7 @@ export default function FileInput(
 
   // Logic for handling image upload
   const fileInputHandler = (selectedFiles: File[] | FileList) => {
-    // event.preventDefault();
-
-    // let selectedFiles: FileList = event.target.files!;
-
     setDisplayFileUpload(false);
-
-    console.log(selectedFiles);
 
     // Retain previously selected files
     const newFiles: FileInfo[] = [...files];
@@ -198,9 +190,7 @@ export default function FileInput(
 
       setFiles(updatedFiles);
       await updateFilePreviewAfterUpload();
-
-      // after upload callback
-      afterUpload && await afterUpload();
+      await updateDocumentList();
     }
   };
 
@@ -294,7 +284,6 @@ export default function FileInput(
                     type="file"
                     className="hidden"
                     multiple
-                    // onChange={fileInputHandler}
                     accept={
                       'text/plain, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                     }
@@ -323,21 +312,6 @@ export default function FileInput(
               >
                 {displayFileUpload ? 'Cancel' : 'Add files'}
               </button>
-              {/*<input*/}
-              {/*  id="add-file-button"*/}
-              {/*  type="file"*/}
-              {/*  multiple*/}
-              {/*  onChange={(event) => {*/}
-              {/*    event.preventDefault();*/}
-              {/*    if (event.target.files && event.target.files.length > 0) {*/}
-              {/*      fileInputHandler(event.target.files!);*/}
-              {/*    }*/}
-              {/*  }}*/}
-              {/*  accept={*/}
-              {/*    'text/plain, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document'*/}
-              {/*  }*/}
-              {/*  hidden*/}
-              {/*/>*/}
               <button
                 className={classNames(
                   'font-semibold text-white rounded-lg text-sm px-3 py-1.5 inline-flex shadow',

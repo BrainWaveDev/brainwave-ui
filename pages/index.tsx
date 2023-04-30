@@ -2,13 +2,15 @@ import { GetServerSidePropsContext } from 'next';
 import FileInput from '@/components/ui/FileInput/FileInput';
 import FilesList from '@/components/ui/FilesList';
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
-import { supabase } from '@/utils/supabase-client';
-import { useState } from 'react';
-import { DocMetadata, Document } from '../types';
+import { getDocumentList, supabase } from '@/utils/supabase-client';
+import React, { useState } from 'react';
+import { Document } from '../types';
 import { Database } from '../types/supabase';
+import { RotatingLines } from 'react-loader-spinner';
 
 export default function HomePage({ documents }: { documents: Document[] }) {
   const [documentsList, setDocumentsList] = useState<Document[]>(documents);
+  const [loadingDocuments, setLoadingDocuments] = useState(false);
   const handleFileDelete = async (documentIds: string[]) => {
     // remove from db
     const { error } = await supabase
@@ -17,15 +19,30 @@ export default function HomePage({ documents }: { documents: Document[] }) {
       .in('id', documentIds);
     if (error) {
       // TODO: Handle failed file removal
+      console.error(error.message);
       return false;
     } else {
-      // remove all docs with name from given names
+      // remove all documents selected for removal based on ID
       setDocumentsList(
         documentsList.filter((doc) => !documentIds.includes(doc.id))
       );
       return true;
     }
   };
+
+  const updateDocumentList = async () => {
+    try {
+      setLoadingDocuments(true);
+      const documents = await getDocumentList();
+      setDocumentsList(documents);
+    } catch (e: any) {
+      // TODO: Handle failed document list update
+      console.error(e.message);
+    } finally {
+      setLoadingDocuments(false);
+    }
+  };
+
   return (
     <>
       <header className="bg-white shadow">
@@ -36,13 +53,25 @@ export default function HomePage({ documents }: { documents: Document[] }) {
         </div>
       </header>
       <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <FileInput />
+        <FileInput updateDocumentList={updateDocumentList} />
       </div>
       <div className="mx-auto max-w-7xl pt-2 pb-6 sm:px-6 lg:px-8">
-        <FilesList
-          documents={documentsList}
-          deleteDocumentAction={handleFileDelete}
-        />
+        {loadingDocuments ? (
+          <section className="container px-4 mx-auto flex items-center place-content-center h-[45vh]">
+            <RotatingLines
+              strokeColor="#9ca3af"
+              strokeWidth="1.5"
+              animationDuration="1"
+              width="4.5rem"
+              visible={true}
+            />
+          </section>
+        ) : (
+          <FilesList
+            documents={documentsList}
+            deleteDocumentAction={handleFileDelete}
+          />
+        )}
       </div>
     </>
   );
@@ -64,27 +93,22 @@ export const getServerSideProps = async (
       }
     };
 
-  const { data } = await supabase.from('document').select();
-  // Default sorting by date
   let documents: Document[] = [];
-  if (data && data.length > 0) {
-    // @ts-ignore
-    documents = data
-      .map((document) => ({
-        ...document,
-        id: document.id.toString(),
-        // @ts-ignore
-        metadata: document.metadata as DocMetadata
-      }))
-      .sort((a, b) =>
-        new Date(a.metadata.lastModified) > new Date(b.metadata.lastModified)
-          ? -1
-          : 1
-      );
+
+  try {
+    documents = await getDocumentList(supabase);
+    console.log(documents);
+    return {
+      props: {
+        documents,
+        error: null
+      }
+    };
+  } catch (e: any) {
+    console.error(e.message);
+    return {
+      documents,
+      error: e.message
+    };
   }
-  return {
-    props: {
-      documents
-    }
-  };
 };

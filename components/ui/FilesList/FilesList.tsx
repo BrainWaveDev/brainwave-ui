@@ -58,9 +58,6 @@ export default function FilesList(props: Props) {
   const [deletingDocuments, setDeletingDocuments] = useState(false);
   const [modalState, setModalState] = useState<ModalState | null>(null);
 
-  console.log('=========== SELECTED DOCUMENTS ===========');
-  console.log(selectedDocuments);
-
   // ===================================================
   // Modal
   // ===================================================

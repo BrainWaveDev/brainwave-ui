@@ -3,8 +3,9 @@ import {
   User
 } from '@supabase/auth-helpers-nextjs';
 
-import { ProductWithPrice, Document } from '../types';
+import { ProductWithPrice, Document, DocMetadata } from '../types';
 import type { Database } from 'types/supabase';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export const supabase = createBrowserSupabaseClient<Database>();
 
@@ -45,4 +46,33 @@ export const updateUserName = async (user: User, name: string) => {
       full_name: name
     })
     .eq('id', user.id);
+};
+
+export const getDocumentList = async (supabaseClient?: SupabaseClient) => {
+  const { data, error } = supabaseClient
+    ? await supabaseClient.from('document').select()
+    : await supabase.from('document').select();
+
+  if (error) {
+    throw Error(error.message);
+  }
+
+  // Default sorting by date
+  let documents: Document[] = [];
+  if (data && data.length > 0) {
+    // @ts-ignore
+    documents = data
+      .map((document) => ({
+        ...document,
+        id: document.id.toString(),
+        // @ts-ignore
+        metadata: document.metadata as DocMetadata
+      }))
+      .sort((a, b) =>
+        new Date(a.metadata.lastModified) > new Date(b.metadata.lastModified)
+          ? -1
+          : 1
+      );
+  }
+  return documents;
 };
