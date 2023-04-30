@@ -5,7 +5,7 @@ import { supabase } from '../supabase-client';
 export const saveFolder = (folder: Folder) => {
   const operation = () => supabase.from("folder").insert({
     name: folder.name,
-    user_id: folder.user_id,
+    user_id: folder.user_id!,
   }).select();
 
   return createDatabaseOperation(operation);

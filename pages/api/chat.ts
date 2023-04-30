@@ -7,6 +7,7 @@ import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
 import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module';
 import GPT3Tokenizer from 'gpt3-tokenizer';
 import { createClient } from '@supabase/supabase-js';
+import { Database } from 'types_db';
 
 export const config = {
   runtime: 'edge'
@@ -31,7 +32,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!jwt) throw new Error('Missing access token in request data');
     if (!userQuestion) throw new Error('Missing query in request data');
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey);
 
     const {
       data: { user }

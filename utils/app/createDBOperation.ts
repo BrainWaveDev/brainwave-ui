@@ -1,5 +1,5 @@
 import { PostgrestError } from "@supabase/supabase-js";
-
+import type { PostgrestFilterBuilder } from "@supabase/postgrest-js";
 
 export const randomNumberId = () => {
   // generate a random number between 100,000,000 and Number.MAX_SAFE_INTEGER
@@ -16,7 +16,8 @@ export const createDatabaseOperation = (operation: () => any) => {
 
     const executeOperation = async () => {
         const res = await operation();
-        if (!res.data || res.error ) {
+        console.log("res = ",res);
+        if (res.error ) {
             errorCallBack(res.error);
         } else {
             successCallBack(res.data);

@@ -4,7 +4,7 @@ import {
 } from '@supabase/auth-helpers-nextjs';
 
 import { ProductWithPrice,Document } from 'types';
-import type { Database } from 'types_db';
+import { Database } from 'types/database.types';
 
 export const supabase = createBrowserSupabaseClient<Database>();
 

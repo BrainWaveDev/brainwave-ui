@@ -310,19 +310,12 @@ const ChatUI: React.FC<HomeProps> = ({
   // CONVERSATION OPERATIONS  --------------------------------------------
 
   const handleNewConversation = () => {
-    const defaultModel = {
-      id: OpenAIModels[defaultModelId].id,
-      name: OpenAIModels[defaultModelId].name,
-      maxLength: OpenAIModels[defaultModelId].maxLength,
-      tokenLimit: OpenAIModels[defaultModelId].tokenLimit
-    }
-    const lastConversation = conversations[conversations.length - 1];
-
+    const defaultModel = OpenAIModels[defaultModelId];
     const newConversation: Conversation = {
       id: randomNumberId(),
       name: `${t('New Conversation')}`,
       messages: [],
-      model: lastConversation?.model || defaultModel,
+      model: defaultModel,
       prompt: DEFAULT_SYSTEM_PROMPT,
       folderId: null
     };
@@ -343,7 +336,12 @@ const ChatUI: React.FC<HomeProps> = ({
             };
           }
           return c;
-        }))
+        }));
+        setSelectedConversation({
+          ...newConversation,
+          id: data.id
+        });
+
       }).execute()
 
     setLoading(false);
