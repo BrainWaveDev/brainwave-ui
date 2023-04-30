@@ -1,7 +1,7 @@
 import { Conversation, Message } from '../../types/chat';
 import { KeyValuePair } from '../../types/data';
 import { ErrorMessage } from '../../types/error';
-import { OpenAIModel, OpenAIModelID } from '../../types/openai';
+import { OpenAIModel, OpenAIModelID, OpenAIModels } from '../../types/openai';
 import { Prompt } from '../../types/prompt';
 import { throttle } from '../../utils';
 import { IconArrowDown, IconClearAll, IconSettings } from '@tabler/icons-react';
@@ -25,7 +25,7 @@ import { SystemPrompt } from './SystemPrompt';
 import AppLogo from '@/components/icons/AppLogo';
 
 interface Props {
-  conversation: Conversation;
+  conversation: Conversation | undefined;
   messageIsStreaming: boolean;
   loading: boolean;
   prompts: Prompt[];
@@ -89,12 +89,18 @@ export const Chat: FC<Props> = memo(
 
     // appear scroll down button only when user scrolls up
 
+    const conversationIsEmpty = (conversation === undefined || conversation.messages.length === 0  || conversation === null);
+    
     useEffect(() => {
+      // may have problems with conversation undefined
+      if(conversationIsEmpty) {
+        return
+      }
       throttledScrollDown();
       setCurrentMessage(
         conversation.messages[conversation.messages.length - 2]
       );
-    }, [conversation.messages, throttledScrollDown]);
+    }, [conversation, throttledScrollDown]);
 
     useEffect(() => {
       const observer = new IntersectionObserver(
@@ -146,20 +152,6 @@ export const Chat: FC<Props> = memo(
     </>;
 
 
-    const Conversations = <>
-      {conversation.messages.map((message, index) => (
-        <ChatMessage
-          key={index}
-          message={message}
-          messageIndex={index}
-          onEditMessage={onEditMessage} />
-      ))}
-      {loading && <ChatLoader />}
-      <div
-        className="h-[162px] bg-white dark:bg-[#343541]"
-        ref={messagesEndRef} />
-    </>;
-
 
     return (
       <div className="relative flex-1 overflow-hidden bg-white dark:bg-[#343541]">
@@ -169,10 +161,22 @@ export const Chat: FC<Props> = memo(
             ref={chatContainerRef}
             onScroll={handleScroll}
           >
-            {conversation.messages.length === 0 ? (
+            {conversationIsEmpty ? (
               EmptyConversationCover
             ) : (
-              Conversations
+              <>
+                {conversation.messages.map((message, index) => (
+                  <ChatMessage
+                    key={index}
+                    message={message}
+                    messageIndex={index}
+                    onEditMessage={onEditMessage} />
+                ))}
+                {loading && <ChatLoader />}
+                <div
+                  className="h-[162px] bg-white dark:bg-[#343541]"
+                  ref={messagesEndRef} />
+              </>
             )}
           </div>
 
@@ -180,9 +184,9 @@ export const Chat: FC<Props> = memo(
             stopConversationRef={stopConversationRef}
             textareaRef={textareaRef}
             messageIsStreaming={messageIsStreaming}
-            conversationIsEmpty={conversation.messages.length === 0}
-            messages={conversation.messages}
-            model={conversation.model}
+            conversationIsEmpty={conversationIsEmpty}
+            // need to pass in the model here in the future
+            model={OpenAIModels['gpt-3.5-turbo']}
             prompts={prompts}
             onSend={(message) => {
               setCurrentMessage(message);

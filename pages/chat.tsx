@@ -100,11 +100,6 @@ const ChatUI: React.FC<HomeProps> = ({
     setLoading(true);
     setMessageIsStreaming(true);
 
-    const {
-      data: { session },
-      error
-    } = await supabase.auth.getSession();
-
     if (error || !session || !session.access_token) {
       setLoading(false);
       setMessageIsStreaming(false);
@@ -355,23 +350,23 @@ const ChatUI: React.FC<HomeProps> = ({
     setConversations(updatedConversations);
     saveConversations(updatedConversations);
 
-    if (updatedConversations.length > 0) {
-      // setSelectedConversation(
-      //   updatedConversations[updatedConversations.length - 1]
-      // );
-      // saveConversation(updatedConversations[updatedConversations.length - 1]);
-    } else {
-      // why the fuck we need a place holder? can't we just put noting here?
-      setSelectedConversation({
-        id: randomNumberId(),
-        name: 'New conversation',
-        messages: [],
-        model: OpenAIModels[defaultModelId],
-        prompt: DEFAULT_SYSTEM_PROMPT,
-        folderId: null
-      });
-      localStorage.removeItem('selectedConversation');
-    }
+    // if (updatedConversations.length > 0) {
+    //   // setSelectedConversation(
+    //   //   updatedConversations[updatedConversations.length - 1]
+    //   // );
+    //   // saveConversation(updatedConversations[updatedConversations.length - 1]);
+    // } else {
+    //   // why the fuck we need a place holder? can't we just put noting here?
+    //   setSelectedConversation({
+    //     id: randomNumberId(),
+    //     name: 'New conversation',
+    //     messages: [],
+    //     model: OpenAIModels[defaultModelId],
+    //     prompt: DEFAULT_SYSTEM_PROMPT,
+    //     folderId: null
+    //   });
+    //   localStorage.removeItem('selectedConversation');
+    // }
   };
 
   const handleUpdateConversation = (
@@ -522,16 +517,9 @@ const ChatUI: React.FC<HomeProps> = ({
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      {selectedConversation && (
         <div
           className={`flex h-[calc(100vh_-_4rem)] flex-col text-sm text-white dark:text-white ${lightMode}`}
         >
-          <div className="fixed top-0 w-full sm:hidden">
-            <Navbar
-              selectedConversation={selectedConversation}
-              onNewConversation={handleNewConversation}
-            />
-          </div>
           <div
             className="flex h-full w-full pt-[48px] sm:pt-0 relative"
             ref={containerRef}
@@ -573,7 +561,7 @@ const ChatUI: React.FC<HomeProps> = ({
             </div>
           </div>
         </div>
-      )}
+      )
     </>
   );
 };

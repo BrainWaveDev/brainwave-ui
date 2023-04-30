@@ -6,7 +6,7 @@ import { ConversationComponent } from './Conversation';
 interface Props {
   loading: boolean;
   conversations: ConversationSummary[];
-  selectedConversation: Conversation;
+  selectedConversation: Conversation | undefined;
   onSelectConversation: (conversation: ConversationIdentifiable) => void;
   onDeleteConversation: (conversation: ConversationIdentifiable) => void;
   onUpdateConversation: (

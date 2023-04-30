@@ -10,7 +10,7 @@ import {
 import { DragEvent, FC, KeyboardEvent, useEffect, useState } from 'react';
 
 interface Props {
-  selectedConversation: Conversation;
+  selectedConversation: ConversationIdentifiable | undefined;
   conversation: ConversationSummary;
   loading: boolean;
   onSelectConversation: (conversation: ConversationIdentifiable) => void;
@@ -33,6 +33,7 @@ export const ConversationComponent: FC<Props> = ({
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
 
+  if (!selectedConversation) return null;
   const handleEnterDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();

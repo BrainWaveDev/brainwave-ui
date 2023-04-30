@@ -1,4 +1,4 @@
-import { Conversation, ConversationSummary } from '../../../types/chat';
+import { Conversation, ConversationIdentifiable, ConversationSummary } from '../../../types/chat';
 import { KeyValuePair } from '../../../types/data';
 import { Folder } from '../../../types/folder';
 import { FC } from 'react';
@@ -11,12 +11,12 @@ interface Props {
   onDeleteFolder: (folder: number) => void;
   onUpdateFolder: (folder: number, name: string) => void;
   // conversation props
-  selectedConversation: Conversation;
+  selectedConversation: Conversation | undefined;
   loading: boolean;
-  onSelectConversation: (conversation: Conversation) => void;
-  onDeleteConversation: (conversation: Conversation) => void;
+  onSelectConversation: (conversation: ConversationIdentifiable) => void;
+  onDeleteConversation: (conversation: ConversationIdentifiable) => void;
   onUpdateConversation: (
-    conversation: Conversation,
+    conversation: ConversationIdentifiable,
     data: KeyValuePair
   ) => void;
 }

@@ -15,7 +15,7 @@ interface Props {
   loading: boolean;
   conversations: ConversationSummary[];
   lightMode: 'light' | 'dark';
-  selectedConversation: Conversation;
+  selectedConversation: Conversation | undefined;
   folders: Folder[];
   showSidebar: boolean;
   handleToggleChatbar: () => void;
