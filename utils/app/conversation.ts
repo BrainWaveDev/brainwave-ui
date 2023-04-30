@@ -66,7 +66,7 @@ export const retriveConversation = async (conversationId: number) => {
 }
 
 export const retriveConversations = async (userId: string) => {
-  const {data,error} = await supabase
+  const { data, error } = await supabase
     .from('conversation')
     .select('*')
     .eq('user_id', userId)
@@ -76,7 +76,7 @@ export const retriveConversations = async (userId: string) => {
     throw error;
   }
 
-  return data.map((c)=>{
+  return data.map((c) => {
     return {
       id: c.id,
       name: c.name,
@@ -86,6 +86,15 @@ export const retriveConversations = async (userId: string) => {
     } as ConversationSummary;
   })
 };
+
+export const deleteConversation = async (conversationId: number) => {
+  await supabase
+    .from('conversation')
+    .delete()
+    .eq('id', conversationId)
+    .throwOnError();
+  
+}
 
 
 export const saveConversations = (conversations: ConversationSummary[]) => {

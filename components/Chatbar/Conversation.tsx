@@ -22,6 +22,7 @@ interface Props {
 
 export const ConversationComponent: FC<Props> = ({
   conversation,
+  isSelected,
   loading,
   onSelectConversation,
   onDeleteConversation,
@@ -131,7 +132,7 @@ export const ConversationComponent: FC<Props> = ({
           </div>
         )}
 
-      {conversation.id === conversation.id &&
+      {
         !isDeleting &&
         !isRenaming && (
           <div className="absolute right-1 z-10 flex text-gray-300">

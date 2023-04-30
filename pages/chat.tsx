@@ -17,6 +17,7 @@ import {
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const';
 import {
   createConversation,
+  deleteConversation,
   retriveConversation,
   retriveConversations,
   saveConversation,
@@ -366,25 +367,10 @@ const ChatUI: React.FC<HomeProps> = ({
       (c) => c.id !== conversation.id
     );
     setConversations(updatedConversations);
-    saveConversations(updatedConversations);
-
-    // if (updatedConversations.length > 0) {
-    //   // setSelectedConversation(
-    //   //   updatedConversations[updatedConversations.length - 1]
-    //   // );
-    //   // saveConversation(updatedConversations[updatedConversations.length - 1]);
-    // } else {
-    //   // why the fuck we need a place holder? can't we just put noting here?
-    //   setSelectedConversation({
-    //     id: randomNumberId(),
-    //     name: 'New conversation',
-    //     messages: [],
-    //     model: OpenAIModels[defaultModelId],
-    //     prompt: DEFAULT_SYSTEM_PROMPT,
-    //     folderId: null
-    //   });
-    //   localStorage.removeItem('selectedConversation');
-    // }
+    deleteConversation(conversation.id!)
+    .catch((_) => {
+      setConversations(conversations);
+    })
   };
 
   const handleUpdateConversation = (
