@@ -30,13 +30,13 @@ export const Conversations: FC<Props> = ({
         .reverse()
         .map((conversation, index) => (
           <ConversationComponent
-            key={index}
-            selectedConversation={selectedConversation}
+            key={conversation.id}
             conversation={conversation}
+            isSelected={selectedConversation?.id === conversation.id}
             loading={loading}
-            onSelectConversation={onSelectConversation}
-            onDeleteConversation={onDeleteConversation}
-            onUpdateConversation={onUpdateConversation}
+            onSelectConversation={() => onSelectConversation(conversation)}
+            onDeleteConversation={() => onDeleteConversation(conversation)}
+            onUpdateConversation={(data:KeyValuePair) => onUpdateConversation(conversation, data)}
           />
         ))}
     </div>

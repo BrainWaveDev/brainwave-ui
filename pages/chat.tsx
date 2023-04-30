@@ -17,6 +17,8 @@ import {
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const';
 import {
   createConversation,
+  retriveConversation,
+  retriveConversations,
   saveConversation,
   saveConversations,
   updateConversation
@@ -63,8 +65,8 @@ const ChatUI: React.FC<HomeProps> = ({
   useEffect(() => {
     // loading after login
     if (isLoading || error) { return }
-    const user = session?.user;
-    retrieveListOfFolders(user?.id!)
+    const user_id = session?.user?.id!;
+    retrieveListOfFolders(user_id)
       .then((data) => {
         setFolders(data.map((dbFolder) =>{
           return {
@@ -75,8 +77,23 @@ const ChatUI: React.FC<HomeProps> = ({
         }));
       })
       .catch((error) => {
-        console.log(error);
+        console.error(error);
       })
+    
+    retriveConversations(user_id)
+    .then((data) => {
+      setConversations(data);
+      if (data.length > 0) {
+        retriveConversation(data[0].id)
+        .then((conversation) => {
+          setSelectedConversation(conversation);
+        })
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    })
+      
 
   }, [isLoading, error]);
 
@@ -239,8 +256,13 @@ const ChatUI: React.FC<HomeProps> = ({
   };
 
   const handleSelectConversation = (conversation: ConversationIdentifiable) => {
-    // setSelectedConversation(conversation);
-    // saveConversation(conversation);
+    setSelectedConversation(undefined);
+    retriveConversation(conversation.id!)
+    .then((data) => {
+      setSelectedConversation(data)
+    }).catch((error) => {
+      console.warn(error);
+    })
   };
 
   // FOLDER OPERATIONS  --------------------------------------------
@@ -322,23 +344,19 @@ const ChatUI: React.FC<HomeProps> = ({
     setConversations(updatedConversations);
 
     createConversation(newConversation, session?.user!)
-      .onError((error) => { setConversations(conversations) })
-      .onSuccess((data: Conversation) => {
-        setConversations(updatedConversations.map((c) => {
-          if (c.id === newConversation.id) {
-            return {
-              ...c,
-              id: data.id
-            };
-          }
-          return c;
-        }));
-        setSelectedConversation({
-          ...newConversation,
-          id: data.id
-        });
-
-      }).execute()
+    .then((data) => {
+      setConversations(updatedConversations.map((c) => {
+        if (c.id === newConversation.id) {
+          return {
+            ...c,
+            id: data.id,
+          };
+        }
+        return c;
+      }));
+    }).catch((_) => {
+      setConversations(conversations);
+    })
 
     setLoading(false);
   };
@@ -422,14 +440,7 @@ const ChatUI: React.FC<HomeProps> = ({
       messages: updatedMessages
     };
 
-    const { single, all } = updateConversation(
-      updatedConversation,
-      conversations
-    );
-
-    setSelectedConversation(single);
-    setConversations(all);
-
+    // TODO: update converstation and folder in db
     setCurrentMessage(message);
 
   };
@@ -561,7 +572,6 @@ const ChatUI: React.FC<HomeProps> = ({
             </div>
           </div>
         </div>
-      )
     </>
   );
 };

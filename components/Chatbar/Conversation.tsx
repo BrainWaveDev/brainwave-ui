@@ -10,19 +10,17 @@ import {
 import { DragEvent, FC, KeyboardEvent, useEffect, useState } from 'react';
 
 interface Props {
-  selectedConversation: ConversationIdentifiable | undefined;
   conversation: ConversationSummary;
+  isSelected: boolean;
   loading: boolean;
-  onSelectConversation: (conversation: ConversationIdentifiable) => void;
-  onDeleteConversation: (conversation: ConversationIdentifiable) => void;
+  onSelectConversation: () => void;
+  onDeleteConversation: () => void;
   onUpdateConversation: (
-    conversation: ConversationIdentifiable,
     data: KeyValuePair
   ) => void;
 }
 
 export const ConversationComponent: FC<Props> = ({
-  selectedConversation,
   conversation,
   loading,
   onSelectConversation,
@@ -33,11 +31,10 @@ export const ConversationComponent: FC<Props> = ({
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
 
-  if (!selectedConversation) return null;
   const handleEnterDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleRename(selectedConversation);
+      handleRename(conversation);
     }
   };
 
@@ -52,7 +49,7 @@ export const ConversationComponent: FC<Props> = ({
 
   const handleRename = (conversation: ConversationIdentifiable) => {
     if (renameValue.trim().length > 0) {
-      onUpdateConversation(conversation, { key: 'name', value: renameValue });
+      onUpdateConversation({ key: 'name', value: renameValue });
       setRenameValue('');
       setIsRenaming(false);
     }
@@ -68,7 +65,7 @@ export const ConversationComponent: FC<Props> = ({
 
   return (
     <div className="relative flex items-center">
-      {isRenaming && selectedConversation.id === conversation.id ? (
+      {isRenaming && conversation.id === conversation.id ? (
         <div className="flex w-full items-center gap-3 bg-[#343541]/90 p-3 rounded-lg">
           <IconMessage size={18} />
           <input
@@ -85,9 +82,9 @@ export const ConversationComponent: FC<Props> = ({
           className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm transition-colors duration-200 hover:bg-[#343541]/90 ${
             loading ? 'disabled:cursor-not-allowed' : ''
           } ${
-            selectedConversation.id === conversation.id ? 'bg-[#343541]/90' : ''
+            conversation.id === conversation.id ? 'bg-[#343541]/90' : ''
           }`}
-          onClick={() => onSelectConversation(conversation)}
+          onClick={() => onSelectConversation()}
           disabled={loading}
           draggable="true"
           onDragStart={(e) => handleDragStart(e, conversation)}
@@ -95,7 +92,7 @@ export const ConversationComponent: FC<Props> = ({
           <IconMessage size={18} />
           <div
             className={`relative max-h-5 flex-1 overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-[12.5px] leading-3 ${
-              selectedConversation.id === conversation.id ? 'pr-12' : 'pr-1'
+              conversation.id === conversation.id ? 'pr-12' : 'pr-1'
             }`}
           >
             {conversation.name}
@@ -104,14 +101,14 @@ export const ConversationComponent: FC<Props> = ({
       )}
 
       {(isDeleting || isRenaming) &&
-        selectedConversation.id === conversation.id && (
+        conversation.id === conversation.id && (
           <div className="absolute right-1 z-10 flex text-gray-300">
             <button
               className="min-w-[20px] p-1 text-neutral-400 hover:text-neutral-100"
               onClick={(e) => {
                 e.stopPropagation();
                 if (isDeleting) {
-                  onDeleteConversation(conversation);
+                  onDeleteConversation();
                 } else if (isRenaming) {
                   handleRename(conversation);
                 }
@@ -134,7 +131,7 @@ export const ConversationComponent: FC<Props> = ({
           </div>
         )}
 
-      {selectedConversation.id === conversation.id &&
+      {conversation.id === conversation.id &&
         !isDeleting &&
         !isRenaming && (
           <div className="absolute right-1 z-10 flex text-gray-300">
@@ -143,7 +140,7 @@ export const ConversationComponent: FC<Props> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 setIsRenaming(true);
-                setRenameValue(selectedConversation.name);
+                setRenameValue(conversation.name);
               }}
             >
               <IconPencil size={18} />

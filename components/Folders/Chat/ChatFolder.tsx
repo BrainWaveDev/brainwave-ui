@@ -203,12 +203,12 @@ export const ChatFolder: FC<Props> = ({
               return (
                 <div key={index} className="ml-5 gap-2 border-l pl-2">
                   <ConversationComponent
-                    selectedConversation={selectedConversation}
+                    isSelected={selectedConversation?.id === conversation.id}
                     conversation={conversation}
                     loading={loading}
-                    onSelectConversation={onSelectConversation}
-                    onDeleteConversation={onDeleteConversation}
-                    onUpdateConversation={onUpdateConversation}
+                    onSelectConversation={() => onSelectConversation(conversation)}
+                    onDeleteConversation={() => onDeleteConversation(conversation)}
+                    onUpdateConversation={(data) => onUpdateConversation(conversation, data)}
                   />
                 </div>
               );
