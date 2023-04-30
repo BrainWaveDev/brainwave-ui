@@ -15,11 +15,11 @@ export const createDatabaseOperation = (operation: () => any) => {
     let successCallBack = (data: any) => { };
 
     const executeOperation = async () => {
-        const { data, error } = await operation();
-        if (error) {
-            errorCallBack(error);
+        const res = await operation();
+        if (!res.data || res.error ) {
+            errorCallBack(res.error);
         } else {
-            successCallBack(data);
+            successCallBack(res.data);
         }
     };
     const registerErrorCallBack = (callback: (error: PostgrestError | null) => void) => {

@@ -1,4 +1,4 @@
-import { Conversation } from '../../types/chat';
+import { Conversation, ConversationIdentifiable, ConversationSummary } from '../../types/chat';
 import { KeyValuePair } from '../../types/data';
 import {
   IconCheck,
@@ -11,12 +11,12 @@ import { DragEvent, FC, KeyboardEvent, useEffect, useState } from 'react';
 
 interface Props {
   selectedConversation: Conversation;
-  conversation: Conversation;
+  conversation: ConversationSummary;
   loading: boolean;
-  onSelectConversation: (conversation: Conversation) => void;
-  onDeleteConversation: (conversation: Conversation) => void;
+  onSelectConversation: (conversation: ConversationIdentifiable) => void;
+  onDeleteConversation: (conversation: ConversationIdentifiable) => void;
   onUpdateConversation: (
-    conversation: Conversation,
+    conversation: ConversationIdentifiable,
     data: KeyValuePair
   ) => void;
 }
@@ -42,14 +42,14 @@ export const ConversationComponent: FC<Props> = ({
 
   const handleDragStart = (
     e: DragEvent<HTMLButtonElement>,
-    conversation: Conversation
+    conversation: ConversationIdentifiable
   ) => {
     if (e.dataTransfer) {
       e.dataTransfer.setData('conversation', JSON.stringify(conversation));
     }
   };
 
-  const handleRename = (conversation: Conversation) => {
+  const handleRename = (conversation: ConversationIdentifiable) => {
     if (renameValue.trim().length > 0) {
       onUpdateConversation(conversation, { key: 'name', value: renameValue });
       setRenameValue('');

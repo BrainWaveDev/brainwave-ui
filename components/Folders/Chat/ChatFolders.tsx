@@ -1,4 +1,4 @@
-import { Conversation } from '../../../types/chat';
+import { Conversation, ConversationSummary } from '../../../types/chat';
 import { KeyValuePair } from '../../../types/data';
 import { Folder } from '../../../types/folder';
 import { FC } from 'react';
@@ -6,7 +6,7 @@ import { ChatFolder } from './ChatFolder';
 
 interface Props {
   searchTerm: string;
-  conversations: Conversation[];
+  conversations: ConversationSummary[];
   folders: Folder[];
   onDeleteFolder: (folder: number) => void;
   onUpdateFolder: (folder: number, name: string) => void;

@@ -1,28 +1,29 @@
 import { User, useUser } from '@supabase/auth-helpers-react';
-import { Conversation, Message } from '../../types/chat';
+import { Conversation, ConversationIdentifiable, ConversationSummary, Message } from '../../types/chat';
 import { supabase } from '../supabase-client';
 import { createDatabaseOperation } from './createDBOperation';
 
-// export const updateConversation = (
-//   updatedConversation: Conversation,
-//   allConversations: Conversation[]
-// ) => {
-//   const updatedConversations = allConversations.map((c) => {
-//     if (c.id === updatedConversation.id) {
-//       return updatedConversation;
-//     }
+export const updateConversation = (
+  updatedConversation: Conversation,
+  allConversations: ConversationSummary[]
+) => {
+  console.log("update conversation is called")
+  const updatedConversations = allConversations.map((c) => {
+    if (c.id === updatedConversation.id) {
+      return updatedConversation;
+    }
 
-//     return c;
-//   });
+    return c;
+  });
 
-//   saveConversation(updatedConversation);
-//   saveConversations(updatedConversations);
+  saveConversation(updatedConversation);
+  saveConversations(updatedConversations);
 
-//   return {
-//     single: updatedConversation,
-//     all: updatedConversations
-//   };
-// };
+  return {
+    single: updatedConversation,
+    all: updatedConversations
+  };
+};
 
 export const createConversation = (conversation: Conversation,user:User) => {
   const operation = () => {
@@ -35,24 +36,33 @@ export const createConversation = (conversation: Conversation,user:User) => {
   return createDatabaseOperation(operation);
 };
 
-export const updateConversationWithNewMessage = (conversation:Conversation,message:Message) => {
+export const updateConversationWithNewMessage = (conversation:ConversationIdentifiable,message:Message) => {
   const operation = () => {
-    const messages = conversation.messages
     supabase.from('conversation').update({
       name : conversation.name,
     }).eq('id',conversation.id);
     supabase.from('message').
     upsert({
       conversation_id : conversation.id,
-      content         : messages[messages.length-1].content,
-      role            : messages[messages.length-1].role,
+      content         : message.content,
+      role            : message.role,
     }).eq('id',conversation.id);
   }
 
   return createDatabaseOperation(operation);
 }
 
-// export const saveConversations = (conversations: Conversation[]) => {
-//   console.log('saving conversations', conversations);
-//   localStorage.setItem('conversationHistory', JSON.stringify(conversations));
-// };
+export const saveConversations = (conversations: ConversationSummary[]) => {
+  console.log("save list of conversation is called")
+  // localStorage.setItem('conversationHistory', JSON.stringify(conversations));
+};
+
+export const saveConversation = (conversation: Conversation) => {
+  console.log("save conversation is called")
+  // localStorage.setItem('conversation', JSON.stringify(conversation));
+}
+
+// export const updateConversation = (conversation: Conversation) => {
+//   console.log("update conversation is called")
+//   // localStorage.setItem('conversation', JSON.stringify(conversation));
+// }

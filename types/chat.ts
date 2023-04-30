@@ -13,11 +13,21 @@ export interface RequestBody {
   messages: Message[];
 }
 
-export interface Conversation {
+export interface ConversationIdentifiable {
   id: number;
   name: string;
-  messages: Message[];
+}
+
+export interface ConversationSummary extends ConversationIdentifiable {
   model: OpenAIModel;
   prompt: string;
   folderId: number | null;
 }
+
+
+export interface Conversation extends ConversationSummary{
+  messages: Message[];
+}
+
+
+

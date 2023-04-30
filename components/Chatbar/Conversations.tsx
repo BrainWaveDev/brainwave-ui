@@ -1,16 +1,16 @@
-import { Conversation } from '../../types/chat';
+import { Conversation, ConversationIdentifiable, ConversationSummary } from '../../types/chat';
 import { KeyValuePair } from '../../types/data';
 import { FC } from 'react';
 import { ConversationComponent } from './Conversation';
 
 interface Props {
   loading: boolean;
-  conversations: Conversation[];
+  conversations: ConversationSummary[];
   selectedConversation: Conversation;
-  onSelectConversation: (conversation: Conversation) => void;
-  onDeleteConversation: (conversation: Conversation) => void;
+  onSelectConversation: (conversation: ConversationIdentifiable) => void;
+  onDeleteConversation: (conversation: ConversationIdentifiable) => void;
   onUpdateConversation: (
-    conversation: Conversation,
+    conversation: ConversationIdentifiable,
     data: KeyValuePair
   ) => void;
 }

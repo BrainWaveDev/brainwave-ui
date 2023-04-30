@@ -1,7 +1,7 @@
 import { Chat } from '@/components/Chat/Chat';
 import { Chatbar } from '@/components/Chatbar/Chatbar';
 import { Navbar } from '@/components/Mobile/Navbar';
-import { RequestBody, Conversation, Message } from '../types/chat';
+import { RequestBody, Conversation, Message, ConversationSummary, ConversationIdentifiable } from '../types/chat';
 import { KeyValuePair } from '../types/data';
 import { Folder } from '../types/folder';
 import {
@@ -51,7 +51,7 @@ const ChatUI: React.FC<HomeProps> = ({
 
   const [folders, setFolders] = useState<Folder[]>([]);
 
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation>();
   const [currentMessage, setCurrentMessage] = useState<Message>();
@@ -202,7 +202,7 @@ const ChatUI: React.FC<HomeProps> = ({
 
     saveConversation(updatedConversation);
 
-    const updatedConversations: Conversation[] = conversations.map(
+    const updatedConversations: ConversationSummary[] = conversations.map(
       (conversation) => {
         if (conversation.id === selectedConversation.id) {
           return updatedConversation;
@@ -237,9 +237,9 @@ const ChatUI: React.FC<HomeProps> = ({
     localStorage.setItem('showChatbar', JSON.stringify(!showSidebar));
   };
 
-  const handleSelectConversation = (conversation: Conversation) => {
-    setSelectedConversation(conversation);
-    saveConversation(conversation);
+  const handleSelectConversation = (conversation: ConversationIdentifiable) => {
+    // setSelectedConversation(conversation);
+    // saveConversation(conversation);
   };
 
   // FOLDER OPERATIONS  --------------------------------------------
@@ -349,7 +349,7 @@ const ChatUI: React.FC<HomeProps> = ({
     setLoading(false);
   };
 
-  const handleDeleteConversation = (conversation: Conversation) => {
+  const handleDeleteConversation = (conversation: ConversationIdentifiable) => {
     const updatedConversations = conversations.filter(
       (c) => c.id !== conversation.id
     );
@@ -357,11 +357,12 @@ const ChatUI: React.FC<HomeProps> = ({
     saveConversations(updatedConversations);
 
     if (updatedConversations.length > 0) {
-      setSelectedConversation(
-        updatedConversations[updatedConversations.length - 1]
-      );
-      saveConversation(updatedConversations[updatedConversations.length - 1]);
+      // setSelectedConversation(
+      //   updatedConversations[updatedConversations.length - 1]
+      // );
+      // saveConversation(updatedConversations[updatedConversations.length - 1]);
     } else {
+      // why the fuck we need a place holder? can't we just put noting here?
       setSelectedConversation({
         id: randomNumberId(),
         name: 'New conversation',
@@ -375,7 +376,7 @@ const ChatUI: React.FC<HomeProps> = ({
   };
 
   const handleUpdateConversation = (
-    conversation: Conversation,
+    conversation: ConversationIdentifiable,
     data: KeyValuePair
   ) => {
     debugger
