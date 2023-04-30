@@ -44,7 +44,13 @@ export const retrieveListOfFolders = async (userId: string) => {
     throw error;
   }
 
-  return data;
+  return data.map((dbFolder) =>{
+    return {
+      id: dbFolder.id,
+      name: dbFolder.name,
+      user_id: dbFolder.user_id,
+    }
+  }) as Folder[];
 };
 
 export const updateFolder = async (folder: Folder) => {
