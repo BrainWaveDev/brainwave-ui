@@ -31,11 +31,8 @@ import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import { useEffect, useRef, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import toast from 'react-hot-toast';
-import { supabase } from '@/utils/supabase-client';
-import { useRouter } from 'next/router';
-import { useSessionContext, useUser } from '@supabase/auth-helpers-react';
+import { useSessionContext } from '@supabase/auth-helpers-react';
 import { randomNumberId } from '@/utils/app/createDBOperation';
 
 interface HomeProps {
@@ -568,9 +565,6 @@ const ChatUI: React.FC<HomeProps> = ({
           />
           <div
             className="flex flex-1 w-full"
-            onClick={() => {
-              if (showSidebar) setShowSidebar(false);
-            }}
           >
             <Chat
               conversation={selectedConversation}
