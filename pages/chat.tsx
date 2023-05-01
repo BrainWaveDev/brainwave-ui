@@ -23,6 +23,7 @@ import {
   retriveConversation,
   retriveConversations,
   saveConversation,
+  updateConversation,
 } from '@/utils/app/conversation';
 import { deleteFolder, retrieveListOfFolders, saveFolder, updateFolder } from '@/utils/app/folders';
 import { GetServerSideProps } from 'next';
@@ -69,7 +70,7 @@ const ChatUI: React.FC<HomeProps> = ({
     const user_id = session?.user?.id!;
     retrieveListOfFolders(user_id)
       .then((data) => {
-        setFolders(data.map((dbFolder) =>{
+        setFolders(data.map((dbFolder) => {
           return {
             id: dbFolder.id,
             name: dbFolder.name,
@@ -80,21 +81,21 @@ const ChatUI: React.FC<HomeProps> = ({
       .catch((error) => {
         console.error(error);
       })
-    
+
     retriveConversations(user_id)
-    .then((data) => {
-      setConversations(data);
-      if (data.length > 0) {
-        retriveConversation(data[0].id)
-        .then((conversation) => {
-          setSelectedConversation(conversation);
-        })
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    })
-      
+      .then((data) => {
+        setConversations(data);
+        if (data.length > 0) {
+          retriveConversation(data[0].id)
+            .then((conversation) => {
+              setSelectedConversation(conversation);
+            })
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+
 
   }, [isLoading, error]);
 
@@ -187,7 +188,7 @@ const ChatUI: React.FC<HomeProps> = ({
         isFirst = false;
         const updatedMessages: Message[] = [
           ...updatedConversation.messages,
-          { id:undefined,role: 'assistant', content: chunkValue }
+          { id: undefined, role: 'assistant', content: chunkValue }
         ];
 
         updatedConversation = {
@@ -220,9 +221,9 @@ const ChatUI: React.FC<HomeProps> = ({
     }
 
     saveConversation(updatedConversation, session.user.id!)
-    .catch((error) => {
-      console.error(error);
-    })
+      .catch((error) => {
+        console.error(error);
+      })
 
     const updatedConversations: ConversationSummary[] = conversations.map(
       (conversation) => {
@@ -260,11 +261,11 @@ const ChatUI: React.FC<HomeProps> = ({
   const handleSelectConversation = (conversation: ConversationIdentifiable) => {
     setSelectedConversation(undefined);
     retriveConversation(conversation.id!)
-    .then((data) => {
-      setSelectedConversation(data)
-    }).catch((error) => {
-      console.warn(error);
-    })
+      .then((data) => {
+        setSelectedConversation(data)
+      }).catch((error) => {
+        console.warn(error);
+      })
   };
 
   // FOLDER OPERATIONS  --------------------------------------------
@@ -300,9 +301,9 @@ const ChatUI: React.FC<HomeProps> = ({
     const updatedFolders = folders.filter((f) => f.id !== folderId);
     setFolders(updatedFolders);
     deleteFolder(folderId)
-    .catch((_) => {
-      setFolders(folders);
-    })
+      .catch((_) => {
+        setFolders(folders);
+      })
   };
 
   const handleUpdateFolder = (folderId: number, name: string) => {
@@ -347,19 +348,19 @@ const ChatUI: React.FC<HomeProps> = ({
 
     // if success, update the conversation with the database id
     createConversation(newConversation, session?.user!)
-    .then((data) => {
-      setConversations(updatedConversations.map((c) => {
-        if (c.id === newConversation.id) {
-          return {
-            ...c,
-            id: data.id,
-          };
-        }
-        return c;
-      }));
-    }).catch((_) => {
-      setConversations(conversations);
-    })
+      .then((data) => {
+        setConversations(updatedConversations.map((c) => {
+          if (c.id === newConversation.id) {
+            return {
+              ...c,
+              id: data.id,
+            };
+          }
+          return c;
+        }));
+      }).catch((_) => {
+        setConversations(conversations);
+      })
 
     setLoading(false);
   };
@@ -370,38 +371,60 @@ const ChatUI: React.FC<HomeProps> = ({
     );
     setConversations(updatedConversations);
     deleteConversation(conversation.id!)
-    .catch((_) => {
-      // if error, restore the conversation
-      setConversations(conversations);
-    })
+      .catch((_) => {
+        // if error, restore the conversation
+        setConversations(conversations);
+      })
   };
 
-  const handleUpdateConversation = (
+
+  const handleUpdateConversation = async (
     conversation: ConversationIdentifiable,
     data: KeyValuePair
   ) => {
-    debugger
-    // const updatedConversation = {
-    //   ...conversation,
-    //   [data.key]: data.value
-    // };
+    // TODO: have a bit of problem here, 
+    // drag to folder not working yet
+    const updatedConversation = {
+      ...conversation,
+      [data.key]: data.value
+    };
 
-    // const { single, all } = updateConversation(
-    //   updatedConversation,
-    //   conversations
-    // );
+    if ([data.key].find((key) => key === 'name')) {
+      setConversations(conversations.map((c) => {
+        if (c.id === conversation.id) {
+          return {
+            ...c,
+            name: data.value
+          };
+        }
+        return c;
+      })
+      )
+    }
 
-    // setSelectedConversation(single);
-    // setConversations(all);
+    const isUpdated = await updateConversation(updatedConversation);
+    if (isUpdated) {
+      try {
+        const [selectedConvData, allConvData] = await Promise.all([
+          retriveConversation(conversation.id!),
+          retriveConversations(session?.user?.id!)
+        ]);
+        setSelectedConversation(selectedConvData);
+        setConversations(allConvData);
+      } catch (error) {
+        console.warn(error);
+      }
+    }
   };
+
 
   const handleClearConversations = () => {
     setConversations([]);
     setSelectedConversation(undefined);
     clearAllConversations(session?.user?.id!)
-    .catch((_) => {
-      console.error('Error clearing conversations');
-    })
+      .catch((_) => {
+        console.error('Error clearing conversations');
+      })
   };
 
   const handleEditMessage = (message: Message, messageIndex: number) => {
@@ -425,13 +448,13 @@ const ChatUI: React.FC<HomeProps> = ({
     const prev_conversation = selectedConversation;
     setSelectedConversation(updatedConversation);
     setCurrentMessage(message);
-    inseartMessage(message,messageIndex,selectedConversation.id!,session?.user?.id!)
-    .catch((_) => {
-      // if error, restore the conversation
-      setSelectedConversation(prev_conversation);
-      setCurrentMessage(prev_message);
-      console.error('Error editing message');
-    })
+    inseartMessage(message, messageIndex, selectedConversation.id!, session?.user?.id!)
+      .catch((_) => {
+        // if error, restore the conversation
+        setSelectedConversation(prev_conversation);
+        setCurrentMessage(prev_message);
+        console.error('Error editing message');
+      })
 
   };
 
@@ -518,50 +541,50 @@ const ChatUI: React.FC<HomeProps> = ({
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      <div
+        className={`flex h-[calc(100vh_-_4rem)] flex-col text-sm text-white dark:text-white ${lightMode}`}
+      >
         <div
-          className={`flex h-[calc(100vh_-_4rem)] flex-col text-sm text-white dark:text-white ${lightMode}`}
+          className="flex h-full w-full pt-[48px] sm:pt-0 relative"
+          ref={containerRef}
         >
+          <Chatbar
+            loading={messageIsStreaming}
+            conversations={conversations}
+            lightMode={lightMode}
+            selectedConversation={selectedConversation}
+            folders={folders}
+            showSidebar={showSidebar}
+            handleToggleChatbar={handleToggleChatbar}
+            onToggleLightMode={handleLightMode}
+            onCreateFolder={(name) => handleCreateFolder(name)}
+            onDeleteFolder={handleDeleteFolder}
+            onUpdateFolder={handleUpdateFolder}
+            onNewConversation={handleNewConversation}
+            onSelectConversation={handleSelectConversation}
+            onDeleteConversation={handleDeleteConversation}
+            onUpdateConversation={handleUpdateConversation}
+            onClearConversations={handleClearConversations}
+          />
           <div
-            className="flex h-full w-full pt-[48px] sm:pt-0 relative"
-            ref={containerRef}
+            className="flex flex-1 w-full"
+            onClick={() => {
+              if (showSidebar) setShowSidebar(false);
+            }}
           >
-            <Chatbar
-              loading={messageIsStreaming}
-              conversations={conversations}
-              lightMode={lightMode}
-              selectedConversation={selectedConversation}
-              folders={folders}
-              showSidebar={showSidebar}
-              handleToggleChatbar={handleToggleChatbar}
-              onToggleLightMode={handleLightMode}
-              onCreateFolder={(name) => handleCreateFolder(name)}
-              onDeleteFolder={handleDeleteFolder}
-              onUpdateFolder={handleUpdateFolder}
-              onNewConversation={handleNewConversation}
-              onSelectConversation={handleSelectConversation}
-              onDeleteConversation={handleDeleteConversation}
+            <Chat
+              conversation={selectedConversation}
+              messageIsStreaming={messageIsStreaming}
+              loading={loading}
+              prompts={prompts}
+              onSend={handleSend}
               onUpdateConversation={handleUpdateConversation}
-              onClearConversations={handleClearConversations}
+              onEditMessage={handleEditMessage}
+              stopConversationRef={stopConversationRef}
             />
-            <div
-              className="flex flex-1 w-full"
-              onClick={() => {
-                if (showSidebar) setShowSidebar(false);
-              }}
-            >
-              <Chat
-                conversation={selectedConversation}
-                messageIsStreaming={messageIsStreaming}
-                loading={loading}
-                prompts={prompts}
-                onSend={handleSend}
-                onUpdateConversation={handleUpdateConversation}
-                onEditMessage={handleEditMessage}
-                stopConversationRef={stopConversationRef}
-              />
-            </div>
           </div>
         </div>
+      </div>
     </>
   );
 };

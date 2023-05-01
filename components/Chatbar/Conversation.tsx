@@ -132,7 +132,7 @@ export const ConversationComponent: FC<Props> = ({
           </div>
         )}
 
-      {
+      { isSelected &&
         !isDeleting &&
         !isRenaming && (
           <div className="absolute right-1 z-10 flex text-gray-300">
