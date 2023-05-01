@@ -1,4 +1,4 @@
-import { Conversation } from '../../../types/chat';
+import { Conversation, ConversationIdentifiable, ConversationSummary } from '../../../types/chat';
 import { KeyValuePair } from '../../../types/data';
 import { Folder } from '../../../types/folder';
 import {
@@ -14,17 +14,17 @@ import { ConversationComponent } from '../../Chatbar/Conversation';
 
 interface Props {
   searchTerm: string;
-  conversations: Conversation[];
+  conversations: ConversationSummary[];
   currentFolder: Folder;
-  onDeleteFolder: (folder: string) => void;
-  onUpdateFolder: (folder: string, name: string) => void;
+  onDeleteFolder: (folder: number) => void;
+  onUpdateFolder: (folder: number, name: string) => void;
   // conversation props
-  selectedConversation: Conversation;
+  selectedConversation: Conversation | undefined;
   loading: boolean;
-  onSelectConversation: (conversation: Conversation) => void;
-  onDeleteConversation: (conversation: Conversation) => void;
+  onSelectConversation: (conversation: ConversationIdentifiable) => void;
+  onDeleteConversation: (conversation: ConversationIdentifiable) => void;
   onUpdateConversation: (
-    conversation: Conversation,
+    conversation: ConversationIdentifiable,
     data: KeyValuePair
   ) => void;
 }
@@ -203,12 +203,12 @@ export const ChatFolder: FC<Props> = ({
               return (
                 <div key={index} className="ml-5 gap-2 border-l pl-2">
                   <ConversationComponent
-                    selectedConversation={selectedConversation}
+                    isSelected={selectedConversation?.id === conversation.id}
                     conversation={conversation}
                     loading={loading}
-                    onSelectConversation={onSelectConversation}
-                    onDeleteConversation={onDeleteConversation}
-                    onUpdateConversation={onUpdateConversation}
+                    onSelectConversation={() => onSelectConversation(conversation)}
+                    onDeleteConversation={() => onDeleteConversation(conversation)}
+                    onUpdateConversation={(data) => onUpdateConversation(conversation, data)}
                   />
                 </div>
               );

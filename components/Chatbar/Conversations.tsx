@@ -1,16 +1,16 @@
-import { Conversation } from '../../types/chat';
+import { Conversation, ConversationIdentifiable, ConversationSummary } from '../../types/chat';
 import { KeyValuePair } from '../../types/data';
 import { FC } from 'react';
 import { ConversationComponent } from './Conversation';
 
 interface Props {
   loading: boolean;
-  conversations: Conversation[];
-  selectedConversation: Conversation;
-  onSelectConversation: (conversation: Conversation) => void;
-  onDeleteConversation: (conversation: Conversation) => void;
+  conversations: ConversationSummary[];
+  selectedConversation: Conversation | undefined;
+  onSelectConversation: (conversation: ConversationIdentifiable) => void;
+  onDeleteConversation: (conversation: ConversationIdentifiable) => void;
   onUpdateConversation: (
-    conversation: Conversation,
+    conversation: ConversationIdentifiable,
     data: KeyValuePair
   ) => void;
 }
@@ -30,13 +30,13 @@ export const Conversations: FC<Props> = ({
         .reverse()
         .map((conversation, index) => (
           <ConversationComponent
-            key={index}
-            selectedConversation={selectedConversation}
+            key={conversation.id}
             conversation={conversation}
+            isSelected={selectedConversation?.id === conversation.id}
             loading={loading}
-            onSelectConversation={onSelectConversation}
-            onDeleteConversation={onDeleteConversation}
-            onUpdateConversation={onUpdateConversation}
+            onSelectConversation={() => onSelectConversation(conversation)}
+            onDeleteConversation={() => onDeleteConversation(conversation)}
+            onUpdateConversation={(data:KeyValuePair) => onUpdateConversation(conversation, data)}
           />
         ))}
     </div>

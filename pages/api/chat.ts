@@ -7,6 +7,7 @@ import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
 import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module';
 import GPT3Tokenizer from 'gpt3-tokenizer';
 import { createClient } from '@supabase/supabase-js';
+import { Database } from 'types_db';
 
 export const config = {
   runtime: 'edge'
@@ -111,7 +112,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     let messagesToSend: Message[] = [];
     for (let i = messages.length - 1; i >= 0; i--) {
-      const message = messages[i];
+  
+      const message = {
+        role: messages[i].role,
+        content: messages[i].content
+      }
       const tokens = encoding.encode(message.content);
 
       if (tokenCount + tokens.length + 1000 > model.tokenLimit) {

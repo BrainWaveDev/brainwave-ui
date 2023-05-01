@@ -22,7 +22,7 @@ export default function AppLogo(
         d="M166 74.8676C166 122.138 125.302 150.943 87 150.943C67.9311 150.943 47.0781 143.74 31.0405 130.553C15.0689 117.42 4.00001 98.4782 4 74.8676C3.99999 50.8467 15.0299 33.272 30.875 21.5803C46.8365 9.80256 67.7206 4 87 4C106.283 4 126.118 9.67066 141.039 21.3165C155.84 32.8693 166 50.4335 166 74.8676Z"
         fill="white"
         stroke="url(#paint0_linear_12_42)"
-        stroke-width="8"
+        strokeWidth="8"
       />
       <g filter="url(#filter0_d_12_42)">
         <rect
@@ -32,8 +32,8 @@ export default function AppLogo(
           height="68"
           rx="32"
           fill="url(#paint1_linear_12_42)"
-          fill-opacity="0.2"
-          shape-rendering="crispEdges"
+          fillOpacity="0.2"
+          shapeRendering="crispEdges"
         />
       </g>
       <g filter="url(#filter1_d_12_42)">
@@ -46,7 +46,7 @@ export default function AppLogo(
           rx="16"
           ry="11"
           fill="#06FEA5"
-          fill-opacity="0.5"
+          fillOpacity="0.5"
         />
       </g>
       <g filter="url(#filter3_b_12_42)">
@@ -59,7 +59,7 @@ export default function AppLogo(
           rx="16"
           ry="11"
           fill="#06FEA5"
-          fill-opacity="0.5"
+          fillOpacity="0.5"
         />
       </g>
       <path d="M56 62L70 74H42L56 62Z" fill="#06FEA5" />
@@ -71,9 +71,9 @@ export default function AppLogo(
           width="157"
           height="96"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feColorMatrix
             in="SourceAlpha"
             type="matrix"
@@ -112,9 +112,9 @@ export default function AppLogo(
           width="147"
           height="86"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters ="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feColorMatrix
             in="SourceAlpha"
             type="matrix"
@@ -153,9 +153,9 @@ export default function AppLogo(
           width="52"
           height="42"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feBlend
             mode="normal"
             in="SourceGraphic"
@@ -174,9 +174,9 @@ export default function AppLogo(
           width="68"
           height="52"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feGaussianBlur in="BackgroundImageFix" stdDeviation="10" />
           <feComposite
             in2="SourceAlpha"
@@ -197,9 +197,9 @@ export default function AppLogo(
           width="52"
           height="42"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feBlend
             mode="normal"
             in="SourceGraphic"
@@ -219,8 +219,8 @@ export default function AppLogo(
           y2="154.943"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#5B76FF" />
-          <stop offset="1" stop-color="#00E96B" />
+          <stop stopColor="#5B76FF" />
+          <stop offset="1" stopColor="#00E96B" />
         </linearGradient>
         <linearGradient
           id="paint1_linear_12_42"
@@ -230,10 +230,10 @@ export default function AppLogo(
           y2="85.2676"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#151515" stop-opacity="0.77" />
-          <stop offset="0.24939" stop-color="#202020" stop-opacity="0.73" />
-          <stop offset="0.796582" stop-color="#202020" stop-opacity="0.73" />
-          <stop offset="0.989583" stop-color="#151515" stop-opacity="0.67" />
+          <stop stopColor="#151515" stopOpacity="0.77" />
+          <stop offset="0.24939" stopColor="#202020" stopOpacity="0.73" />
+          <stop offset="0.796582" stopColor="#202020" stopOpacity="0.73" />
+          <stop offset="0.989583" stopColor="#151515" stopOpacity="0.67" />
         </linearGradient>
       </defs>
     </svg>

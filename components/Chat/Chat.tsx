@@ -1,7 +1,7 @@
 import { Conversation, Message } from '../../types/chat';
 import { KeyValuePair } from '../../types/data';
 import { ErrorMessage } from '../../types/error';
-import { OpenAIModel, OpenAIModelID } from '../../types/openai';
+import { OpenAIModel, OpenAIModelID, OpenAIModels } from '../../types/openai';
 import { Prompt } from '../../types/prompt';
 import { throttle } from '../../utils';
 import { IconArrowDown, IconClearAll, IconSettings } from '@tabler/icons-react';
@@ -25,13 +25,8 @@ import { SystemPrompt } from './SystemPrompt';
 import AppLogo from '@/components/icons/AppLogo';
 
 interface Props {
-  conversation: Conversation;
-  models: OpenAIModel[];
-  apiKey: string;
-  serverSideApiKeyIsSet: boolean;
-  defaultModelId: OpenAIModelID;
+  conversation: Conversation | undefined;
   messageIsStreaming: boolean;
-  modelError: ErrorMessage | null;
   loading: boolean;
   prompts: Prompt[];
   onSend: (message: Message, deleteCount?: number) => void;
@@ -46,36 +41,21 @@ interface Props {
 export const Chat: FC<Props> = memo(
   ({
     conversation,
-    models,
-    apiKey,
-    serverSideApiKeyIsSet,
-    defaultModelId,
     messageIsStreaming,
-    modelError,
     loading,
     prompts,
     onSend,
-    onUpdateConversation,
     onEditMessage,
     stopConversationRef
   }) => {
-    const { t } = useTranslation('chat');
     const [currentMessage, setCurrentMessage] = useState<Message>();
     const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true);
-    const [showSettings, setShowSettings] = useState<boolean>(false);
     const [showScrollDownButton, setShowScrollDownButton] =
       useState<boolean>(false);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-    const scrollToBottom = useCallback(() => {
-      if (autoScrollEnabled) {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        textareaRef.current?.focus();
-      }
-    }, [autoScrollEnabled]);
 
     const handleScroll = () => {
       if (chatContainerRef.current) {
@@ -100,16 +80,6 @@ export const Chat: FC<Props> = memo(
       });
     };
 
-    const handleSettings = () => {
-      setShowSettings(!showSettings);
-    };
-
-    const onClearAll = () => {
-      if (confirm(t<string>('Are you sure you want to clear all messages?'))) {
-        onUpdateConversation(conversation, { key: 'messages', value: [] });
-      }
-    };
-
     const scrollDown = () => {
       if (autoScrollEnabled) {
         messagesEndRef.current?.scrollIntoView(true);
@@ -119,12 +89,18 @@ export const Chat: FC<Props> = memo(
 
     // appear scroll down button only when user scrolls up
 
+    const conversationIsEmpty = (conversation === undefined || conversation.messages.length === 0  || conversation === null);
+    
     useEffect(() => {
+      // may have problems with conversation undefined
+      if(conversationIsEmpty) {
+        return
+      }
       throttledScrollDown();
       setCurrentMessage(
         conversation.messages[conversation.messages.length - 2]
       );
-    }, [conversation.messages, throttledScrollDown]);
+    }, [conversation, throttledScrollDown]);
 
     useEffect(() => {
       const observer = new IntersectionObserver(
@@ -150,125 +126,80 @@ export const Chat: FC<Props> = memo(
       };
     }, [messagesEndRef]);
 
+
+
+    const EmptyConversationCover = <>
+      <div className="mx-auto flex w-[350px] flex-col space-y-10 pt-12 sm:w-[600px]">
+        <div className="text-center text-3xl font-semibold text-gray-800 dark:text-gray-100">
+          <div>
+            <>
+              <div
+                className={'flex flex-row items-center place-content-center gap-x-2 mb-2'}
+              >
+                <AppLogo className={'w-10 h-10 mt-0.5'} />
+                BrainBot
+              </div>
+              <div className="text-center text-xl text-gray-500 dark:text-gray-400">
+                <div className="mb-2 md:whitespace-nowrap">
+                  Start conversation with your documents by typing
+                  a prompt below.
+                </div>
+              </div>
+            </>
+          </div>
+        </div>
+      </div>
+    </>;
+
+
+
     return (
       <div className="relative flex-1 overflow-hidden bg-white dark:bg-[#343541]">
-        {!(apiKey || serverSideApiKeyIsSet) ? (
-          <div className="mx-auto flex h-full w-[300px] flex-col justify-center space-y-6 sm:w-[600px]">
-            <div className="text-center text-4xl font-bold text-black dark:text-white">
-              Welcome to Chatbot UI
-            </div>
-            <div className="text-center text-lg text-black dark:text-white">
-              <div className="mb-8">{`Chatbot UI is an open source clone of OpenAI's ChatGPT UI.`}</div>
-              <div className="mb-2 font-bold">
-                Important: Chatbot UI is 100% unaffiliated with OpenAI.
-              </div>
-            </div>
-            <div className="text-center text-gray-500 dark:text-gray-400">
-              <div className="mb-2">
-                Chatbot UI allows you to plug in your API key to use this UI
-                with their API.
-              </div>
-              <div className="mb-2">
-                It is <span className="italic">only</span> used to communicate
-                with their API.
-              </div>
-              <div className="mb-2">
-                {t(
-                  'Please set your OpenAI API key in the bottom left of the sidebar.'
-                )}
-              </div>
-              <div>
-                {t(
-                  "If you don't have an OpenAI API key, you can get one here: "
-                )}
-                <a
-                  href="https://platform.openai.com/account/api-keys"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-500 hover:underline"
-                >
-                  openai.com
-                </a>
-              </div>
-            </div>
+        <>
+          <div
+            className="max-h-full overflow-x-hidden"
+            ref={chatContainerRef}
+            onScroll={handleScroll}
+          >
+            {conversationIsEmpty ? (
+              EmptyConversationCover
+            ) : (
+              <>
+                {conversation.messages.map((message, index) => (
+                  <ChatMessage
+                    key={index}
+                    message={message}
+                    messageIndex={index}
+                    onEditMessage={onEditMessage} />
+                ))}
+                {loading && <ChatLoader />}
+                <div
+                  className="h-[162px] bg-white dark:bg-[#343541]"
+                  ref={messagesEndRef} />
+              </>
+            )}
           </div>
-        ) : modelError ? (
-          <ErrorMessageDiv error={modelError} />
-        ) : (
-          <>
-            <div
-              className="max-h-full overflow-x-hidden"
-              ref={chatContainerRef}
-              onScroll={handleScroll}
-            >
-              {conversation.messages.length === 0 ? (
-                <>
-                  <div className="mx-auto flex w-[350px] flex-col space-y-10 pt-12 sm:w-[600px]">
-                    <div className="text-center text-3xl font-semibold text-gray-800 dark:text-gray-100">
-                      <div>
-                        {models.length === 0 ? (
-                          <Spinner size="16px" className="mx-auto" />
-                        ) : (
-                          <>
-                            <div
-                              className={
-                                'flex flex-row items-center place-content-center gap-x-2 mb-2'
-                              }
-                            >
-                              <AppLogo className={'w-10 h-10 mt-0.5'} />
-                              BrainBot
-                            </div>
-                            <div className="text-center text-xl text-gray-500 dark:text-gray-400">
-                              <div className="mb-2 md:whitespace-nowrap">
-                                Start conversation with your documents by typing
-                                a prompt below.
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {conversation.messages.map((message, index) => (
-                    <ChatMessage
-                      key={index}
-                      message={message}
-                      messageIndex={index}
-                      onEditMessage={onEditMessage}
-                    />
-                  ))}
-                  {loading && <ChatLoader />}
-                  <div
-                    className="h-[162px] bg-white dark:bg-[#343541]"
-                    ref={messagesEndRef}
-                  />
-                </>
-              )}
-            </div>
 
-            <ChatInput
-              stopConversationRef={stopConversationRef}
-              textareaRef={textareaRef}
-              messageIsStreaming={messageIsStreaming}
-              conversationIsEmpty={conversation.messages.length === 0}
-              messages={conversation.messages}
-              model={conversation.model}
-              prompts={prompts}
-              onSend={(message) => {
-                setCurrentMessage(message);
-                onSend(message);
-              }}
-              onRegenerate={() => {
-                if (currentMessage) {
-                  onSend(currentMessage, 2);
-                }
-              }}
-            />
-          </>
-        )}
+          <ChatInput
+            stopConversationRef={stopConversationRef}
+            textareaRef={textareaRef}
+            messageIsStreaming={messageIsStreaming}
+            conversationIsEmpty={conversationIsEmpty}
+            // need to pass in the model here in the future
+            model={OpenAIModels['gpt-3.5-turbo']}
+            prompts={prompts}
+            onSend={(message) => {
+              setCurrentMessage(message);
+              onSend(message);
+            }}
+            onRegenerate={() => {
+              if (currentMessage) {
+                onSend(currentMessage, 2);
+              }
+            }}
+          />
+        </>
+
         {showScrollDownButton && (
           <div className="absolute bottom-0 right-0 mb-4 mr-4 pb-20">
             <button

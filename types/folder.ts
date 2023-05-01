@@ -1,7 +1,11 @@
+import { supabase } from "@supabase/auth-ui-shared";
+
+
 export interface Folder {
-  id: string;
+  id: number;
+  user_id?: string;
+  created_at?: string;
+  updated_at?: string;
   name: string;
-  type: FolderType;
 }
 
-export type FolderType = 'chat' | 'prompt';

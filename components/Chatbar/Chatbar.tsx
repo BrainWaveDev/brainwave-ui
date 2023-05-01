@@ -1,4 +1,4 @@
-import { Conversation } from '../../types/chat';
+import { Conversation, ConversationIdentifiable, ConversationSummary } from '../../types/chat';
 import { KeyValuePair } from '../../types/data';
 import { Folder } from '../../types/folder';
 import { IconFolderPlus, IconMessagesOff, IconPlus } from '@tabler/icons-react';
@@ -13,21 +13,21 @@ import ChevronLeft from '@/components/icons/ChevronLeft';
 
 interface Props {
   loading: boolean;
-  conversations: Conversation[];
+  conversations: ConversationSummary[];
   lightMode: 'light' | 'dark';
-  selectedConversation: Conversation;
+  selectedConversation: Conversation | undefined;
   folders: Folder[];
   showSidebar: boolean;
   handleToggleChatbar: () => void;
   onCreateFolder: (name: string) => void;
-  onDeleteFolder: (folderId: string) => void;
-  onUpdateFolder: (folderId: string, name: string) => void;
+  onDeleteFolder: (folderId: number) => void;
+  onUpdateFolder: (folderId: number, name: string) => void;
   onNewConversation: () => void;
   onToggleLightMode: (mode: 'light' | 'dark') => void;
-  onSelectConversation: (conversation: Conversation) => void;
-  onDeleteConversation: (conversation: Conversation) => void;
+  onSelectConversation: (conversation: ConversationIdentifiable) => void;
+  onDeleteConversation: (conversation: ConversationIdentifiable) => void;
   onUpdateConversation: (
-    conversation: Conversation,
+    conversation: ConversationIdentifiable,
     data: KeyValuePair
   ) => void;
   onClearConversations: () => void;
@@ -54,17 +54,17 @@ export const Chatbar: FC<Props> = ({
   const { t } = useTranslation('sidebar');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredConversations, setFilteredConversations] =
-    useState<Conversation[]>(conversations);
+    useState<ConversationSummary[]>([]);
 
   const handleUpdateConversation = (
-    conversation: Conversation,
+    conversation: ConversationIdentifiable,
     data: KeyValuePair
   ) => {
     onUpdateConversation(conversation, data);
     setSearchTerm('');
   };
 
-  const handleDeleteConversation = (conversation: Conversation) => {
+  const handleDeleteConversation = (conversation: ConversationIdentifiable) => {
     onDeleteConversation(conversation);
     setSearchTerm('');
   };
@@ -94,10 +94,7 @@ export const Chatbar: FC<Props> = ({
     if (searchTerm) {
       setFilteredConversations(
         conversations.filter((conversation) => {
-          const searchable =
-            conversation.name.toLocaleLowerCase() +
-            ' ' +
-            conversation.messages.map((message) => message.content).join(' ');
+          const searchable = conversation.name.toLocaleLowerCase() 
           return searchable.toLowerCase().includes(searchTerm.toLowerCase());
         })
       );
