@@ -93,16 +93,11 @@ export const deleteConversation = async (conversationId: number) => {
     .delete()
     .eq('id', conversationId)
     .throwOnError();
-  
+
 }
 
 
-export const saveConversations = (conversations: ConversationSummary[]) => {
-  console.log("save list of conversation is called")
-  // localStorage.setItem('conversationHistory', JSON.stringify(conversations));
-};
-
-export const saveConversation = async (conversation: Conversation,user_id:string) => {
+export const saveConversation = async (conversation: Conversation, user_id: string) => {
   var to_upsert = {
     name: conversation.name,
     user_id: user_id,
@@ -111,39 +106,39 @@ export const saveConversation = async (conversation: Conversation,user_id:string
   } as any
   if (!isGeneratedId(conversation.id)) {
     to_upsert.id = conversation.id;
-  }else{
+  } else {
     console.warn("save conversation is called with generated id")
   }
 
-  const {data} = await supabase
-  .from('conversation')
-  .upsert(to_upsert)
-  .throwOnError()
-  .select()
-  .single();
+  const { data } = await supabase
+    .from('conversation')
+    .upsert(to_upsert)
+    .throwOnError()
+    .select()
+    .single();
 
-  console.debug("save conversation is called,data is",data)
-  const messages = conversation.messages.map((m,idx) => {
-    var res= {
+  console.debug("save conversation is called,data is", data)
+  const messages = conversation.messages.map((m, idx) => {
+    var res = {
       conversation_id: data!.id,
       content: m.content,
       role: m.role,
       user_id: user_id,
       index: idx,
     } as any
-    if (m.id){
+    if (m.id) {
       res.id = m.id
     }
     return res
-  })
-  console.debug("save conversation is called,message is",messages)
+  }).filter(m => !m.id)
+  console.debug("save conversation is called,message is", messages)
   const messages_res = await supabase
-  .from('messages')
-  .upsert(messages)
-  .select()
-  .throwOnError();
+    .from('messages')
+    .upsert(messages)
+    .select()
+    .throwOnError();
 
-  return{
+  return {
     id: data?.id,
     name: data?.name,
     model: OpenAIModels['gpt-3.5-turbo'],
@@ -159,6 +154,39 @@ export const saveConversation = async (conversation: Conversation,user_id:string
   } as Conversation
 }
 
+export const clearAllConversations = async (user_id: string) => {
+  await supabase
+    .from('conversation')
+    .delete()
+    .eq('user_id', user_id)
+    .throwOnError();
+
+}
+
+export const inseartMessage = async (message: Message,
+  index: number,
+  conversation_id: number,
+  user_id: string
+) => {
+  const { data } = await supabase
+    .from('messages')
+    .insert({
+      conversation_id: conversation_id,
+      content: message.content,
+      role: message.role,
+      user_id: user_id,
+      index: index,
+    })
+    .select()
+    .throwOnError()
+    .single();
+
+  return {
+    id: data?.id,
+    role: data?.role,
+    content: data?.content,
+  } as Message
+}
 
 
 // export const updateConversation = (conversation: Conversation) => {

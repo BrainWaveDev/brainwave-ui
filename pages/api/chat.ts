@@ -112,7 +112,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     let messagesToSend: Message[] = [];
     for (let i = messages.length - 1; i >= 0; i--) {
-      const message = messages[i];
+  
+      const message = {
+        role: messages[i].role,
+        content: messages[i].content
+      }
       const tokens = encoding.encode(message.content);
 
       if (tokenCount + tokens.length + 1000 > model.tokenLimit) {

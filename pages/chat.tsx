@@ -16,13 +16,13 @@ import {
 } from '@/utils/app/clean';
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const';
 import {
+  clearAllConversations,
   createConversation,
   deleteConversation,
+  inseartMessage,
   retriveConversation,
   retriveConversations,
   saveConversation,
-  saveConversations,
-  updateConversation
 } from '@/utils/app/conversation';
 import { deleteFolder, retrieveListOfFolders, saveFolder, updateFolder } from '@/utils/app/folders';
 import { GetServerSideProps } from 'next';
@@ -397,24 +397,16 @@ const ChatUI: React.FC<HomeProps> = ({
 
   const handleClearConversations = () => {
     setConversations([]);
-    localStorage.removeItem('conversationHistory');
-
-    setSelectedConversation({
-      id: randomNumberId(),
-      name: 'New conversation',
-      messages: [],
-      model: OpenAIModels[defaultModelId],
-      prompt: DEFAULT_SYSTEM_PROMPT,
-      folderId: null
-    });
-    localStorage.removeItem('selectedConversation');
-
-    // TODO: update converstation and folder in db
+    setSelectedConversation(undefined);
+    clearAllConversations(session?.user?.id!)
+    .catch((_) => {
+      console.error('Error clearing conversations');
+    })
   };
 
   const handleEditMessage = (message: Message, messageIndex: number) => {
     if (!selectedConversation) {
-      return;
+      throw new Error('No conversation selected, this should not happen');
     }
     const updatedMessages = selectedConversation.messages
       .map((m, i) => {
@@ -429,8 +421,17 @@ const ChatUI: React.FC<HomeProps> = ({
       messages: updatedMessages
     };
 
-    // TODO: update converstation and folder in db
+    const prev_message = currentMessage;
+    const prev_conversation = selectedConversation;
+    setSelectedConversation(updatedConversation);
     setCurrentMessage(message);
+    inseartMessage(message,messageIndex,selectedConversation.id!,session?.user?.id!)
+    .catch((_) => {
+      // if error, restore the conversation
+      setSelectedConversation(prev_conversation);
+      setCurrentMessage(prev_message);
+      console.error('Error editing message');
+    })
 
   };
 
