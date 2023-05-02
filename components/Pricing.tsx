@@ -7,7 +7,7 @@ import { postData } from '@/utils/helpers';
 import { getStripe } from '@/utils/stripe-client';
 import { useUser } from '@/utils/useUser';
 
-import { Price, ProductWithPrice } from 'types';
+import { Price, ProductWithPrice } from '../types';
 
 interface Props {
   products: ProductWithPrice[];

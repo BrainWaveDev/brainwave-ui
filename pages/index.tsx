@@ -2,33 +2,59 @@ import { GetServerSidePropsContext } from 'next';
 import FileInput from '@/components/ui/FileInput/FileInput';
 import FilesList from '@/components/ui/FilesList';
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
+import { getDocumentList, supabase } from '@/utils/supabase-client';
+import React, { useState } from 'react';
 import { Document } from '../types';
-import { supabase } from '@/utils/supabase-client';
-import { useEffect, useState } from 'react';
+import { Database } from '../types/supabase';
+import { RotatingLines } from 'react-loader-spinner';
+import { ErrorAlert, useErrorContext } from '../context/ErrorContext';
 
-export default function HomePage() {
-  const { documentsList, refreshDocuments,setDocumentsList } = useDocuments();
+export default function HomePage({ documents }: { documents: Document[] }) {
+  const [documentsList, setDocumentsList] = useState<Document[]>(documents);
+  const [loadingDocuments, setLoadingDocuments] = useState(false);
+  const { dispatch: dispatchError } = useErrorContext();
 
-  
-  const handleFileDelete = (names: string[]) => {
-    const stashDocuments = [...documentsList];
-    // remove all docs with name from given names
-    const newDocumentsList = documentsList.filter((doc) => !names.includes(doc.name));
-    setDocumentsList(newDocumentsList);
-
-    console.log(names);
+  const handleFileDelete = async (documentIds: string[]) => {
     // remove from db
-    supabase.from('document').delete().in('name', names)
-    .then((data) => {
-      if(data.status !== 204){
-        // if delete failed, restore documents
-        setDocumentsList(stashDocuments);
-      } else {
-        // Refresh documentsList after successful deletion
-        refreshDocuments();
-      }
-    })
+    const { error } = await supabase
+      .from('document')
+      .delete()
+      .in('id', documentIds);
+    if (error) {
+      const newError = new ErrorAlert(
+        `Failed to delete document${documentIds.length > 1 ? 's' : ''}`
+      );
+      dispatchError({ type: 'addError', error: newError });
+      // Automatically clear error alert
+      setTimeout(() => {
+        dispatchError({
+          type: 'removeError',
+          id: newError.id
+        });
+      }, 3000);
 
+      console.error(error.message);
+      return false;
+    } else {
+      // remove all documents selected for removal based on ID
+      setDocumentsList(
+        documentsList.filter((doc) => !documentIds.includes(doc.id))
+      );
+      return true;
+    }
+  };
+
+  const updateDocumentList = async () => {
+    try {
+      setLoadingDocuments(true);
+      const documents = await getDocumentList();
+      setDocumentsList(documents);
+    } catch (e: any) {
+      // TODO: Handle failed document list update
+      console.error(e.message);
+    } finally {
+      setLoadingDocuments(false);
+    }
   };
 
   return (
@@ -41,13 +67,25 @@ export default function HomePage() {
         </div>
       </header>
       <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <FileInput afterUpload={
-          async () => refreshDocuments()
-        }/>
+        <FileInput updateDocumentList={updateDocumentList} />
       </div>
-      
-      <div className="mx-auto max-w-7xl pt-2 pb-6 sm:px-6 lg:px-8 ">
-        <FilesList documents={documentsList} deleteDocumentAction={handleFileDelete} />
+      <div className="mx-auto max-w-7xl pt-2 pb-6 sm:px-6 lg:px-8">
+        {loadingDocuments ? (
+          <section className="container px-4 mx-auto flex items-center place-content-center h-[45vh]">
+            <RotatingLines
+              strokeColor="#9ca3af"
+              strokeWidth="1.5"
+              animationDuration="1"
+              width="4.5rem"
+              visible={true}
+            />
+          </section>
+        ) : (
+          <FilesList
+            documents={documentsList}
+            deleteDocumentAction={handleFileDelete}
+          />
+        )}
       </div>
     </>
   );
@@ -56,7 +94,7 @@ export default function HomePage() {
 export const getServerSideProps = async (
   context: GetServerSidePropsContext
 ) => {
-  const supabase = createServerSupabaseClient(context);
+  const supabase = createServerSupabaseClient<Database>(context);
   const {
     data: { session }
   } = await supabase.auth.getSession();
@@ -69,39 +107,21 @@ export const getServerSideProps = async (
       }
     };
 
-  return {
-    props: {
-      placeHolder: 'placeholder'
-    }
+  let documents: Document[] = [];
+
+  try {
+    documents = await getDocumentList(supabase);
+    return {
+      props: {
+        documents,
+        error: null
+      }
+    };
+  } catch (e: any) {
+    console.error(e.message);
+    return {
+      documents,
+      error: e.message
+    };
   }
-};
-
-
-const useDocuments = () => {
-  const [documentsList, setDocumentsList] = useState<Document[]>([]);
-
-  const fetchDocuments = async () => {
-    const { data, error } = await supabase.from('document').select();
-    if (error) {
-      throw error;
-    }
-    return data as Document[];
-  };
-
-  const refreshDocuments = () => {
-    fetchDocuments()
-      .then((data) => {
-        setDocumentsList(data);
-      })
-      .catch((error) => {
-        // TODO: handle error
-        console.log(error);
-      });
-  };
-
-  useEffect(() => {
-    refreshDocuments();
-  }, []);
-
-  return { documentsList, refreshDocuments,setDocumentsList};
 };

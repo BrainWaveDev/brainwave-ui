@@ -6,7 +6,7 @@ import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
 import ErrorProvider from '../context/ErrorContext';
 import Layout from '@/components/ui/Layout/Layout';
 import { MyUserContextProvider } from '@/utils/useUser';
-import type { Database } from 'types_db';
+import type { Database } from 'types/supabase';
 
 import 'styles/main.css';
 import 'styles/chrome-bug.css';

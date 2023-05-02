@@ -35,6 +35,7 @@ export default function FilePreview({
 }: Props) {
   return (
     <motion.div
+      key={name}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -122,7 +123,7 @@ export default function FilePreview({
                 </svg>
               </div>
               <div>
-                <h2 className="font-normal text-sm text-gray-800 mb-0.5 pr-0 max-w-full">
+                <h2 className="font-normal text-sm text-gray-800 mb-0.5 pr-0 max-w-full whitespace-nowrap">
                   {name.length > 30 ? `${name.slice(0, 30)}...` : name}
                 </h2>
                 <p className="text-xs font-normal text-gray-500">
