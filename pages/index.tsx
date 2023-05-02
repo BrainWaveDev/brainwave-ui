@@ -97,7 +97,6 @@ export const getServerSideProps = async (
 
   try {
     documents = await getDocumentList(supabase);
-    console.log(documents);
     return {
       props: {
         documents,

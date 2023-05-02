@@ -73,12 +73,9 @@ const VectorSearch: NextApiHandler = async (req, res) => {
       }
     );
 
-    console.log(matchError);
-    console.log(documentChunks);
-
     if (matchError) {
       console.error(matchError);
-      throw new Error('Failed to match document chunks');
+      throw Error('Failed to match document chunks');
     }
 
     const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
