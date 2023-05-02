@@ -7,10 +7,13 @@ import React, { useState } from 'react';
 import { Document } from '../types';
 import { Database } from '../types/supabase';
 import { RotatingLines } from 'react-loader-spinner';
+import { ErrorAlert, useErrorContext } from '../context/ErrorContext';
 
 export default function HomePage({ documents }: { documents: Document[] }) {
   const [documentsList, setDocumentsList] = useState<Document[]>(documents);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
+  const { dispatch: dispatchError } = useErrorContext();
+
   const handleFileDelete = async (documentIds: string[]) => {
     // remove from db
     const { error } = await supabase
@@ -18,7 +21,18 @@ export default function HomePage({ documents }: { documents: Document[] }) {
       .delete()
       .in('id', documentIds);
     if (error) {
-      // TODO: Handle failed file removal
+      const newError = new ErrorAlert(
+        `Failed to delete document${documentIds.length > 1 ? 's' : ''}`
+      );
+      dispatchError({ type: 'addError', error: newError });
+      // Automatically clear error alert
+      setTimeout(() => {
+        dispatchError({
+          type: 'removeError',
+          id: newError.id
+        });
+      }, 3000);
+
       console.error(error.message);
       return false;
     } else {
