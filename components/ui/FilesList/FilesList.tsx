@@ -33,6 +33,8 @@ const FileType = (mimetype: string) => {
       return 'DOC';
     case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
       return 'DOCX';
+    case 'text/html':
+      return 'HTML';
     default:
       return '';
   }
