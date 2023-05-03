@@ -14,14 +14,14 @@ const Error = ({
 }) => {
   return (
     <motion.div
-      className="flex w-full max-w-sm bg-white rounded-lg shadow-md group relative"
+      className="flex w-full max-w-md bg-white rounded-lg shadow-md group relative"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1, transition: { duration: 0.2 } }}
       exit={{
         x: '100%',
         opacity: 0,
         transition: {
-          duration: 0.2
+          duration: 0.35
         }
       }}
     >
