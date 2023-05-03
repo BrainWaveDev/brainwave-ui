@@ -22,6 +22,7 @@ import Dropzone from 'react-dropzone';
 // Valid file type
 const validFileTypes = [
   'text/plain',
+  'text/html',
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -88,7 +89,7 @@ export default function FileInput({
       setModalState({
         open: true,
         title: 'Invalid File Type',
-        description: 'You can only upload TXT, PDF, DOC and DOCS files.',
+        description: 'You can only upload TXT, PDF, DOC, DOCX and HTML files.',
         type: ModalType.Alert
       });
     }
