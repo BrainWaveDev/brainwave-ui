@@ -50,7 +50,18 @@ export default function HomePage({ documents }: { documents: Document[] }) {
       const documents = await getDocumentList();
       setDocumentsList(documents);
     } catch (e: any) {
-      // TODO: Handle failed document list update
+      const newError = new ErrorAlert(
+        'Failed to update document list. Please try again.'
+      );
+      dispatchError({ type: 'addError', error: newError });
+      // Automatically clear error alert
+      setTimeout(() => {
+        dispatchError({
+          type: 'removeError',
+          id: newError.id
+        });
+      }, 3000);
+
       console.error(e.message);
     } finally {
       setLoadingDocuments(false);
