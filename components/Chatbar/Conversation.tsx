@@ -66,7 +66,7 @@ export const ConversationComponent: FC<Props> = ({
   }, [isRenaming, isDeleting]);
 
   return (
-    <div className="relative flex items-center">
+    <div className="relative flex items-center my-1">
       {isRenaming && isSelected ? (
         <div className="flex w-full items-center gap-3 bg-[#343541]/90 p-3 rounded-lg">
           <IconMessage size={18} />
