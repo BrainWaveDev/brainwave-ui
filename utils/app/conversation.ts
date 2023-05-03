@@ -1,7 +1,7 @@
 import { User, useUser } from '@supabase/auth-helpers-react';
 import { Conversation, ConversationIdentifiable, ConversationSummary, Message } from '../../types/chat';
 import { supabase } from '../supabase-client';
-import { createDatabaseOperation, isGeneratedId } from './createDBOperation';
+import { isGeneratedId } from './createDBOperation';
 import { OpenAIModels } from 'types/openai';
 import { DEFAULT_SYSTEM_PROMPT } from './const';
 import { clear, get, remove, set } from './localcache';
@@ -34,6 +34,32 @@ export const updateConversation = async (
 
   return false;
 };
+
+
+export const updateConversationFolder = async (
+  conversationId: number,
+  folderId: number | null,
+) => {
+  try {
+    const { data } = await supabase
+      .from('conversation')
+      .update({
+        folder_id: folderId,
+      })
+      .eq('id', conversationId)
+      .throwOnError()
+      .select();
+      if (data) {
+        remove('conversation', conversationId.toString());
+        return true;
+      }
+    } catch (err) {
+      console.error('Error updating conversation folder:', err);
+      return false;
+    }
+    return false;
+  }
+  
 
 export const createConversation = async (conversation: ConversationIdentifiable, user: User) => {
   const { data } = await supabase

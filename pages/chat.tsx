@@ -24,6 +24,7 @@ import {
   retriveConversations,
   saveConversation,
   updateConversation,
+  updateConversationFolder,
 } from '@/utils/app/conversation';
 import { deleteFolder, retrieveListOfFolders, saveFolder, updateFolder } from '@/utils/app/folders';
 import { GetServerSideProps } from 'next';
@@ -61,6 +62,7 @@ const ChatUI: React.FC<HomeProps> = ({
 
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const { isLoading, session, error } = useSessionContext();
+
   useEffect(() => {
     // loading after login
     if (isLoading || error) { return }
@@ -355,6 +357,10 @@ const ChatUI: React.FC<HomeProps> = ({
           }
           return c;
         }));
+        setSelectedConversation({
+          ...newConversation,
+          id: data.id
+        });
       }).catch((_) => {
         setConversations(conversations);
       })
@@ -376,15 +382,30 @@ const ChatUI: React.FC<HomeProps> = ({
 
 
   const handleUpdateConversation = async (
-    conversation: ConversationIdentifiable,
+    conversation: ConversationIdentifiable | ConversationSummary,
     data: KeyValuePair
   ) => {
-    // TODO: have a bit of problem here, 
-    // drag to folder not working yet
+    
     const updatedConversation = {
       ...conversation,
       [data.key]: data.value
     };
+
+    let isUpdated = false;
+
+    if ([data.key].find((key) => key === 'folderId')) {
+      setConversations(conversations.map((c) => {
+        if (c.id === conversation.id) {
+          return {
+            ...c,
+            folderId: data.value
+          };
+        }
+        return c;
+      })
+      )
+      isUpdated = await updateConversationFolder(conversation.id!, data.value);
+    }
 
     if ([data.key].find((key) => key === 'name')) {
       setConversations(conversations.map((c) => {
@@ -397,9 +418,9 @@ const ChatUI: React.FC<HomeProps> = ({
         return c;
       })
       )
+      isUpdated = await updateConversation(updatedConversation);
     }
 
-    const isUpdated = await updateConversation(updatedConversation);
     if (isUpdated) {
       try {
         const [selectedConvData, allConvData] = await Promise.all([
@@ -411,6 +432,8 @@ const ChatUI: React.FC<HomeProps> = ({
       } catch (error) {
         console.warn(error);
       }
+    }else{
+      setConversations(conversations);
     }
   };
 
