@@ -31,7 +31,6 @@ export const ConversationComponent: FC<Props> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
-  console.debug(`ConversationComponent${conversation.id} isSelected`, isSelected);
 
   const handleEnterDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter') {
@@ -44,6 +43,7 @@ export const ConversationComponent: FC<Props> = ({
     e: DragEvent<HTMLButtonElement>,
     conversation: ConversationIdentifiable
   ) => {
+    console.debug('drag start', conversation,  e.dataTransfer);
     if (e.dataTransfer) {
       e.dataTransfer.setData('conversation', JSON.stringify(conversation));
     }
