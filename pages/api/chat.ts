@@ -1,4 +1,4 @@
-import { Message, RequestBody } from '../../types/chat';
+import { Message, RequestBody, RequestMatchDocumentChunks } from '../../types/chat';
 import { defaultPrompt } from '@/utils/app/const';
 import { OpenAIError, OpenAIStream } from '@/utils/server';
 import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json';
@@ -7,7 +7,6 @@ import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
 import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module';
 import GPT3Tokenizer from 'gpt3-tokenizer';
 import { createClient } from '@supabase/supabase-js';
-import { Database } from 'types_db';
 
 export const config = {
   runtime: 'edge'
@@ -26,7 +25,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!supabaseServiceKey)
       throw new Error('Missing environment variable SUPABASE_SERVICE_ROLE_KEY');
 
-    const { jwt, model, messages } = (await req.json()) as RequestBody;
+    const { jwt, model, messages, search_space } = (await req.json()) as RequestBody;
     const userQuestion = messages.at(messages.length - 1);
 
     if (!jwt) throw new Error('Missing access token in request data');
@@ -69,15 +68,23 @@ const handler = async (req: Request): Promise<Response> => {
       data: [{ embedding }]
     } = await embeddingResponse.json();
 
+    let search_req: RequestMatchDocumentChunks = {
+      user_id: user.id,
+      embedding,
+      match_count: 10,
+      match_threshold: 0.75,
+      min_content_length: 50
+    };
+
+    if (search_space) {
+      search_req = {
+        ...search_req,
+        search_space: search_space
+      };
+    }
+
     const { error: matchError, data: documentChunks } = await supabase.rpc(
-      'match_document_chunks',
-      {
-        user_id: user.id,
-        embedding,
-        match_count: 10,
-        match_threshold: 0.75,
-        min_content_length: 50
-      }
+      'match_document_chunks', search_req
     );
 
     if (matchError) {
@@ -112,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     let messagesToSend: Message[] = [];
     for (let i = messages.length - 1; i >= 0; i--) {
-  
+
       const message = {
         role: messages[i].role,
         content: messages[i].content
