@@ -180,7 +180,8 @@ const manageSubscriptionStatusChange = async (
 };
 
 const getDocumentListServerSideProps = async (
-  context: GetServerSidePropsContext
+  context: GetServerSidePropsContext,
+  additionalProps?: { [key: string]: any }
 ) => {
   const supabase = createServerSupabaseClient<Database>(context);
   const {
@@ -202,14 +203,18 @@ const getDocumentListServerSideProps = async (
     return {
       props: {
         documents,
-        error: null
+        error: null,
+        ...additionalProps
       }
     };
   } catch (e: any) {
     console.error(e.message);
     return {
-      documents,
-      error: e.message
+      props: {
+        documents,
+        error: e.message,
+        ...additionalProps
+      }
     };
   }
 };
