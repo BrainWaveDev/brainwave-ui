@@ -81,11 +81,8 @@ const handler = async (req: Request): Promise<Response> => {
       min_content_length: 50
     };
 
-    if (search_space && search_space.length > 0) {
-      search_req = {
-        ...search_req,
-        search_space: search_space
-      };
+    if (search_space) {
+      search_req.search_space = search_space;
     }
 
     const { error: matchError, data: documentChunks } = await supabase.rpc(

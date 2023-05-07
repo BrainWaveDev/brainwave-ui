@@ -1,14 +1,15 @@
 import { Chat } from '@/components/Chat/Chat';
 import { Chatbar } from '@/components/Chatbar/Chatbar';
-import { Navbar } from '@/components/Mobile/Navbar';
-import { RequestBody, Conversation, Message, ConversationSummary, ConversationIdentifiable } from '../types/chat';
+import {
+  RequestBody,
+  Conversation,
+  Message,
+  ConversationSummary,
+  ConversationIdentifiable
+} from '../types/chat';
 import { KeyValuePair } from '../types/data';
 import { Folder } from '../types/folder';
-import {
-  fallbackModelID,
-  OpenAIModelID,
-  OpenAIModels
-} from '../types/openai';
+import { fallbackModelID, OpenAIModelID, OpenAIModels } from '../types/openai';
 import { Prompt } from '../types/prompt';
 import {
   cleanConversationHistory,
@@ -24,9 +25,14 @@ import {
   retriveConversations,
   saveConversation,
   updateConversation,
-  updateConversationFolder,
+  updateConversationFolder
 } from '@/utils/app/conversation';
-import { deleteFolder, retrieveListOfFolders, saveFolder, updateFolder } from '@/utils/app/folders';
+import {
+  deleteFolder,
+  retrieveListOfFolders,
+  saveFolder,
+  updateFolder
+} from '@/utils/app/folders';
 import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -35,18 +41,26 @@ import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useSessionContext } from '@supabase/auth-helpers-react';
 import { randomNumberId } from '@/utils/app/createDBOperation';
+import { getDocumentListServerSideProps } from '@/utils/supabase-admin';
+import { Document } from '../types';
 
-interface HomeProps {
+interface ChatProps {
   defaultModelId: OpenAIModelID;
+  documents: Document[];
+  error?: string;
 }
 
-const ChatUI: React.FC<HomeProps> = ({
-  defaultModelId
-}) => {
+// This interface is used to pass document information to the filter component
+export interface DocumentInfo {
+  id: number;
+  name: string;
+  selected: boolean;
+}
+
+const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
   const { t } = useTranslation('chat');
 
   // STATE ----------------------------------------------
-
   const [loading, setLoading] = useState<boolean>(false);
   const [lightMode, setLightMode] = useState<'dark' | 'light'>('dark');
   const [messageIsStreaming, setMessageIsStreaming] = useState<boolean>(false);
@@ -63,41 +77,46 @@ const ChatUI: React.FC<HomeProps> = ({
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const { isLoading, session, error } = useSessionContext();
 
+  // Managing documents for the filter component
+  const [searchSpace, setSearchSpace] = useState<Set<number>>(
+    new Set<number>(documents.map((document) => document.id))
+  );
+
   useEffect(() => {
     // loading after login
-    if (isLoading || error) { return }
+    if (isLoading || error) {
+      return;
+    }
     const user_id = session?.user?.id!;
     retrieveListOfFolders(user_id)
       .then((data) => {
-        setFolders(data.map((dbFolder) => {
-          return {
-            id: dbFolder.id,
-            name: dbFolder.name,
-            user_id: dbFolder.user_id,
-          }
-        }));
+        setFolders(
+          data.map((dbFolder) => {
+            return {
+              id: dbFolder.id,
+              name: dbFolder.name,
+              user_id: dbFolder.user_id
+            };
+          })
+        );
       })
       .catch((error) => {
         console.error(error);
-      })
+      });
 
     retriveConversations(user_id)
       .then((data) => {
         setConversations(data);
         if (data.length > 0) {
-          retriveConversation(data[0].id)
-            .then((conversation) => {
-              setSelectedConversation(conversation);
-            })
+          retriveConversation(data[0].id).then((conversation) => {
+            setSelectedConversation(conversation);
+          });
         }
       })
       .catch((error) => {
         console.error(error);
-      })
-
-
+      });
   }, [isLoading, error]);
-
 
   // REFS ----------------------------------------------
 
@@ -130,7 +149,8 @@ const ChatUI: React.FC<HomeProps> = ({
     const requestBody: RequestBody = {
       jwt: session.access_token,
       model: updatedConversation.model,
-      messages: updatedConversation.messages
+      messages: updatedConversation.messages,
+      search_space: Array.from(searchSpace)
     };
 
     const controller = new AbortController();
@@ -219,10 +239,9 @@ const ChatUI: React.FC<HomeProps> = ({
       }
     }
 
-    saveConversation(updatedConversation, session.user.id!)
-      .catch((error) => {
-        console.error(error);
-      })
+    saveConversation(updatedConversation, session.user.id!).catch((error) => {
+      console.error(error);
+    });
 
     const updatedConversations: ConversationSummary[] = conversations.map(
       (conversation) => {
@@ -241,9 +260,7 @@ const ChatUI: React.FC<HomeProps> = ({
     setConversations(updatedConversations);
 
     setMessageIsStreaming(false);
-
   };
-
 
   // BASIC HANDLERS --------------------------------------------
 
@@ -261,10 +278,11 @@ const ChatUI: React.FC<HomeProps> = ({
     setSelectedConversation(undefined);
     retriveConversation(conversation.id!)
       .then((data) => {
-        setSelectedConversation(data)
-      }).catch((error) => {
-        console.warn(error);
+        setSelectedConversation(data);
       })
+      .catch((error) => {
+        console.warn(error);
+      });
   };
 
   // FOLDER OPERATIONS  --------------------------------------------
@@ -274,35 +292,36 @@ const ChatUI: React.FC<HomeProps> = ({
     const newFolder: Folder = {
       user_id: session?.user?.id!,
       id: tempId,
-      name,
+      name
     };
 
     const updatedFolders = [...folders, newFolder];
     setFolders(updatedFolders);
     saveFolder(newFolder)
       .then((data) => {
-        setFolders(updatedFolders.map((f) => {
-          if (f.id === tempId) {
-            return {
-              ...f,
-              id: data.id,
-            };
-          }
-          return f;
-        }));
+        setFolders(
+          updatedFolders.map((f) => {
+            if (f.id === tempId) {
+              return {
+                ...f,
+                id: data.id
+              };
+            }
+            return f;
+          })
+        );
       })
       .catch((_) => {
         setFolders(folders);
-      })
+      });
   };
 
   const handleDeleteFolder = (folderId: number) => {
     const updatedFolders = folders.filter((f) => f.id !== folderId);
     setFolders(updatedFolders);
-    deleteFolder(folderId)
-      .catch((_) => {
-        setFolders(folders);
-      })
+    deleteFolder(folderId).catch((_) => {
+      setFolders(folders);
+    });
   };
 
   const handleUpdateFolder = (folderId: number, name: string) => {
@@ -320,11 +339,9 @@ const ChatUI: React.FC<HomeProps> = ({
 
     setFolders(updatedFolders);
     updatedFolder.name = name;
-    updateFolder(updatedFolder)
-      .catch((_) => {
-        setFolders(folders);
-      })
-
+    updateFolder(updatedFolder).catch((_) => {
+      setFolders(folders);
+    });
   };
 
   // CONVERSATION OPERATIONS  --------------------------------------------
@@ -348,22 +365,25 @@ const ChatUI: React.FC<HomeProps> = ({
     // if success, update the conversation with the database id
     createConversation(newConversation, session?.user!)
       .then((data) => {
-        setConversations(updatedConversations.map((c) => {
-          if (c.id === newConversation.id) {
-            return {
-              ...c,
-              id: data.id,
-            };
-          }
-          return c;
-        }));
+        setConversations(
+          updatedConversations.map((c) => {
+            if (c.id === newConversation.id) {
+              return {
+                ...c,
+                id: data.id
+              };
+            }
+            return c;
+          })
+        );
         setSelectedConversation({
           ...newConversation,
           id: data.id
         });
-      }).catch((_) => {
-        setConversations(conversations);
       })
+      .catch((_) => {
+        setConversations(conversations);
+      });
 
     setLoading(false);
   };
@@ -373,19 +393,16 @@ const ChatUI: React.FC<HomeProps> = ({
       (c) => c.id !== conversation.id
     );
     setConversations(updatedConversations);
-    deleteConversation(conversation.id!)
-      .catch((_) => {
-        // if error, restore the conversation
-        setConversations(conversations);
-      })
+    deleteConversation(conversation.id!).catch((_) => {
+      // if error, restore the conversation
+      setConversations(conversations);
+    });
   };
-
 
   const handleUpdateConversation = async (
     conversation: ConversationIdentifiable | ConversationSummary,
     data: KeyValuePair
   ) => {
-    
     const updatedConversation = {
       ...conversation,
       [data.key]: data.value
@@ -394,30 +411,32 @@ const ChatUI: React.FC<HomeProps> = ({
     let isUpdated = false;
 
     if ([data.key].find((key) => key === 'folderId')) {
-      setConversations(conversations.map((c) => {
-        if (c.id === conversation.id) {
-          return {
-            ...c,
-            folderId: data.value
-          };
-        }
-        return c;
-      })
-      )
+      setConversations(
+        conversations.map((c) => {
+          if (c.id === conversation.id) {
+            return {
+              ...c,
+              folderId: data.value
+            };
+          }
+          return c;
+        })
+      );
       isUpdated = await updateConversationFolder(conversation.id!, data.value);
     }
 
     if ([data.key].find((key) => key === 'name')) {
-      setConversations(conversations.map((c) => {
-        if (c.id === conversation.id) {
-          return {
-            ...c,
-            name: data.value
-          };
-        }
-        return c;
-      })
-      )
+      setConversations(
+        conversations.map((c) => {
+          if (c.id === conversation.id) {
+            return {
+              ...c,
+              name: data.value
+            };
+          }
+          return c;
+        })
+      );
       isUpdated = await updateConversation(updatedConversation);
     }
 
@@ -432,19 +451,17 @@ const ChatUI: React.FC<HomeProps> = ({
       } catch (error) {
         console.warn(error);
       }
-    }else{
+    } else {
       setConversations(conversations);
     }
   };
 
-
   const handleClearConversations = () => {
     setConversations([]);
     setSelectedConversation(undefined);
-    clearAllConversations(session?.user?.id!)
-      .catch((_) => {
-        console.error('Error clearing conversations');
-      })
+    clearAllConversations(session?.user?.id!).catch((_) => {
+      console.error('Error clearing conversations');
+    });
   };
 
   const handleEditMessage = (message: Message, messageIndex: number) => {
@@ -468,14 +485,17 @@ const ChatUI: React.FC<HomeProps> = ({
     const prev_conversation = selectedConversation;
     setSelectedConversation(updatedConversation);
     setCurrentMessage(message);
-    inseartMessage(message, messageIndex, selectedConversation.id!, session?.user?.id!)
-      .catch((_) => {
-        // if error, restore the conversation
-        setSelectedConversation(prev_conversation);
-        setCurrentMessage(prev_message);
-        console.error('Error editing message');
-      })
-
+    inseartMessage(
+      message,
+      messageIndex,
+      selectedConversation.id!,
+      session?.user?.id!
+    ).catch((_) => {
+      // if error, restore the conversation
+      setSelectedConversation(prev_conversation);
+      setCurrentMessage(prev_message);
+      console.error('Error editing message');
+    });
   };
 
   // EFFECTS  --------------------------------------------
@@ -494,7 +514,6 @@ const ChatUI: React.FC<HomeProps> = ({
     }
   }, [selectedConversation]);
 
-
   // ON LOAD --------------------------------------------
 
   useEffect(() => {
@@ -511,9 +530,6 @@ const ChatUI: React.FC<HomeProps> = ({
     if (showChatbar) {
       setShowSidebar(showChatbar === 'true');
     }
-
-
-
 
     const prompts = localStorage.getItem('prompts');
     if (prompts) {
@@ -586,9 +602,7 @@ const ChatUI: React.FC<HomeProps> = ({
             onUpdateConversation={handleUpdateConversation}
             onClearConversations={handleClearConversations}
           />
-          <div
-            className="flex flex-1 w-full"
-          >
+          <div className="flex flex-1 w-full">
             <Chat
               conversation={selectedConversation}
               messageIsStreaming={messageIsStreaming}
@@ -598,6 +612,9 @@ const ChatUI: React.FC<HomeProps> = ({
               onUpdateConversation={handleUpdateConversation}
               onEditMessage={handleEditMessage}
               stopConversationRef={stopConversationRef}
+              documents={documents}
+              searchSpace={searchSpace}
+              setSearchSpace={setSearchSpace}
             />
           </div>
         </div>
@@ -608,7 +625,7 @@ const ChatUI: React.FC<HomeProps> = ({
 
 export default ChatUI;
 
-export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
+export const getServerSideProps: GetServerSideProps = async (context) => {
   const defaultModelId =
     (process.env.DEFAULT_MODEL &&
       Object.values(OpenAIModelID).includes(
@@ -617,17 +634,17 @@ export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
       process.env.DEFAULT_MODEL) ||
     fallbackModelID;
 
-  return {
-    props: {
-      serverSideApiKeyIsSet: !!process.env.OPENAI_API_KEY,
-      defaultModelId,
-      ...(await serverSideTranslations(locale ?? 'en', [
-        'common',
-        'chat',
-        'sidebar',
-        'markdown',
-        'promptbar'
-      ]))
-    }
+  const props = {
+    defaultModelId,
+    ...(await serverSideTranslations(context.locale ?? 'en', [
+      'common',
+      'chat',
+      'sidebar',
+      'markdown',
+      'promptbar'
+    ]))
   };
+
+  // Combine with the props containing the document list
+  return getDocumentListServerSideProps(context, props);
 };

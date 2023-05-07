@@ -8,7 +8,12 @@ import { RotatingLines } from 'react-loader-spinner';
 import { ErrorAlert, useErrorContext } from '../context/ErrorContext';
 import { getDocumentListServerSideProps } from '@/utils/supabase-admin';
 
-export default function HomePage({ documents }: { documents: Document[] }) {
+export default function HomePage({
+  documents
+}: {
+  documents: Document[];
+  error?: string;
+}) {
   const [documentsList, setDocumentsList] = useState<Document[]>(documents);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const { dispatch: dispatchError } = useErrorContext();

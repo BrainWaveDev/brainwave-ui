@@ -78,6 +78,10 @@ module.exports = {
         slideDownAndFade:
           'slideDownAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         slideLeftAndFade: 'slideLeftAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)'
+      },
+      backgroundImage: {
+        'main-gradient':
+          'linear-gradient(90deg, #5B76FF -50.29%, #00E96B 119.88%)'
       }
     }
   },

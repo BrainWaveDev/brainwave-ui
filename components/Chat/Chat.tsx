@@ -1,28 +1,26 @@
 import { Conversation, Message } from '../../types/chat';
 import { KeyValuePair } from '../../types/data';
-import { ErrorMessage } from '../../types/error';
-import { OpenAIModel, OpenAIModelID, OpenAIModels } from '../../types/openai';
+import { OpenAIModels } from '../../types/openai';
 import { Prompt } from '../../types/prompt';
 import { throttle } from '../../utils';
-import { IconArrowDown, IconClearAll, IconSettings } from '@tabler/icons-react';
-import { useTranslation } from 'next-i18next';
+import { IconArrowDown } from '@tabler/icons-react';
 import {
+  Dispatch,
   FC,
   memo,
   MutableRefObject,
-  useCallback,
+  SetStateAction,
   useEffect,
   useRef,
   useState
 } from 'react';
-import { Spinner } from '../Global/Spinner';
 import { ChatInput } from './ChatInput';
 import { ChatLoader } from './ChatLoader';
 import { ChatMessage } from './ChatMessage';
-import { ErrorMessageDiv } from './ErrorMessageDiv';
-import { ModelSelect } from './ModelSelect';
-import { SystemPrompt } from './SystemPrompt';
 import AppLogo from '@/components/icons/AppLogo';
+import classNames from 'classnames';
+import DocumentFilter from '@/components/Chat/DocumentFilter';
+import { Document } from '../../types';
 
 interface Props {
   conversation: Conversation | undefined;
@@ -36,6 +34,9 @@ interface Props {
   ) => void;
   onEditMessage: (message: Message, messageIndex: number) => void;
   stopConversationRef: MutableRefObject<boolean>;
+  documents: Document[];
+  searchSpace: Set<number>;
+  setSearchSpace: Dispatch<SetStateAction<Set<number>>>;
 }
 
 export const Chat: FC<Props> = memo(
@@ -46,7 +47,10 @@ export const Chat: FC<Props> = memo(
     prompts,
     onSend,
     onEditMessage,
-    stopConversationRef
+    stopConversationRef,
+    documents,
+    searchSpace,
+    setSearchSpace
   }) => {
     const [currentMessage, setCurrentMessage] = useState<Message>();
     const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true);
@@ -89,12 +93,15 @@ export const Chat: FC<Props> = memo(
 
     // appear scroll down button only when user scrolls up
 
-    const conversationIsEmpty = (conversation === undefined || conversation.messages.length === 0  || conversation === null);
-    
+    const conversationIsEmpty =
+      conversation === undefined ||
+      conversation.messages.length === 0 ||
+      conversation === null;
+
     useEffect(() => {
       // may have problems with conversation undefined
-      if(conversationIsEmpty) {
-        return
+      if (conversationIsEmpty) {
+        return;
       }
       throttledScrollDown();
       setCurrentMessage(
@@ -126,60 +133,66 @@ export const Chat: FC<Props> = memo(
       };
     }, [messagesEndRef]);
 
-
-
-    const EmptyConversationCover = <>
-      <div className="mx-auto flex w-[350px] flex-col space-y-10 pt-12 sm:w-[600px]">
+    const EmptyConversationCover = (
+      <div className="mx-auto flex w-[350px] flex-col space-y-10 sm:w-[600px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full">
         <div className="text-center text-3xl font-semibold text-gray-800 dark:text-gray-100">
           <div>
-            <>
-              <div
-                className={'flex flex-row items-center place-content-center gap-x-2 mb-2'}
+            <div
+              className={'flex flex-row items-center place-content-center mb-2'}
+            >
+              <AppLogo className={'w-10 h-10 mt-0.5 mr-2 -ml-2'} />
+              <span
+                className={'bg-clip-text text-transparent bg-main-gradient m-0'}
               >
-                <AppLogo className={'w-10 h-10 mt-0.5'} />
-                BrainBot
+                Brain
+              </span>
+              Bot
+            </div>
+            <div className="text-center text-xl text-gray-500 dark:text-gray-400">
+              <div className="mb-2 md:whitespace-nowrap">
+                Start conversation with your documents by typing a prompt below.
               </div>
-              <div className="text-center text-xl text-gray-500 dark:text-gray-400">
-                <div className="mb-2 md:whitespace-nowrap">
-                  Start conversation with your documents by typing
-                  a prompt below.
-                </div>
-              </div>
-            </>
+            </div>
           </div>
         </div>
       </div>
-    </>;
-
-
+    );
 
     return (
       <div className="relative flex-1 overflow-hidden bg-white dark:bg-[#343541]">
         <>
           <div
-            className="max-h-full overflow-x-hidden"
+            className={classNames(
+              'min-h-full max-h-full overflow-x-hidden pt-16'
+            )}
             ref={chatContainerRef}
             onScroll={handleScroll}
           >
+            <DocumentFilter
+              documents={documents}
+              searchSpace={searchSpace}
+              setSearchSpace={setSearchSpace}
+            />
             {conversationIsEmpty ? (
               EmptyConversationCover
             ) : (
-              <>
+              <div className={'mt-2'}>
                 {conversation.messages.map((message, index) => (
                   <ChatMessage
                     key={index}
                     message={message}
                     messageIndex={index}
-                    onEditMessage={onEditMessage} />
+                    onEditMessage={onEditMessage}
+                  />
                 ))}
                 {loading && <ChatLoader />}
                 <div
                   className="h-[162px] bg-white dark:bg-[#343541]"
-                  ref={messagesEndRef} />
-              </>
+                  ref={messagesEndRef}
+                />
+              </div>
             )}
           </div>
-
           <ChatInput
             stopConversationRef={stopConversationRef}
             textareaRef={textareaRef}

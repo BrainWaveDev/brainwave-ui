@@ -16,6 +16,7 @@
 :root {
     --background-start-rgb: 214, 219, 225;
     --background-end-rgb: 255, 255, 255;
+    --text-gradient: linear-gradient(90deg, #5B76FF -50.29%, #00E96B 119.88%);
 }
 
 html {
@@ -47,8 +48,6 @@ a {
 }
 
 .animated {
-    -webkit-animation-duration: 1s;
-    animation-duration: 1s;
     -webkit-animation-duration: 1s;
     animation-duration: 1s;
     -webkit-animation-fill-mode: both;
