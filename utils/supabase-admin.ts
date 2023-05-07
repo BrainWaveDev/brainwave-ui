@@ -1,11 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
-
 import { stripe } from './stripe';
 import { toDateTime } from './helpers';
-
-import { Price, Product } from '../types';
+import { Document, Price, Product } from '../types';
 import type { Database } from 'types/supabase';
+import { GetServerSidePropsContext } from 'next';
+import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
+import { getDocumentList } from '@/utils/supabase-client';
 
 // Note: supabaseAdmin uses the SERVICE_ROLE_KEY which you must only use in a secure server-side context
 // as it has admin priviliges and overwrites RLS policies!
@@ -178,9 +179,45 @@ const manageSubscriptionStatusChange = async (
     );
 };
 
+const getDocumentListServerSideProps = async (
+  context: GetServerSidePropsContext
+) => {
+  const supabase = createServerSupabaseClient<Database>(context);
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  if (!session)
+    return {
+      redirect: {
+        destination: '/signin',
+        permanent: false
+      }
+    };
+
+  let documents: Document[] = [];
+
+  try {
+    documents = await getDocumentList(supabase);
+    return {
+      props: {
+        documents,
+        error: null
+      }
+    };
+  } catch (e: any) {
+    console.error(e.message);
+    return {
+      documents,
+      error: e.message
+    };
+  }
+};
+
 export {
   upsertProductRecord,
   upsertPriceRecord,
   createOrRetrieveCustomer,
-  manageSubscriptionStatusChange
+  manageSubscriptionStatusChange,
+  getDocumentListServerSideProps
 };

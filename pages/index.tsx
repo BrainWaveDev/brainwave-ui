@@ -1,13 +1,12 @@
 import { GetServerSidePropsContext } from 'next';
 import FileInput from '@/components/ui/FileInput/FileInput';
 import FilesList from '@/components/ui/FilesList';
-import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
 import { getDocumentList, supabase } from '@/utils/supabase-client';
 import React, { useState } from 'react';
 import { Document } from '../types';
-import { Database } from '../types/supabase';
 import { RotatingLines } from 'react-loader-spinner';
 import { ErrorAlert, useErrorContext } from '../context/ErrorContext';
+import { getDocumentListServerSideProps } from '@/utils/supabase-admin';
 
 export default function HomePage({ documents }: { documents: Document[] }) {
   const [documentsList, setDocumentsList] = useState<Document[]>(documents);
@@ -102,37 +101,5 @@ export default function HomePage({ documents }: { documents: Document[] }) {
   );
 }
 
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  const supabase = createServerSupabaseClient<Database>(context);
-  const {
-    data: { session }
-  } = await supabase.auth.getSession();
-
-  if (!session)
-    return {
-      redirect: {
-        destination: '/signin',
-        permanent: false
-      }
-    };
-
-  let documents: Document[] = [];
-
-  try {
-    documents = await getDocumentList(supabase);
-    return {
-      props: {
-        documents,
-        error: null
-      }
-    };
-  } catch (e: any) {
-    console.error(e.message);
-    return {
-      documents,
-      error: e.message
-    };
-  }
-};
+export const getServerSideProps = async (context: GetServerSidePropsContext) =>
+  getDocumentListServerSideProps(context);
