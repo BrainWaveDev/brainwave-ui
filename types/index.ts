@@ -77,7 +77,7 @@ export interface Metadata {
 }
 
 export interface Document {
-  id: string /* primary key */;
+  id: number /* primary key */;
   owner?: string /* foreign key to auth.users.id */;
   object_id?: string /* foreign key to storage.objects.id */;
   name: string;

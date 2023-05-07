@@ -64,7 +64,6 @@ export const getDocumentList = async (supabaseClient?: SupabaseClient) => {
     documents = data
       .map((document) => ({
         ...document,
-        id: document.id.toString(),
         // @ts-ignore
         metadata: document.metadata as DocMetadata
       }))

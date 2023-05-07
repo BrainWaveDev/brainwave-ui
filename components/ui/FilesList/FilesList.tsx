@@ -16,7 +16,7 @@ import * as AlertDialog from '@radix-ui/react-alert-dialog';
 
 interface Props {
   documents: Document[];
-  deleteDocumentAction: (ids: string[]) => Promise<boolean>;
+  deleteDocumentAction: (ids: number[]) => Promise<boolean>;
 }
 
 const ONE_PAGE_SIZE = 5;
@@ -54,8 +54,8 @@ export default function FilesList(props: Props) {
   const [sortByColumn, setSortByColumn] = useState<number | null>(null);
   const [sortAscending, setSortAscending] = useState(true);
   // List of document ids that were selected with input checkmarks in the document table
-  const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(
-    new Set<string>()
+  const [selectedDocuments, setSelectedDocuments] = useState<Set<number>>(
+    new Set<number>()
   );
   const [deletingDocuments, setDeletingDocuments] = useState(false);
   const [modalState, setModalState] = useState<ModalState | null>(null);
@@ -82,7 +82,7 @@ export default function FilesList(props: Props) {
             Array.from(selectedDocuments)
           );
           if (filesRemoved) {
-            setSelectedDocuments(new Set<string>());
+            setSelectedDocuments(new Set<number>());
           }
           setDeletingDocuments(false);
         }}
@@ -113,10 +113,10 @@ export default function FilesList(props: Props) {
   const selectAllDocuments = (selectAll: boolean) => {
     if (selectAll) {
       setSelectedDocuments(
-        new Set<string>(props.documents.map((document) => document.id))
+        new Set<number>(props.documents.map((document) => document.id))
       );
     } else {
-      setSelectedDocuments(new Set<string>());
+      setSelectedDocuments(new Set<number>());
     }
   };
 
@@ -410,7 +410,7 @@ function DocumentRow(
   doc: Document,
   selected: boolean,
   loading: boolean,
-  setSelectedDocuments: Dispatch<SetStateAction<Set<string>>>
+  setSelectedDocuments: Dispatch<SetStateAction<Set<number>>>
 ) {
   // Shorten document name is it is too long
   const formatDocumentName = (name: string) => {
@@ -445,7 +445,7 @@ function DocumentRow(
     return `${month} ${day}, ${year}`;
   };
 
-  const selectDocument = (select: boolean, documentId: string) => {
+  const selectDocument = (select: boolean, documentId: number) => {
     setSelectedDocuments((selectedDocuments) => {
       if (selectedDocuments.has(documentId)) {
         selectedDocuments.delete(documentId);

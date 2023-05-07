@@ -13,7 +13,7 @@ export default function HomePage({ documents }: { documents: Document[] }) {
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const { dispatch: dispatchError } = useErrorContext();
 
-  const handleFileDelete = async (documentIds: string[]) => {
+  const handleFileDelete = async (documentIds: number[]) => {
     // remove from db
     const { error } = await supabase
       .from('document')
