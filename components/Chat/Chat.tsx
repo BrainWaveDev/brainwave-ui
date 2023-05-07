@@ -176,7 +176,7 @@ export const Chat: FC<Props> = memo(
             {conversationIsEmpty ? (
               EmptyConversationCover
             ) : (
-              <div className={'mt-2'}>
+              <div className={'mt-1.5'}>
                 {conversation.messages.map((message, index) => (
                   <ChatMessage
                     key={index}
