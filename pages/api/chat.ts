@@ -1,4 +1,8 @@
-import { Message, RequestBody, RequestMatchDocumentChunks } from '../../types/chat';
+import {
+  Message,
+  RequestBody,
+  RequestMatchDocumentChunks
+} from '../../types/chat';
 import { defaultPrompt } from '@/utils/app/const';
 import { OpenAIError, OpenAIStream } from '@/utils/server';
 import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json';
@@ -25,7 +29,8 @@ const handler = async (req: Request): Promise<Response> => {
     if (!supabaseServiceKey)
       throw new Error('Missing environment variable SUPABASE_SERVICE_ROLE_KEY');
 
-    const { jwt, model, messages, search_space } = (await req.json()) as RequestBody;
+    const { jwt, model, messages, search_space } =
+      (await req.json()) as RequestBody;
     const userQuestion = messages.at(messages.length - 1);
 
     if (!jwt) throw new Error('Missing access token in request data');
@@ -76,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
       min_content_length: 50
     };
 
-    if (search_space) {
+    if (search_space && search_space.length > 0) {
       search_req = {
         ...search_req,
         search_space: search_space
@@ -84,7 +89,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const { error: matchError, data: documentChunks } = await supabase.rpc(
-      'match_document_chunks', search_req
+      'match_document_chunks',
+      search_req
     );
 
     if (matchError) {
@@ -119,11 +125,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     let messagesToSend: Message[] = [];
     for (let i = messages.length - 1; i >= 0; i--) {
-
       const message = {
         role: messages[i].role,
         content: messages[i].content
-      }
+      };
       const tokens = encoding.encode(message.content);
 
       if (tokenCount + tokens.length + 1000 > model.tokenLimit) {
