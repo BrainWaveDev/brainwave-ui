@@ -181,7 +181,7 @@ const DocumentFilter = ({
                   </svg>
                 </div>
                 <input
-                  className="w-full inline-flex pl-8 items-center justify-center flex-1 rounded px-2.5 text-sm leading-none text-gray-800 h-8 border border-gray-300 placeholder:text-gray-400 outline-none"
+                  className="w-full inline-flex pl-8 items-center justify-center flex-1 rounded-md px-2.5 text-sm leading-none text-gray-800 h-8 border border-gray-300 placeholder:text-gray-400 outline-none"
                   id="width"
                   placeholder="Search documents"
                   onInput={(e) => setSearchString(e.currentTarget.value)}
