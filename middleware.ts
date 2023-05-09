@@ -19,7 +19,7 @@ export async function middleware(req: NextRequest) {
   console.log('Current User Id: ', session?.user.id);
 
   // Check auth condition
-  if (!inDevEnv && session && testUsers.includes(session.user.id)) {
+  if (inDevEnv && session && testUsers.includes(session.user.id)) {
     // Allow sign in for test users
     return res;
   } else {
