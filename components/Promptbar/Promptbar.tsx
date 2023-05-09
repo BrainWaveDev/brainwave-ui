@@ -12,14 +12,14 @@ interface Props {
   prompts: Prompt[];
   folders: Folder[];
   onCreateFolder: (name: string) => void;
-  onDeleteFolder: (folderId: string) => void;
-  onUpdateFolder: (folderId: string, name: string) => void;
+  onDeleteFolder: (folderId: number) => void;
+  onUpdateFolder: (folderId: number, name: string) => void;
   onCreatePrompt: () => void;
   onUpdatePrompt: (prompt: Prompt) => void;
   onDeletePrompt: (prompt: Prompt) => void;
 }
 
-export const Promptbar: FC<Props> = ({
+export const PromptBar: FC<Props> = ({
   folders,
   prompts,
   onCreateFolder,

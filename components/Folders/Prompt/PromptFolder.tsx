@@ -15,8 +15,8 @@ interface Props {
   searchTerm: string;
   prompts: Prompt[];
   currentFolder: Folder;
-  onDeleteFolder: (folder: string) => void;
-  onUpdateFolder: (folder: string, name: string) => void;
+  onDeleteFolder: (folder: number) => void;
+  onUpdateFolder: (folder: number, name: string) => void;
   // prompt props
   onDeletePrompt: (prompt: Prompt) => void;
   onUpdatePrompt: (prompt: Prompt) => void;
