@@ -102,7 +102,7 @@ const handler = async (req: Request): Promise<Response> => {
     for (let i = 0; i < documentChunks.length; i++) {
       const documentChunk = documentChunks[i];
       const documentName = documentChunk.document_name.split('/')[1];
-      const content = `Document Name: ${documentName}\n Content:\n${documentChunk.content.trim()}\n---\n`;
+      const content = `Source Name: ${documentName}\n Content:\n${documentChunk.content.trim()}\n---\n`;
       const encoded = tokenizer.encode(content);
       tokenCount += encoded.text.length;
 
@@ -134,6 +134,8 @@ const handler = async (req: Request): Promise<Response> => {
       tokenCount += tokens.length;
       messagesToSend = [message, ...messagesToSend];
     }
+
+    console.log(promptToSend);
 
     encoding.free();
 
