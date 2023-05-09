@@ -1,8 +1,4 @@
-import {
-  Message,
-  RequestBody,
-  RequestMatchDocumentChunks
-} from '../../types/chat';
+import { Message, RequestBody, RequestMatchDocumentChunks } from '@/types/chat';
 import { qaPrompt } from '@/utils/app/prompts';
 import { OpenAIError, OpenAIStream } from '@/utils/server';
 import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json';
@@ -89,7 +85,6 @@ const handler = async (req: Request): Promise<Response> => {
       'match_document_chunks',
       search_req
     );
-
 
     if (matchError) {
       console.error(matchError);
