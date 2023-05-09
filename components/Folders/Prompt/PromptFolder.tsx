@@ -45,7 +45,7 @@ export const PromptFolder: FC<Props> = ({
   };
 
   const handleRename = () => {
-    onUpdateFolder(currentFolder.id.toString(), renameValue);
+    onUpdateFolder(currentFolder.id, renameValue);
     setRenameValue('');
     setIsRenaming(false);
   };
@@ -143,7 +143,7 @@ export const PromptFolder: FC<Props> = ({
                 e.stopPropagation();
 
                 if (isDeleting) {
-                  onDeleteFolder(currentFolder.id.toString());
+                  onDeleteFolder(currentFolder.id);
                 } else if (isRenaming) {
                   handleRename();
                 }
