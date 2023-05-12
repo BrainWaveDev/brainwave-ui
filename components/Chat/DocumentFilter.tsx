@@ -104,7 +104,9 @@ const DocumentFilter = ({
     <div
       className={classNames(
         'absolute top-0 left-0 right-0 z-10 py-4 flex items-center place-content-center',
-        'bg-white shadow-[0_0_8px_rgba(0,0,0,0.08)] border-black/10 border-b'
+        'bg-transparent border-nonerelative'
+        // I think this looks slightly better, let me know what you think - @Irving
+        // shadow-[0_0_8px_rgba(0,0,0,0.08)] border-black/10 border-b '
       )}
     >
       <Popover.Root>

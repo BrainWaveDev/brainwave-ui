@@ -581,7 +581,7 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
         className={`flex h-[calc(100vh_-_4rem)] min-w-full flex-col text-sm text-white dark:text-white ${lightMode}`}
       >
         <div
-          className="flex h-full w-full pt-[48px] sm:pt-0 relative"
+          className="flex h-full w-full pt-0 relative"
           ref={containerRef}
         >
           <Chatbar

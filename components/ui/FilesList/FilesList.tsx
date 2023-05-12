@@ -278,12 +278,12 @@ export default function FilesList(props: Props) {
           </div>
         </div>
 
-        <div className="flex flex-col mt-6">
+        <div className="flex flex-col mt-6 min-h-[45vh]">
           <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
               <div className="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed">
-                  <thead className="bg-gray-50 dark:bg-gray-800">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed ">
+                  <thead className="bg-gray-50 dark:bg-gray-800 ">
                     <TableHeader
                       sortByColumn={sortByColumn}
                       sortAscending={sortAscending}
@@ -412,6 +412,7 @@ function DocumentRow(
   loading: boolean,
   setSelectedDocuments: Dispatch<SetStateAction<Set<number>>>
 ) {
+  
   // Shorten document name is it is too long
   const formatDocumentName = (name: string) => {
     const documentName = name.split('/').pop();
@@ -492,14 +493,23 @@ function DocumentRow(
         animate={{ opacity: 1, display: 'table-row' }}
         exit={{ opacity: 0, display: 'none' }}
         transition={{ duration: 0.5 }}
+        onClick={() => {
+          //if on small screen,
+          if(window.innerWidth < 640){
+            selectDocument(!selected, doc.id)
+          }
+        }}
+        // TODO: this need to be more visually confortable
+        className={` ${selected ? 'bg-gray-100 dark:bg-gray-800 shadow-[inset_0px_0px_0px_4px] shadow-cyan-500' : ''} sm:shadow-none sm:bg-white`}
       >
-        <td className="inline-block px-4 py-4 sm:w-[33rem] w-[50vw] overflow-ellipsis text-sm font-medium text-gray-700 whitespace-nowrap overflow-hidden">
+        <td className="inline-block px-4 py-4 sm:w-[33rem] w-[50vw] 
+        overflow-ellipsis text-sm font-medium text-gray-700 whitespace-nowrap overflow-hidden">
           <div className="inline-flex items-center gap-x-3">
             <input
               type="checkbox"
               className={classNames(
                 'mr-2 text-teal-400 border-gray-300 rounded cursor-pointer',
-                'focus:outline-teal-400 active:outline-teal-400'
+                'focus:outline-teal-400 active:outline-teal-400 hidden sm:inline-block'
               )}
               checked={selected}
               onChange={(event) => selectDocument(event.target.checked, doc.id)}

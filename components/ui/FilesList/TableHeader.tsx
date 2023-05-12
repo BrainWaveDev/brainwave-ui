@@ -74,8 +74,8 @@ export default function TableHeader({
           <input
             type="checkbox"
             className={classNames(
-              'mr-2 text-teal-400 border-gray-300 rounded cursor-pointer',
-              'focus:outline-teal-400 active:outline-teal-400'
+              ' text-teal-400 border-gray-300 rounded cursor-pointer',
+              'focus:outline-teal-400 active:outline-teal-400 sm:mr-2'
             )}
             onChange={(event) => selectAllDocuments(event.target.checked)}
             checked={allDocumentsSelected}
