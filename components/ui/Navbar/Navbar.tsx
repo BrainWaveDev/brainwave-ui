@@ -128,7 +128,10 @@ export default function Navbar() {
 
               <div className="-mr-2 flex md:hidden">
                 {/* Mobile menu button */}
-                <Disclosure.Button className="inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+                <Disclosure.Button className="inline-flex items-center justify-center rounded-md 
+                bg-gray-800 p-2 text-gray-400 hover:bg-gray-700
+                 hover:text-white focus:outline-none focus:ring-2
+                  focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                   <span className="sr-only">Open main menu</span>
                   {open ? (
                     <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
@@ -140,8 +143,8 @@ export default function Navbar() {
             </div>
           </div>
           {/* Mobile NavBar */}
-          <Disclosure.Panel className="md:hidden">
-            <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
+          <Disclosure.Panel className="md:hidden absolute bg-slate-800 z-30 min-w-full">
+            <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3 z-30 w-[30vw] float-right">
               {navigation.map((item) => (
                 <Disclosure.Button
                   key={item.name}
@@ -162,18 +165,11 @@ export default function Navbar() {
             <div className="border-t border-gray-700 pb-3 pt-4">
               {user && (
                 <div className="flex items-center px-5">
-                  <div className="ml-3">
+                  <div className="">
                     <div className="text-sm font-medium leading-none text-gray-400">
                       {user.email}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    className="ml-auto flex-shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                  >
-                    <span className="sr-only">View notifications</span>
-                    <BellIcon className="h-6 w-6" aria-hidden="true" />
-                  </button>
                 </div>
               )}
               <div className="mt-3 space-y-1 px-2">

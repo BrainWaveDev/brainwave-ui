@@ -493,7 +493,7 @@ function DocumentRow(
         exit={{ opacity: 0, display: 'none' }}
         transition={{ duration: 0.5 }}
       >
-        <td className="inline-block px-4 py-4 w-[33rem] text-sm font-medium text-gray-700 whitespace-nowrap overflow-hidden">
+        <td className="inline-block px-4 py-4 sm:w-[33rem] w-[50vw] overflow-ellipsis text-sm font-medium text-gray-700 whitespace-nowrap overflow-hidden">
           <div className="inline-flex items-center gap-x-3">
             <input
               type="checkbox"
