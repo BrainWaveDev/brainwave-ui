@@ -235,7 +235,7 @@ export default function FilesList(props: Props) {
         />
       )}
       <section className="container px-4 mx-auto">
-        <div className="sm:flex sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between flex-row-reverse sm:flex-row">
           <div className={'flex items-center place-self-center'}>
             <AnimatePresence>
               {selectedDocuments.size > 0 && (
@@ -268,7 +268,7 @@ export default function FilesList(props: Props) {
               <input
                 type="text"
                 id="table-search-users"
-                className={classes.input}
+                className="block p-2 pl-10 text-sm text-gray-700 border-none rounded-lg sm:w-80 bg-white shadow focus:ring-2 ring-teal-400 outline-none appearance-none"
                 placeholder="Search for files"
                 onChange={(e) => {
                   setFilter(e.target.value);
