@@ -234,7 +234,7 @@ export default function FilesList(props: Props) {
           actionButtons={ModalActionButtons}
         />
       )}
-      <section className="container px-4 mx-auto">
+      <section className="container px-4 mx-auto ">
         <div className="flex items-center justify-between flex-row-reverse sm:flex-row">
           <div className={'flex items-center place-self-center'}>
             <AnimatePresence>
@@ -278,10 +278,10 @@ export default function FilesList(props: Props) {
           </div>
         </div>
 
-        <div className="flex flex-col mt-6 min-h-[45vh]">
+        <div className="flex flex-col mt-6 min-h-[47vh]">
           <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-              <div className="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
+              <div className="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg mx-[2vw] sm:mx-0 rounded-md">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed ">
                   <thead className="bg-gray-50 dark:bg-gray-800 ">
                     <TableHeader
@@ -358,7 +358,10 @@ export default function FilesList(props: Props) {
                 d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18"
               />
             </svg>
-            <span>Previous</span>
+            <span 
+              className='hidden sm:inline-block'
+            >
+              Previous</span>
           </button>
 
           <PageIndex
@@ -384,7 +387,10 @@ export default function FilesList(props: Props) {
                 : 'opacity-0'
             )}
           >
-            <span>Next</span>
+            <span
+              className='hidden sm:inline-block'
+            >Next
+            </span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -538,13 +544,13 @@ function DocumentRow(
             </div>
           </div>
         </td>
-        <td className="px-12 py-4 w-52 text-sm font-normal text-gray-700 whitespace-nowrap">
+        <td className="px-12 py-4 w-52 text-sm font-normal text-gray-700 whitespace-nowrap hidden sm:table-cell">
           {formatBytes(doc.metadata.size)}
         </td>
-        <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+        <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap hidden sm:table-cell">
           {FileType(doc.metadata.mimetype)}
         </td>
-        <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+        <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap hidden sm:table-cell">
           {formatDate(doc.metadata.lastModified)}
         </td>
         <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">

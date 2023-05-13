@@ -39,7 +39,7 @@ export default function PageIndex({ totalPages, setPage, currPage }: Props) {
   if (totalPages <= 5) {
     // display all page numbers
     return (
-      <div className="items-center hidden md:flex gap-x-3">
+      <div className="items-center gap-x-3">
         {Array.from(Array(totalPages).keys()).map((pageNumber) => {
           return pageNumberBox(pageNumber, pageNumber === currPage);
         })}
@@ -59,6 +59,6 @@ export default function PageIndex({ totalPages, setPage, currPage }: Props) {
       pageNumberBox(totalPages - 1, isLastPageSelected)
     ].filter(Boolean); // Remove null values from the array
 
-    return <div className="items-center hidden md:flex gap-x-3">{pages}</div>;
+    return <div className="items-center flex gap-x-3">{pages}</div>;
   }
 }

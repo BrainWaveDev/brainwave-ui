@@ -91,7 +91,7 @@ export default function TableHeader({
 
       <th
         scope="col"
-        className="px-12 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+        className="px-12 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 hidden sm:table-cell"
       >
         <ColumnName
           name={'Size'}
@@ -103,7 +103,7 @@ export default function TableHeader({
 
       <th
         scope="col"
-        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 hidden sm:table-cell"
       >
         <ColumnName
           name={'Kind'}
@@ -115,7 +115,7 @@ export default function TableHeader({
 
       <th
         scope="col"
-        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 hidden sm:table-cell"
       >
         <ColumnName
           name={'Date Uploaded'}
