@@ -1,4 +1,4 @@
-import { User, useUser } from '@supabase/auth-helpers-react';
+import { User } from '@supabase/auth-helpers-react';
 import {
   Conversation,
   ConversationIdentifiable,
