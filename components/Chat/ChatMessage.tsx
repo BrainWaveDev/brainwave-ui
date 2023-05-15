@@ -1,11 +1,5 @@
 import { Message } from '../../types/chat';
-import {
-  IconCheck,
-  IconCopy,
-  IconEdit,
-  IconUser,
-  IconRobot
-} from '@tabler/icons-react';
+import { IconCheck, IconCopy, IconEdit } from '@tabler/icons-react';
 import { useTranslation } from 'next-i18next';
 import { FC, memo, useEffect, useRef, useState } from 'react';
 import rehypeMathjax from 'rehype-mathjax';
