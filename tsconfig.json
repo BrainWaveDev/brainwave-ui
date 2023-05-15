@@ -33,7 +33,8 @@
         "./node_modules/@types/react"
       ]
     },
-    "incremental": true
+    "incremental": true,
+    "downlevelIteration": true
   },
   "include": [
     "next-env.d.ts",
