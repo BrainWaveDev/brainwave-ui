@@ -5,7 +5,7 @@ import {
   ParsedEvent,
   ReconnectInterval
 } from 'eventsource-parser';
-import { OPENAI_API_HOST } from '../app/const';
+import { OPENAI_API_HOST } from '../app/prompts';
 
 export class OpenAIError extends Error {
   type: string;
@@ -24,8 +24,21 @@ export class OpenAIError extends Error {
 export const OpenAIStream = async (
   model: OpenAIModel,
   systemPrompt: string,
-  messages: Message[]
+  messages: Message[],
+  sources?: string
+  //sources?: { [key: string]: any }
 ) => {
+  const messagesToSend = [
+    ...messages.slice(0, messages.length - 1),
+    {
+      role: 'system',
+      content: systemPrompt
+    },
+    messages.at(messages.length - 1)
+  ];
+
+  console.log(messagesToSend);
+
   const res = await fetch(`${OPENAI_API_HOST}/v1/chat/completions`, {
     headers: {
       'Content-Type': 'application/json',
@@ -46,7 +59,7 @@ export const OpenAIStream = async (
         messages.at(messages.length - 1)
       ],
       max_tokens: 1000,
-      temperature: 1,
+      temperature: 0.7,
       stream: true
     })
   });
@@ -78,7 +91,10 @@ export const OpenAIStream = async (
         if (event.type === 'event') {
           const data = event.data;
 
-          if (data === '[DONE]') {
+          if (sources && data === '[DONE]') {
+            // Add system prompt at the final parser message
+            const queue = encoder.encode(sources);
+            controller.enqueue(queue);
             controller.close();
             return;
           }
