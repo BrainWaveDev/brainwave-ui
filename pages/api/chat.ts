@@ -90,6 +90,8 @@ const handler = async (req: Request): Promise<Response> => {
       search_req
     );
 
+    console.log(documentChunks);
+
     if (matchError) {
       console.error(matchError);
       throw new Error('Failed to match document chunks');
@@ -114,7 +116,8 @@ const handler = async (req: Request): Promise<Response> => {
     let tokenCount = 0;
     let contextText = '';
     let sourceKey = 1;
-    let sources = `\n\n<h3>Sources</h3>`;
+    let sources =
+      documentChunks.length > 0 ? `\n\n<h3>Sources</h3>` : undefined;
 
     const iterator = contentByDocument.keys();
     for (const documentName of iterator) {
