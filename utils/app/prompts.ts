@@ -40,10 +40,11 @@ export const qaPrompt = (contextText: string = '') => codeBlock`
         oneLine` and provide a generic response. DO NOT make up information about unknown entities. 
         DO NOT mention the document in the response by saying "According to", 
         "As discussed in" or similar phrases. Respond as if the information in 
-        the provided context is true and accurate. For each sentence in your answer, 
-        indicate key of the source that most supports it via valid citation markers 
-        before the at the end of sentence, like (1). DO NOT try to make up sources. 
-        Format your response using markdown.` +
+        the provided context is true and accurate. For each statement in your answer, 
+        you must indicate key of the source in the given context that most supports 
+        it via valid citation marker before the at the end of sentence, like (1). 
+        DO NOT add a citation if you didn't use any source in the given context to 
+        answer this question. DO NOT make up sources. Format your response using markdown.` +
         `\n\n${
           contextText.length > 0
             ? `Context sections, separated by ---:\n---\n${contextText}`
