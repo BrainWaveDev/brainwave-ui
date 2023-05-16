@@ -1,5 +1,5 @@
 import { OpenAIModel, OpenAIModelID, OpenAIModels } from '../../types/openai';
-import { OPENAI_API_HOST } from '@/utils/app/const';
+import { OPENAI_API_HOST } from '@/utils/app/prompts';
 
 export const config = {
   runtime: 'edge'

@@ -1,7 +1,6 @@
 import { Conversation } from '../../types/chat';
-import { OpenAIModelID } from '../../types/openai';
 import { Prompt } from '../../types/prompt';
-import { DEFAULT_SYSTEM_PROMPT } from '../../utils/app/const';
+import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/prompts';
 import { useTranslation } from 'next-i18next';
 import {
   FC,
@@ -66,8 +65,7 @@ export const SystemPrompt: FC<Props> = ({
   const handleInitModal = () => {
     const selectedPrompt = filteredPrompts[activePromptIndex];
     setValue((prevVal) => {
-      const newContent = prevVal?.replace(/\/\w*$/, selectedPrompt.content);
-      return newContent;
+      return prevVal?.replace(/\/\w*$/, selectedPrompt.content);
     });
     handlePromptSelect(selectedPrompt);
     setShowPromptList(false);

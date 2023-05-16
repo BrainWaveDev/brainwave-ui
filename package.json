@@ -51,6 +51,7 @@
     "react-merge-refs": "^2.0.1",
     "react-syntax-highlighter": "^15.5.0",
     "rehype-mathjax": "^4.0.2",
+    "rehype-raw": "^6.1.1",
     "remark-gfm": "^3.0.1",
     "remark-math": "^5.1.1",
     "stripe": "^11.13.0",

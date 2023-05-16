@@ -15,7 +15,7 @@ import {
   cleanConversationHistory,
   cleanSelectedConversation
 } from '@/utils/app/clean';
-import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const';
+import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/prompts';
 import {
   clearAllConversations,
   createConversation,
@@ -43,6 +43,7 @@ import { useSessionContext } from '@supabase/auth-helpers-react';
 import { randomNumberId } from '@/utils/app/createDBOperation';
 import { getDocumentListServerSideProps } from '@/utils/supabase-admin';
 import { Document } from '../types';
+import { clearSourcesFromMessages } from '@/utils/app/messages';
 
 interface ChatProps {
   defaultModelId: OpenAIModelID;
@@ -128,6 +129,9 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
   const handleSend = async (message: Message) => {
     if (!selectedConversation) return;
 
+    // Remove sources from selectedConversation
+    clearSourcesFromMessages(selectedConversation.messages);
+
     let updatedConversation = {
       ...selectedConversation,
       messages: [...selectedConversation.messages, message]
@@ -199,6 +203,7 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
       }
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
+
       const chunkValue = decoder.decode(value);
 
       text += chunkValue;
