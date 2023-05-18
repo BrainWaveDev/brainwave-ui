@@ -15,9 +15,6 @@ export async function middleware(req: NextRequest) {
     data: { session }
   } = await supabase.auth.getSession();
 
-  console.log('TEST_USERS', testUsers);
-  console.log('Current User Id: ', session?.user.id);
-
   // Check auth condition
   if (inDevEnv && session && testUsers.includes(session.user.id)) {
     // Allow sign in for test users

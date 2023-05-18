@@ -1,11 +1,5 @@
 import { Message } from '../../types/chat';
-import {
-  IconCheck,
-  IconCopy,
-  IconEdit,
-  IconUser,
-  IconRobot
-} from '@tabler/icons-react';
+import { IconCheck, IconCopy, IconEdit } from '@tabler/icons-react';
 import { useTranslation } from 'next-i18next';
 import { FC, memo, useEffect, useRef, useState } from 'react';
 import rehypeMathjax from 'rehype-mathjax';
@@ -15,6 +9,7 @@ import { CodeBlock } from '../Markdown/CodeBlock';
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown';
 import AppLogo from '@/components/icons/AppLogo';
 import UserIcon from '@/components/icons/UserIcon';
+import rehypeRaw from 'rehype-raw';
 
 interface Props {
   message: Message;
@@ -190,7 +185,7 @@ export const ChatMessage: FC<Props> = memo(
                 <MemoizedReactMarkdown
                   className="prose dark:prose-invert"
                   remarkPlugins={[remarkGfm, remarkMath]}
-                  rehypePlugins={[rehypeMathjax]}
+                  rehypePlugins={[rehypeMathjax, rehypeRaw]}
                   components={{
                     code({ node, inline, className, children, ...props }) {
                       const match = /language-(\w+)/.exec(className || '');

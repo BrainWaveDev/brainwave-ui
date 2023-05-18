@@ -1,19 +1,24 @@
-import { User, useUser } from '@supabase/auth-helpers-react';
-import { Conversation, ConversationIdentifiable, ConversationSummary, Message } from '../../types/chat';
+import { User } from '@supabase/auth-helpers-react';
+import {
+  Conversation,
+  ConversationIdentifiable,
+  ConversationSummary,
+  Message
+} from '../../types/chat';
 import { supabase } from '../supabase-client';
 import { isGeneratedId } from './createDBOperation';
 import { OpenAIModels } from 'types/openai';
-import { DEFAULT_SYSTEM_PROMPT } from './const';
+import { DEFAULT_SYSTEM_PROMPT } from './prompts';
 import { clear, get, remove, set } from './localcache';
 
 export const updateConversation = async (
-  updatedConversation: ConversationIdentifiable,
+  updatedConversation: ConversationIdentifiable
 ) => {
   try {
     const { data, error } = await supabase
       .from('conversation')
       .update({
-        name: updatedConversation.name,
+        name: updatedConversation.name
       })
       .eq('id', updatedConversation.id)
       .select();
@@ -35,38 +40,39 @@ export const updateConversation = async (
   return false;
 };
 
-
 export const updateConversationFolder = async (
   conversationId: number,
-  folderId: number | null,
+  folderId: number | null
 ) => {
   try {
     const { data } = await supabase
       .from('conversation')
       .update({
-        folder_id: folderId,
+        folder_id: folderId
       })
       .eq('id', conversationId)
       .throwOnError()
       .select();
-      if (data) {
-        remove('conversation', conversationId.toString());
-        return true;
-      }
-    } catch (err) {
-      console.error('Error updating conversation folder:', err);
-      return false;
+    if (data) {
+      remove('conversation', conversationId.toString());
+      return true;
     }
+  } catch (err) {
+    console.error('Error updating conversation folder:', err);
     return false;
   }
-  
+  return false;
+};
 
-export const createConversation = async (conversation: ConversationIdentifiable, user: User) => {
+export const createConversation = async (
+  conversation: ConversationIdentifiable,
+  user: User
+) => {
   const { data } = await supabase
     .from('conversation')
     .insert({
       name: conversation.name,
-      user_id: user.id,
+      user_id: user.id
     })
     .select()
     .throwOnError()
@@ -78,30 +84,32 @@ export const createConversation = async (conversation: ConversationIdentifiable,
     model: OpenAIModels['gpt-3.5-turbo'],
     prompt: DEFAULT_SYSTEM_PROMPT,
     messages: [],
-    folderId: data?.folder_id,
+    folderId: data?.folder_id
   } as Conversation;
 
   set('conversation', res.id.toString(), res);
-  return res
-}
+  return res;
+};
 
 export const retriveConversation = async (conversationId: number) => {
-  const {exist, resource} = get('conversation', conversationId.toString());
+  const { exist, resource } = get('conversation', conversationId.toString());
   if (exist) {
     return resource!;
   }
-  const { data, error } = await supabase
+  const { data, error } = (await supabase
     .from('conversation')
-    .select(`
+    .select(
+      `
     id,
     name,
     created_at,
     folder_id,
     messages ( id,role, content, user_id, index)
-  `)
+  `
+    )
     .eq('id', conversationId)
     .order('created_at', { ascending: false })
-    .single() as any;
+    .single()) as any;
 
   if (error) {
     throw error;
@@ -111,12 +119,12 @@ export const retriveConversation = async (conversationId: number) => {
     name: data?.name,
     model: OpenAIModels['gpt-3.5-turbo'],
     prompt: DEFAULT_SYSTEM_PROMPT,
-    messages: data?.messages,
+    messages: data?.messages
   } as Conversation;
   set('conversation', conversationId.toString(), res); // @ts-nocheck
   // @ts-nocheck
-  return res
-}
+  return res;
+};
 
 export const retriveConversations = async (userId: string) => {
   const { data, error } = await supabase
@@ -135,9 +143,9 @@ export const retriveConversations = async (userId: string) => {
       name: c.name,
       model: OpenAIModels['gpt-3.5-turbo'],
       prompt: DEFAULT_SYSTEM_PROMPT,
-      folderId: c.folder_id,
+      folderId: c.folder_id
     } as ConversationSummary;
-  })
+  });
 };
 
 export const deleteConversation = async (conversationId: number) => {
@@ -147,22 +155,23 @@ export const deleteConversation = async (conversationId: number) => {
     .delete()
     .eq('id', conversationId)
     .throwOnError();
+};
 
-}
-
-
-export const saveConversation = async (conversation: Conversation, user_id: string) => {
+export const saveConversation = async (
+  conversation: Conversation,
+  user_id: string
+) => {
   var to_upsert = {
     name: conversation.name,
     user_id: user_id,
     model: conversation.model.name,
-    folder_id: conversation.folderId,
-  } as any
+    folder_id: conversation.folderId
+  } as any;
 
   if (!isGeneratedId(conversation.id)) {
     to_upsert.id = conversation.id;
   } else {
-    console.warn("save conversation is called with generated id")
+    console.warn('save conversation is called with generated id');
   }
 
   const { data } = await supabase
@@ -172,19 +181,21 @@ export const saveConversation = async (conversation: Conversation, user_id: stri
     .select()
     .single();
 
-  const messages = conversation.messages.map((m, idx) => {
-    var res = {
-      conversation_id: data!.id,
-      content: m.content,
-      role: m.role,
-      user_id: user_id,
-      index: idx,
-    } as any
-    if (m.id) {
-      res.id = m.id
-    }
-    return res
-  }).filter(m => !m.id)
+  const messages = conversation.messages
+    .map((m, idx) => {
+      var res = {
+        conversation_id: data!.id,
+        content: m.content,
+        role: m.role,
+        user_id: user_id,
+        index: idx
+      } as any;
+      if (m.id) {
+        res.id = m.id;
+      }
+      return res;
+    })
+    .filter((m) => !m.id);
   const messages_res = await supabase
     .from('messages')
     .upsert(messages)
@@ -197,30 +208,30 @@ export const saveConversation = async (conversation: Conversation, user_id: stri
     model: OpenAIModels['gpt-3.5-turbo'],
     prompt: DEFAULT_SYSTEM_PROMPT,
     folderId: data?.folder_id,
-    messages: messages_res.data?.map(m => {
+    messages: messages_res.data?.map((m) => {
       return {
         id: m.id,
         role: m.role,
-        content: m.content,
-      } as Message
-    }),
-  } as Conversation
+        content: m.content
+      } as Message;
+    })
+  } as Conversation;
 
   set('conversation', res.id.toString(), res);
-  return res
-}
+  return res;
+};
 
 export const clearAllConversations = async (user_id: string) => {
-  clear()
+  clear();
   await supabase
     .from('conversation')
     .delete()
     .eq('user_id', user_id)
     .throwOnError();
+};
 
-}
-
-export const inseartMessage = async (message: Message,
+export const inseartMessage = async (
+  message: Message,
   index: number,
   conversation_id: number,
   user_id: string
@@ -232,7 +243,7 @@ export const inseartMessage = async (message: Message,
       content: message.content,
       role: message.role,
       user_id: user_id,
-      index: index,
+      index: index
     })
     .select()
     .throwOnError()
@@ -241,17 +252,14 @@ export const inseartMessage = async (message: Message,
   const newMessage = {
     id: data?.id,
     role: data?.role,
-    content: data?.content,
-  } as Message
+    content: data?.content
+  } as Message;
 
-  const {exist, resource} = get('conversation', conversation_id.toString());
+  const { exist, resource } = get('conversation', conversation_id.toString());
   if (exist) {
-    resource!.messages.push(newMessage)
+    resource!.messages.push(newMessage);
     set('conversation', conversation_id.toString(), resource!);
   }
 
-  return newMessage
-}
-
-
-
+  return newMessage;
+};

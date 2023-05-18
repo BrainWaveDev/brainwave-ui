@@ -3,7 +3,7 @@ import {
   RequestBody,
   RequestMatchDocumentChunks
 } from '../../types/chat';
-import { defaultPrompt } from '@/utils/app/const';
+import { qaPrompt } from '@/utils/app/prompts';
 import { OpenAIError, OpenAIStream } from '@/utils/server';
 import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json';
 import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
@@ -95,20 +95,49 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Failed to match document chunks');
     }
 
+    const contentByDocument = new Map<string, string[]>();
+
+    for (let i = 0; i < documentChunks.length; i++) {
+      const documentName = documentChunks[i].document_name.split('/')[1];
+      const documentChunk = documentChunks[i].content.trim();
+
+      const documentContent = contentByDocument.get(documentName);
+
+      if (documentContent) {
+        documentContent.push(documentChunk);
+      } else {
+        contentByDocument.set(documentName, [documentChunk]);
+      }
+    }
+
     const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });
     let tokenCount = 0;
     let contextText = '';
+    let sourceKey = 1;
+    let sources = `\n\n<h3>Sources</h3>`;
 
-    for (let i = 0; i < documentChunks.length; i++) {
-      const documentChunk = documentChunks[i];
-      const documentName = documentChunk.document_name.split('/')[1];
-      const content = `Source Name: ${documentName}\n Content:\n${documentChunk.content.trim()}\n---\n`;
+    const iterator = contentByDocument.keys();
+    for (const documentName of iterator) {
+      const documentContent = contentByDocument.get(documentName);
+      if (!documentContent || documentContent.length === 0) {
+        continue;
+      }
+
+      const content =
+        `Source key: \`${sourceKey}\`\n ` +
+        `Content:\n\`` +
+        `${documentContent.join('\n')}\`\n---\n`;
+
       const encoded = tokenizer.encode(content);
       tokenCount += encoded.text.length;
 
-      if (tokenCount >= 1500) break;
-
-      contextText += content;
+      if (tokenCount >= 1500) {
+        break;
+      } else {
+        contextText += content;
+        sources += `${sourceKey}. ${documentName}<br/>`;
+        ++sourceKey;
+      }
     }
 
     await init((imports) => WebAssembly.instantiate(wasm, imports));
@@ -118,7 +147,7 @@ const handler = async (req: Request): Promise<Response> => {
       tiktokenModel.pat_str
     );
 
-    let promptToSend = defaultPrompt(contextText);
+    let promptToSend = qaPrompt(contextText);
 
     let messagesToSend: Message[] = [];
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -135,11 +164,14 @@ const handler = async (req: Request): Promise<Response> => {
       messagesToSend = [message, ...messagesToSend];
     }
 
-    console.log(promptToSend);
-
     encoding.free();
 
-    const stream = await OpenAIStream(model, promptToSend, messagesToSend);
+    const stream = await OpenAIStream(
+      model,
+      promptToSend,
+      messagesToSend,
+      sources
+    );
 
     return new Response(stream);
   } catch (error) {
