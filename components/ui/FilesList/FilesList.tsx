@@ -1,5 +1,4 @@
 import SearchIcon from '@/components/icons/SearchIcon';
-import classes from './FilesList.module.css';
 import { Document } from '../../../types';
 import classNames from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -13,6 +12,8 @@ import AlertModal, {
   setModalOpen
 } from '@/components/ui/AlertModal';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
+import SelectBar, { SelectItem } from '../Select/Select';
+import { SelectGroup } from '@radix-ui/react-select';
 
 interface Props {
   documents: Document[];
@@ -59,6 +60,11 @@ export default function FilesList(props: Props) {
   );
   const [deletingDocuments, setDeletingDocuments] = useState(false);
   const [modalState, setModalState] = useState<ModalState | null>(null);
+  const [smallScreenTableHeader, setSmallScreenTableHeader] = useState<SelectItem & { columnId: Columns }>({
+    display: 'Status',
+    value: 'Status',
+    columnId: Columns.status
+  });
 
   // ===================================================
   // Modal
@@ -103,9 +109,8 @@ export default function FilesList(props: Props) {
     setModalState({
       open: true,
       title: 'Confirm deletion',
-      description: `This action cannot be reverted. Are you want to delete selected document${
-        selectedDocuments.size > 1 ? 's' : ''
-      }?`,
+      description: `This action cannot be reverted. Are you want to delete selected document${selectedDocuments.size > 1 ? 's' : ''
+        }?`,
       type: ModalType.Alert
     });
   };
@@ -156,7 +161,7 @@ export default function FilesList(props: Props) {
           case Columns.dateUploaded:
             returnValue =
               new Date(a.metadata.lastModified) >
-              new Date(b.metadata.lastModified)
+                new Date(b.metadata.lastModified)
                 ? 1
                 : -1;
             break;
@@ -202,7 +207,8 @@ export default function FilesList(props: Props) {
           document,
           selectedDocuments.has(document.id),
           deletingDocuments && selectedDocuments.has(document.id),
-          setSelectedDocuments
+          setSelectedDocuments,
+          smallScreenTableHeader.columnId
         )
       );
     } else {
@@ -211,7 +217,8 @@ export default function FilesList(props: Props) {
           document,
           selectedDocuments.has(document.id),
           deletingDocuments && selectedDocuments.has(document.id),
-          setSelectedDocuments
+          setSelectedDocuments,
+          smallScreenTableHeader.columnId
         )
       );
     }
@@ -225,6 +232,15 @@ export default function FilesList(props: Props) {
     totalPages
   );
 
+
+
+  const selectGroup: (SelectItem & { columnId: Columns })[] = [
+    { display: 'Size', value: 'Size', columnId: Columns.size },
+    { display: 'Kind', value: 'Kind', columnId: Columns.kind },
+    { display: 'Date uploaded', value: 'Date uploaded', columnId: Columns.dateUploaded },
+    { display: 'Status', value: 'Status', columnId: Columns.status }
+  ]
+
   return (
     <>
       {modalState && (
@@ -235,6 +251,20 @@ export default function FilesList(props: Props) {
         />
       )}
       <section className="container px-4 mx-auto ">
+
+        <div className='block sm:hidden'>
+          <SelectBar groups={[{
+            label: "Show Columns",
+            items: selectGroup,
+          }]}
+            onValueChange={(value: string) => {
+              setSmallScreenTableHeader(selectGroup.filter((item) => item.value === value)[0])
+            }}
+            defaulSelected={smallScreenTableHeader}
+          />
+        </div>
+
+
         <div className="flex items-center justify-between flex-row-reverse sm:flex-row">
           <div className={'flex items-center place-self-center'}>
             <AnimatePresence>
@@ -278,6 +308,8 @@ export default function FilesList(props: Props) {
           </div>
         </div>
 
+
+
         <div className="flex flex-col mt-6 min-h-[47vh]">
           <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
@@ -293,6 +325,7 @@ export default function FilesList(props: Props) {
                         selectedDocuments.size === props.documents.length
                       }
                       selectAllDocuments={selectAllDocuments}
+                      smallScreenSelectedColumn={smallScreenTableHeader}
                     />
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
@@ -358,7 +391,7 @@ export default function FilesList(props: Props) {
                 d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18"
               />
             </svg>
-            <span 
+            <span
               className='hidden sm:inline-block'
             >
               Previous</span>
@@ -416,9 +449,10 @@ function DocumentRow(
   doc: Document,
   selected: boolean,
   loading: boolean,
-  setSelectedDocuments: Dispatch<SetStateAction<Set<number>>>
+  setSelectedDocuments: Dispatch<SetStateAction<Set<number>>>,
+  selectedSmallScreenColumn: Columns,
 ) {
-  
+
   // Shorten document name is it is too long
   const formatDocumentName = (name: string) => {
     const documentName = name.split('/').pop();
@@ -501,7 +535,7 @@ function DocumentRow(
         transition={{ duration: 0.5 }}
         onClick={() => {
           //if on small screen,
-          if(window.innerWidth < 640){
+          if (window.innerWidth < 640) {
             selectDocument(!selected, doc.id)
           }
         }}
@@ -544,16 +578,20 @@ function DocumentRow(
             </div>
           </div>
         </td>
-        <td className="px-12 py-4 w-52 text-sm font-normal text-gray-700 whitespace-nowrap hidden sm:table-cell">
+
+        <Td showOnSmall={selectedSmallScreenColumn === Columns.size}>
           {formatBytes(doc.metadata.size)}
-        </td>
-        <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap hidden sm:table-cell">
+        </Td>
+
+        <Td showOnSmall={selectedSmallScreenColumn === Columns.kind}>
           {FileType(doc.metadata.mimetype)}
-        </td>
-        <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap hidden sm:table-cell">
+        </Td>
+
+        <Td showOnSmall={selectedSmallScreenColumn === Columns.dateUploaded}>
           {formatDate(doc.metadata.lastModified)}
-        </td>
-        <td className="px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+        </Td>
+
+        <Td showOnSmall={selectedSmallScreenColumn === Columns.status}>
           <div className={'flex flex-row gap-x-1.5 items-center'}>
             {doc.status && (
               <>
@@ -569,7 +607,16 @@ function DocumentRow(
               </>
             )}
           </div>
-        </td>
+        </Td>
+
       </motion.tr>
     );
+
+  function Td({ children,showOnSmall }: { children?: React.ReactNode,showOnSmall:boolean }) {
+    return (
+      <td className={`px-4 py-4 w-48 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap sm:table-cell ${showOnSmall?"":"hidden"}`}>
+        {children}
+      </td>
+    );
+  }
 }

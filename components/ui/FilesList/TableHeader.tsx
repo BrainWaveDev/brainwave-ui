@@ -1,6 +1,7 @@
 import { Columns } from '@/components/ui/FilesList/FilesList';
 import { TriangleDownIcon, TriangleUpIcon } from '@radix-ui/react-icons';
 import classNames from 'classnames';
+import { SelectItem } from '../Select/Select';
 
 const ColumnName = ({
   name,
@@ -56,14 +57,17 @@ export default function TableHeader({
   sortAscending,
   handleColumnClick,
   allDocumentsSelected,
-  selectAllDocuments
+  selectAllDocuments,
+  smallScreenSelectedColumn,
 }: {
   sortByColumn: number | null;
   sortAscending: boolean;
   handleColumnClick: (column: number) => void;
   allDocumentsSelected: boolean;
   selectAllDocuments: (selectAll: boolean) => void;
+  smallScreenSelectedColumn: SelectItem & {columnId:Columns}
 }) {
+
   return (
     <tr>
       <th
@@ -127,13 +131,26 @@ export default function TableHeader({
 
       <th
         scope="col"
-        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 hidden sm:table-cell"
       >
         <ColumnName
           name={'Status'}
           selected={sortByColumn === Columns.status}
           sortAscending={sortAscending}
           handleColumnClick={() => handleColumnClick(Columns.status)}
+        />
+      </th>
+
+      {/* small screen only */}
+      <th
+        scope="col"
+        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 flex sm:hidden"
+      >
+        <ColumnName
+          name={smallScreenSelectedColumn.value}
+          selected={true}
+          sortAscending={sortAscending}
+          handleColumnClick={() => handleColumnClick(smallScreenSelectedColumn.columnId)}
         />
       </th>
     </tr>
