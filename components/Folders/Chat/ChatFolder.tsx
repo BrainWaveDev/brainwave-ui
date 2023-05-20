@@ -13,7 +13,7 @@ import { FC, KeyboardEvent, useEffect, useState } from 'react';
 import { ConversationComponent } from '../../Chatbar/Conversation';
 import { useAppDispatch, useAppSelector } from 'context/redux/store';
 import { deleteFolder, updateFolderName } from 'context/redux/folderSlice';
-
+import { deleteFolder as DBDeleteFodler, renameFolder, updateFolder } from '@/utils/app/folders';
 interface Props {
   searchTerm: string;
   conversations: ConversationSummary[];
@@ -57,6 +57,11 @@ export const ChatFolder: FC<Props> = ({
       id: currentFolder.id,
       newName: renameValue
     }))
+    renameFolder(currentFolder.id, renameValue)
+    .catch((err) => {
+      //TODO: handle error
+      console.error(err);
+    });
     setRenameValue('');
     setIsRenaming(false);
   };
@@ -66,6 +71,11 @@ export const ChatFolder: FC<Props> = ({
     dispatch(deleteFolder({
       id: currentFolder.id
     }));
+    DBDeleteFodler(currentFolder.id)
+    .catch((err) => {
+      // TODO: handle error
+      console.error(err);
+    });
     setIsDeleting(false);
   };
 

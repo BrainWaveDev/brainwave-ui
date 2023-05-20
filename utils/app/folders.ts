@@ -7,7 +7,8 @@ export const saveFolder = async (folder: Folder) => {
     user_id: folder.user_id!,
   })
   .select()
-  .single();
+  .single()
+  ;
 
   if (error) {
     throw error;
@@ -64,3 +65,16 @@ export const updateFolder = async (folder: Folder) => {
 
   return data;
 };
+
+export const renameFolder = async (id:number,newName:string) => {
+  const { data, error } = await supabase.from("folder").update({
+    name: newName,
+  }).eq("id", id);
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+};
+

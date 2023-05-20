@@ -24,8 +24,11 @@ const folderSlice = createSlice({
         }
         return state
     },
+    setFolders(state, action: PayloadAction<Folder[]>) {
+        return action.payload
+    }
   },
 })
 
-export const { addFolder, deleteFolder,updateFolderName } = folderSlice.actions
+export const { addFolder, deleteFolder,updateFolderName,setFolders } = folderSlice.actions
 export default folderSlice.reducer

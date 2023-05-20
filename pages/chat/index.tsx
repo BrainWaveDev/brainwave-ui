@@ -8,7 +8,6 @@ import {
   ConversationIdentifiable
 } from '../../types/chat';
 import { KeyValuePair } from '../../types/data';
-import { Folder } from '../../types/folder';
 import { Prompt } from '../../types/prompt';
 import {
   cleanConversationHistory,
@@ -27,10 +26,7 @@ import {
   updateConversationFolder
 } from '@/utils/app/conversation';
 import {
-  deleteFolder,
   retrieveListOfFolders,
-  saveFolder,
-  updateFolder
 } from '@/utils/app/folders';
 import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
@@ -43,9 +39,9 @@ import { randomNumberId } from '@/utils/app/createDBOperation';
 import { getDocumentListServerSideProps } from '@/utils/supabase-admin';
 import { Document } from '../../types';
 import { clearSourcesFromMessages } from '@/utils/app/messages';
-import { useSelector } from 'react-redux';
-import { RootState, useAppSelector } from 'context/redux/store';
+import { RootState, useAppDispatch, useAppSelector } from 'context/redux/store';
 import { OpenAIModelID, OpenAIModels, fallbackModelID } from 'types/openai';
+import { setFolders } from 'context/redux/folderSlice';
 
 interface ChatProps {
   defaultModelId: OpenAIModelID;
@@ -68,8 +64,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
   const [lightMode, setLightMode] = useState<'dark' | 'light'>('dark');
   const [messageIsStreaming, setMessageIsStreaming] = useState<boolean>(false);
 
-  const [folders, setFolders] = useState<Folder[]>([]);
-
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation>();
@@ -84,10 +78,7 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
   const [searchSpace, setSearchSpace] = useState<Set<number>>(
     new Set<number>(documents.map((document) => document.id))
   );
-
-  const reduxFolders = useAppSelector((state: RootState) => state.folders);
-  console.log("reduxFolders", reduxFolders);
-
+  const dispatch = useAppDispatch();
   useEffect(() => {
     // loading after login
     if (isLoading || error) {
@@ -96,15 +87,7 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
     const user_id = session?.user?.id!;
     retrieveListOfFolders(user_id)
       .then((data) => {
-        setFolders(
-          data.map((dbFolder) => {
-            return {
-              id: dbFolder.id,
-              name: dbFolder.name,
-              user_id: dbFolder.user_id
-            };
-          })
-        );
+        dispatch(setFolders(data));
       })
       .catch((error) => {
         console.error(error);
@@ -295,37 +278,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
       });
   };
 
-  // FOLDER OPERATIONS  --------------------------------------------
-
-  
-
-  const handleDeleteFolder = (folderId: number) => {
-    const updatedFolders = folders.filter((f) => f.id !== folderId);
-    setFolders(updatedFolders);
-    deleteFolder(folderId).catch((_) => {
-      setFolders(folders);
-    });
-  };
-
-  const handleUpdateFolder = (folderId: number, name: string) => {
-    var updatedFolder = folders.find((f) => f.id === folderId);
-    if (!updatedFolder) return;
-    const updatedFolders = folders.map((f) => {
-      if (f.id === folderId) {
-        return {
-          ...f,
-          name
-        };
-      }
-      return f;
-    });
-
-    setFolders(updatedFolders);
-    updatedFolder.name = name;
-    updateFolder(updatedFolder).catch((_) => {
-      setFolders(folders);
-    });
-  };
 
   // CONVERSATION OPERATIONS  --------------------------------------------
 
