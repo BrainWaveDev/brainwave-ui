@@ -11,8 +11,9 @@ import { Conversations } from './Conversations';
 import classNames from 'classnames';
 import ChevronLeft from '@/components/icons/ChevronLeft';
 import { useAppDispatch, useAppSelector } from 'context/redux/store';
-import { addFolder } from 'context/redux/folderSlice';
-import { deleteFolder } from '@/utils/app/folders';
+import { addFolder, deleteFolder } from 'context/redux/folderSlice';
+import { deleteFolder as DBDeleteFodler, saveFolder } from '@/utils/app/folders';
+import { useSessionContext } from '@supabase/auth-helpers-react';
 
 interface Props {
   loading: boolean;
@@ -55,7 +56,7 @@ export const Chatbar: FC<Props> = ({
   const [filteredConversations, setFilteredConversations] =
     useState<ConversationSummary[]>([]);
   const folders = useAppSelector(state => state.folders)
-
+  const { session } = useSessionContext();
   const handleUpdateConversation = (
     conversation: ConversationIdentifiable,
     data: KeyValuePair
@@ -92,22 +93,27 @@ export const Chatbar: FC<Props> = ({
 
   const dispatch = useAppDispatch()
   const handleCreateFolder = (name: string) => {
-    const tempFolder:Folder = {
+    const tempFolder: Folder = {
       id: folders.length + 1,
       name: name,
+      user_id: session?.user.id,
     }
-    dispatch(addFolder({ 
-      id: folders.length + 1,
-      name: name,
-     }))
-     // TODO: save to db
-  };
+    dispatch(addFolder(tempFolder))
+
+    saveFolder(tempFolder)
+      .catch((_) => {
+        dispatch(deleteFolder({
+          id: tempFolder.id,
+        }))
+      })
+  }
+
 
   useEffect(() => {
     if (searchTerm) {
       setFilteredConversations(
         conversations.filter((conversation) => {
-          const searchable = conversation.name.toLocaleLowerCase() 
+          const searchable = conversation.name.toLocaleLowerCase()
           return searchable.toLowerCase().includes(searchTerm.toLowerCase());
         })
       );
@@ -150,7 +156,7 @@ export const Chatbar: FC<Props> = ({
 
         <button
           className="ml-2 flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md border border-white/20 p-3 text-[14px] leading-normal text-white transition-colors duration-200 hover:bg-gray-500/10"
-          onClick={()=>handleCreateFolder('New Folder')}
+          onClick={() => handleCreateFolder('New Folder')}
         >
           <IconFolderPlus size={18} />
         </button>
