@@ -10,6 +10,9 @@ import type { Database } from 'types/supabase';
 
 import 'styles/main.css';
 import 'styles/chrome-bug.css';
+import { ReduxProvider } from 'context/redux/ReduxProvider';
+import { Provider } from 'react-redux';
+import { store } from 'context/redux/store';
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   const [supabaseClient] = useState(() =>
@@ -25,7 +28,9 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         <MyUserContextProvider>
           <ErrorProvider>
             <Layout>
-              <Component {...pageProps} />
+              <Provider store={store}>
+                <Component {...pageProps} />
+              </Provider>
             </Layout>
           </ErrorProvider>
         </MyUserContextProvider>

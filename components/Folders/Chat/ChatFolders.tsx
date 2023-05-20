@@ -8,8 +8,6 @@ interface Props {
   searchTerm: string;
   conversations: ConversationSummary[];
   folders: Folder[];
-  onDeleteFolder: (folder: number) => void;
-  onUpdateFolder: (folder: number, name: string) => void;
   // conversation props
   selectedConversation: Conversation | undefined;
   loading: boolean;
@@ -25,8 +23,6 @@ export const ChatFolders: FC<Props> = ({
   searchTerm,
   conversations,
   folders,
-  onDeleteFolder,
-  onUpdateFolder,
   // conversation props
   selectedConversation,
   loading,
@@ -42,8 +38,6 @@ export const ChatFolders: FC<Props> = ({
           searchTerm={searchTerm}
           conversations={conversations.filter((c) => c.folderId)}
           currentFolder={folder}
-          onDeleteFolder={onDeleteFolder}
-          onUpdateFolder={onUpdateFolder}
           // conversation props
           selectedConversation={selectedConversation}
           loading={loading}

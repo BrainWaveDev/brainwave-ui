@@ -11,13 +11,13 @@ import {
 } from '@tabler/icons-react';
 import { FC, KeyboardEvent, useEffect, useState } from 'react';
 import { ConversationComponent } from '../../Chatbar/Conversation';
+import { useAppDispatch, useAppSelector } from 'context/redux/store';
+import { deleteFolder, updateFolderName } from 'context/redux/folderSlice';
 
 interface Props {
   searchTerm: string;
   conversations: ConversationSummary[];
   currentFolder: Folder;
-  onDeleteFolder: (folder: number) => void;
-  onUpdateFolder: (folder: number, name: string) => void;
   // conversation props
   selectedConversation: Conversation | undefined;
   loading: boolean;
@@ -33,8 +33,6 @@ export const ChatFolder: FC<Props> = ({
   searchTerm,
   conversations,
   currentFolder,
-  onDeleteFolder,
-  onUpdateFolder,
   // conversation props
   selectedConversation,
   loading,
@@ -53,11 +51,22 @@ export const ChatFolder: FC<Props> = ({
       handleRename();
     }
   };
-
+  const dispatch = useAppDispatch();
   const handleRename = () => {
-    onUpdateFolder(currentFolder.id, renameValue);
+    dispatch(updateFolderName({
+      id: currentFolder.id,
+      newName: renameValue
+    }))
     setRenameValue('');
     setIsRenaming(false);
+  };
+
+  const handleDeleteFolder = () => {
+    setIsDeleting(true);
+    dispatch(deleteFolder({
+      id: currentFolder.id
+    }));
+    setIsDeleting(false);
   };
 
   const handleDrop = (e: any, folder: Folder) => {
@@ -148,7 +157,7 @@ export const ChatFolder: FC<Props> = ({
                 e.stopPropagation();
 
                 if (isDeleting) {
-                  onDeleteFolder(currentFolder.id);
+                  handleDeleteFolder();
                 } else if (isRenaming) {
                   handleRename();
                 }
@@ -199,21 +208,21 @@ export const ChatFolder: FC<Props> = ({
 
       {isOpen
         ? conversations.map((conversation, index) => {
-            if (conversation.folderId === currentFolder.id) {
-              return (
-                <div key={index} className="ml-5 gap-2 border-l pl-2">
-                  <ConversationComponent
-                    isSelected={selectedConversation?.id === conversation.id}
-                    conversation={conversation}
-                    loading={loading}
-                    onSelectConversation={() => onSelectConversation(conversation)}
-                    onDeleteConversation={() => onDeleteConversation(conversation)}
-                    onUpdateConversation={(data) => onUpdateConversation(conversation, data)}
-                  />
-                </div>
-              );
-            }
-          })
+          if (conversation.folderId === currentFolder.id) {
+            return (
+              <div key={index} className="ml-5 gap-2 border-l pl-2">
+                <ConversationComponent
+                  isSelected={selectedConversation?.id === conversation.id}
+                  conversation={conversation}
+                  loading={loading}
+                  onSelectConversation={() => onSelectConversation(conversation)}
+                  onDeleteConversation={() => onDeleteConversation(conversation)}
+                  onUpdateConversation={(data) => onUpdateConversation(conversation, data)}
+                />
+              </div>
+            );
+          }
+        })
         : null}
     </>
   );

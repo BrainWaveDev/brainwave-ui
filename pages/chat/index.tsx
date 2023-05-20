@@ -6,11 +6,10 @@ import {
   Message,
   ConversationSummary,
   ConversationIdentifiable
-} from '../types/chat';
-import { KeyValuePair } from '../types/data';
-import { Folder } from '../types/folder';
-import { fallbackModelID, OpenAIModelID, OpenAIModels } from '../types/openai';
-import { Prompt } from '../types/prompt';
+} from '../../types/chat';
+import { KeyValuePair } from '../../types/data';
+import { Folder } from '../../types/folder';
+import { Prompt } from '../../types/prompt';
 import {
   cleanConversationHistory,
   cleanSelectedConversation
@@ -42,8 +41,11 @@ import toast from 'react-hot-toast';
 import { useSessionContext } from '@supabase/auth-helpers-react';
 import { randomNumberId } from '@/utils/app/createDBOperation';
 import { getDocumentListServerSideProps } from '@/utils/supabase-admin';
-import { Document } from '../types';
+import { Document } from '../../types';
 import { clearSourcesFromMessages } from '@/utils/app/messages';
+import { useSelector } from 'react-redux';
+import { RootState, useAppSelector } from 'context/redux/store';
+import { OpenAIModelID, OpenAIModels, fallbackModelID } from 'types/openai';
 
 interface ChatProps {
   defaultModelId: OpenAIModelID;
@@ -82,6 +84,9 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
   const [searchSpace, setSearchSpace] = useState<Set<number>>(
     new Set<number>(documents.map((document) => document.id))
   );
+
+  const reduxFolders = useAppSelector((state: RootState) => state.folders);
+  console.log("reduxFolders", reduxFolders);
 
   useEffect(() => {
     // loading after login
@@ -292,34 +297,7 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
 
   // FOLDER OPERATIONS  --------------------------------------------
 
-  const handleCreateFolder = (name: string) => {
-    const tempId = randomNumberId();
-    const newFolder: Folder = {
-      user_id: session?.user?.id!,
-      id: tempId,
-      name
-    };
-
-    const updatedFolders = [...folders, newFolder];
-    setFolders(updatedFolders);
-    saveFolder(newFolder)
-      .then((data) => {
-        setFolders(
-          updatedFolders.map((f) => {
-            if (f.id === tempId) {
-              return {
-                ...f,
-                id: data.id
-              };
-            }
-            return f;
-          })
-        );
-      })
-      .catch((_) => {
-        setFolders(folders);
-      });
-  };
+  
 
   const handleDeleteFolder = (folderId: number) => {
     const updatedFolders = folders.filter((f) => f.id !== folderId);
@@ -594,13 +572,9 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
             conversations={conversations}
             lightMode={lightMode}
             selectedConversation={selectedConversation}
-            folders={folders}
             showSidebar={showSidebar}
             handleToggleChatbar={handleToggleChatbar}
             onToggleLightMode={handleLightMode}
-            onCreateFolder={(name) => handleCreateFolder(name)}
-            onDeleteFolder={handleDeleteFolder}
-            onUpdateFolder={handleUpdateFolder}
             onNewConversation={handleNewConversation}
             onSelectConversation={handleSelectConversation}
             onDeleteConversation={handleDeleteConversation}
