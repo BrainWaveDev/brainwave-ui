@@ -6,21 +6,41 @@ import {
   Message
 } from '../../types/chat';
 import { supabase } from '../supabase-client';
-import { isGeneratedId } from './createDBOperation';
+import { isGeneratedId, randomNumberId } from './createDBOperation';
 import { OpenAIModels } from 'types/openai';
 import { DEFAULT_SYSTEM_PROMPT } from './prompts';
 import { clear, get, remove, set } from './localcache';
 
+
+export const randomPlaceholderConveration = () => {
+  return {
+    id: randomNumberId(),
+    name: "new conversation",
+    model: OpenAIModels['gpt-3.5-turbo'],
+    prompt: DEFAULT_SYSTEM_PROMPT,
+    messages: [],
+    isPlaceholder: true,
+    folderId: null
+  } as Conversation;
+};
+
 export const updateConversation = async (
-  updatedConversation: ConversationIdentifiable
+  updatedConversation: ConversationSummary
 ) => {
   try {
-    const { data, error } = await supabase
+    var builder: any = supabase
       .from('conversation')
-      .update({
-        name: updatedConversation.name
+    if (updatedConversation.folderId) {
+      builder = builder.update({
+        name: updatedConversation.name,
+        folder_id: updatedConversation.folderId
       })
-      .eq('id', updatedConversation.id)
+    } else {
+      builder = builder.update({
+        name: updatedConversation.name,
+      })
+    }
+    const { data, error } = await builder.eq('id', updatedConversation.id)
       .select();
 
     if (error) {
@@ -66,13 +86,13 @@ export const updateConversationFolder = async (
 
 export const createConversation = async (
   conversation: ConversationIdentifiable,
-  user: User
+  user_id: string
 ) => {
   const { data } = await supabase
     .from('conversation')
     .insert({
       name: conversation.name,
-      user_id: user.id
+      user_id: user_id,
     })
     .select()
     .throwOnError()
@@ -164,8 +184,6 @@ export const saveConversation = async (
   var to_upsert = {
     name: conversation.name,
     user_id: user_id,
-    model: conversation.model.name,
-    folder_id: conversation.folderId
   } as any;
 
   if (!isGeneratedId(conversation.id)) {

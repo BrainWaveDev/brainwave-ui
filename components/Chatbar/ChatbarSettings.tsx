@@ -10,20 +10,18 @@ interface Props {
   lightMode: 'light' | 'dark';
   conversationsCount: number;
   onToggleLightMode: (mode: 'light' | 'dark') => void;
-  onClearConversations: () => void;
 }
 
 export const ChatbarSettings: FC<Props> = ({
   lightMode,
   conversationsCount,
   onToggleLightMode,
-  onClearConversations,
 }) => {
   const { t } = useTranslation('sidebar');
   return (
     <div className="flex flex-col items-center space-y-1 border-t border-white/20 pt-1 text-sm">
       {conversationsCount > 0 ? (
-        <ClearConversations onClearConversations={onClearConversations} />
+        <ClearConversations />
       ) : null}
 
       <SidebarButton

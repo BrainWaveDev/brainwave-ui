@@ -1,5 +1,5 @@
-import { Conversation, ConversationIdentifiable, ConversationSummary } from '../../types/chat';
-import { KeyValuePair } from '../../types/data';
+import { useAppDispatch } from 'context/redux/store';
+import { ConversationIdentifiable, ConversationSummary } from '../../types/chat';
 import {
   IconCheck,
   IconMessage,
@@ -8,16 +8,13 @@ import {
   IconX
 } from '@tabler/icons-react';
 import { DragEvent, FC, KeyboardEvent, useEffect, useState } from 'react';
+import { optimisticConversationsActions } from 'context/redux/conversationsSlice';
 
 interface Props {
   conversation: ConversationSummary;
   isSelected: boolean;
   loading: boolean;
   onSelectConversation: () => void;
-  onDeleteConversation: () => void;
-  onUpdateConversation: (
-    data: KeyValuePair
-  ) => void;
 }
 
 export const ConversationComponent: FC<Props> = ({
@@ -25,13 +22,11 @@ export const ConversationComponent: FC<Props> = ({
   isSelected,
   loading,
   onSelectConversation,
-  onDeleteConversation,
-  onUpdateConversation
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
-
+  const dispatch = useAppDispatch();
   const handleEnterDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -50,11 +45,13 @@ export const ConversationComponent: FC<Props> = ({
   };
 
   const handleRename = () => {
-    if (renameValue.trim().length > 0) {
-      onUpdateConversation({ key: 'name', value: renameValue });
-      setRenameValue('');
-      setIsRenaming(false);
+    const newConversation = {
+      ...conversation,
+      name: renameValue,
     }
+    dispatch(optimisticConversationsActions.updateConversation(newConversation))
+    setIsRenaming(false);
+    setRenameValue('');
   };
 
   useEffect(() => {
@@ -64,6 +61,12 @@ export const ConversationComponent: FC<Props> = ({
       setIsRenaming(false);
     }
   }, [isRenaming, isDeleting]);
+
+  function handleDeleteConversation() {
+    setIsDeleting(true);
+    dispatch(optimisticConversationsActions.deleteConversation(conversation))
+    setIsDeleting(false);
+  }
 
   return (
     <div className="relative flex items-center my-1">
@@ -110,7 +113,7 @@ export const ConversationComponent: FC<Props> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 if (isDeleting) {
-                  onDeleteConversation();
+                  handleDeleteConversation();
                 } else if (isRenaming) {
                   handleRename();
                 }

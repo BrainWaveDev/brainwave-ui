@@ -1,6 +1,4 @@
 import { Conversation, ConversationIdentifiable, ConversationSummary } from '../../types/chat';
-import { KeyValuePair } from '../../types/data';
-import { Folder } from '../../types/folder';
 import { IconFolderPlus, IconMessagesOff, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'next-i18next';
 import { FC, useEffect, useState } from 'react';
@@ -11,70 +9,45 @@ import { Conversations } from './Conversations';
 import classNames from 'classnames';
 import ChevronLeft from '@/components/icons/ChevronLeft';
 import { useAppDispatch, useAppSelector } from 'context/redux/store';
-import { addFolder, deleteFolder } from 'context/redux/folderSlice';
-import { deleteFolder as DBDeleteFodler, saveFolder } from '@/utils/app/folders';
+import { optimisticFoldersOperations } from 'context/redux/folderSlice';
 import { useSessionContext } from '@supabase/auth-helpers-react';
+import { optimisticConversationsActions } from 'context/redux/conversationsSlice';
 
 interface Props {
   loading: boolean;
-  conversations: ConversationSummary[];
   lightMode: 'light' | 'dark';
   selectedConversation: Conversation | undefined;
-  // folders: Folder[];
   showSidebar: boolean;
   handleToggleChatbar: () => void;
-  // onCreateFolder: (name: string) => void;
-  onNewConversation: () => void;
   onToggleLightMode: (mode: 'light' | 'dark') => void;
   onSelectConversation: (conversation: ConversationIdentifiable) => void;
-  onDeleteConversation: (conversation: ConversationIdentifiable) => void;
-  onUpdateConversation: (
-    conversation: ConversationIdentifiable,
-    data: KeyValuePair
-  ) => void;
-  onClearConversations: () => void;
 }
 
 export const Chatbar: FC<Props> = ({
   loading,
-  conversations,
   lightMode,
   selectedConversation,
-  // folders,
   showSidebar,
   handleToggleChatbar,
-  // onCreateFolder,
-  onNewConversation,
   onToggleLightMode,
   onSelectConversation,
-  onDeleteConversation,
-  onUpdateConversation,
-  onClearConversations,
 }) => {
   const { t } = useTranslation('sidebar');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredConversations, setFilteredConversations] =
     useState<ConversationSummary[]>([]);
   const folders = useAppSelector(state => state.folders)
+  const conversations = useAppSelector(state => state.conversations)
   const { session } = useSessionContext();
-  const handleUpdateConversation = (
-    conversation: ConversationIdentifiable,
-    data: KeyValuePair
-  ) => {
-    onUpdateConversation(conversation, data);
-    setSearchTerm('');
-  };
 
-  const handleDeleteConversation = (conversation: ConversationIdentifiable) => {
-    onDeleteConversation(conversation);
-    setSearchTerm('');
-  };
+  
 
   const handleDrop = (e: any) => {
     if (e.dataTransfer) {
       const conversation = JSON.parse(e.dataTransfer.getData('conversation'));
-      onUpdateConversation(conversation, { key: 'folderId', value: 0 });
-
+      // TODO: update conversation folderId
+      // onUpdateConversation(conversation, { key: 'folderId', value: 0 });
+      
       e.target.style.background = 'none';
     }
   };
@@ -92,21 +65,13 @@ export const Chatbar: FC<Props> = ({
   };
 
   const dispatch = useAppDispatch()
-  const handleCreateFolder = (name: string) => {
-    const tempFolder: Folder = {
-      id: folders.length + 1,
-      name: name,
-      user_id: session?.user.id,
-    }
-    dispatch(addFolder(tempFolder))
-
-    saveFolder(tempFolder)
-      .catch((_) => {
-        dispatch(deleteFolder({
-          id: tempFolder.id,
-        }))
-      })
+  const handleCreateFolder = () => {
+    dispatch(optimisticFoldersOperations.creatrNewFolder(session?.user!.id!))
   }
+
+  const handleCreateNewConversation = () => {
+    dispatch(optimisticConversationsActions.createConversation(session?.user!.id!))
+  };
 
 
   useEffect(() => {
@@ -146,7 +111,7 @@ export const Chatbar: FC<Props> = ({
         <button
           className="flex w-[190px] flex-shrink-0 cursor-pointer select-none items-center gap-3 rounded-md border border-white/20 p-3 text-[14px] leading-normal text-white transition-colors duration-200 hover:bg-gray-500/10"
           onClick={() => {
-            onNewConversation();
+            handleCreateNewConversation();
             setSearchTerm('');
           }}
         >
@@ -156,7 +121,7 @@ export const Chatbar: FC<Props> = ({
 
         <button
           className="ml-2 flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md border border-white/20 p-3 text-[14px] leading-normal text-white transition-colors duration-200 hover:bg-gray-500/10"
-          onClick={() => handleCreateFolder('New Folder')}
+          onClick={() => handleCreateFolder()}
         >
           <IconFolderPlus size={18} />
         </button>
@@ -182,8 +147,6 @@ export const Chatbar: FC<Props> = ({
               selectedConversation={selectedConversation}
               loading={loading}
               onSelectConversation={onSelectConversation}
-              onDeleteConversation={handleDeleteConversation}
-              onUpdateConversation={handleUpdateConversation}
             />
           </div>
         )}
@@ -203,8 +166,6 @@ export const Chatbar: FC<Props> = ({
               )}
               selectedConversation={selectedConversation}
               onSelectConversation={onSelectConversation}
-              onDeleteConversation={handleDeleteConversation}
-              onUpdateConversation={handleUpdateConversation}
             />
           </div>
         ) : (
@@ -219,7 +180,6 @@ export const Chatbar: FC<Props> = ({
         lightMode={lightMode}
         conversationsCount={conversations.length}
         onToggleLightMode={onToggleLightMode}
-        onClearConversations={onClearConversations}
       />
     </div>
   );

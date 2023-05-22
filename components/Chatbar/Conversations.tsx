@@ -2,17 +2,14 @@ import { Conversation, ConversationIdentifiable, ConversationSummary } from '../
 import { KeyValuePair } from '../../types/data';
 import { FC } from 'react';
 import { ConversationComponent } from './Conversation';
+import { useAppDispatch } from 'context/redux/store';
+import { deleteConversation, updateConversation } from 'context/redux/conversationsSlice';
 
 interface Props {
   loading: boolean;
   conversations: ConversationSummary[];
   selectedConversation: Conversation | undefined;
   onSelectConversation: (conversation: ConversationIdentifiable) => void;
-  onDeleteConversation: (conversation: ConversationIdentifiable) => void;
-  onUpdateConversation: (
-    conversation: ConversationIdentifiable,
-    data: KeyValuePair
-  ) => void;
 }
 
 export const Conversations: FC<Props> = ({
@@ -20,23 +17,20 @@ export const Conversations: FC<Props> = ({
   conversations,
   selectedConversation,
   onSelectConversation,
-  onDeleteConversation,
-  onUpdateConversation
 }) => {
+
   return (
     <div className="flex w-full flex-col gap-1">
       {conversations
         .slice()
         .reverse()
-        .map((conversation, index) => (
+        .map((conversation) => (
           <ConversationComponent
             key={conversation.id}
             conversation={conversation}
             isSelected={selectedConversation?.id === conversation.id}
             loading={loading}
             onSelectConversation={() => onSelectConversation(conversation)}
-            onDeleteConversation={() => onDeleteConversation(conversation)}
-            onUpdateConversation={(data:KeyValuePair) => onUpdateConversation(conversation, data)}
           />
         ))}
     </div>

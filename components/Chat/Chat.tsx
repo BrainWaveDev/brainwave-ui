@@ -28,10 +28,6 @@ interface Props {
   loading: boolean;
   prompts: Prompt[];
   onSend: (message: Message, deleteCount?: number) => void;
-  onUpdateConversation: (
-    conversation: Conversation,
-    data: KeyValuePair
-  ) => void;
   onEditMessage: (message: Message, messageIndex: number) => void;
   stopConversationRef: MutableRefObject<boolean>;
   documents: Document[];

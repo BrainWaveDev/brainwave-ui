@@ -1,5 +1,4 @@
 import { Conversation, ConversationIdentifiable, ConversationSummary } from '../../../types/chat';
-import { KeyValuePair } from '../../../types/data';
 import { Folder } from '../../../types/folder';
 import { FC } from 'react';
 import { ChatFolder } from './ChatFolder';
@@ -12,11 +11,6 @@ interface Props {
   selectedConversation: Conversation | undefined;
   loading: boolean;
   onSelectConversation: (conversation: ConversationIdentifiable) => void;
-  onDeleteConversation: (conversation: ConversationIdentifiable) => void;
-  onUpdateConversation: (
-    conversation: ConversationIdentifiable,
-    data: KeyValuePair
-  ) => void;
 }
 
 export const ChatFolders: FC<Props> = ({
@@ -27,8 +21,6 @@ export const ChatFolders: FC<Props> = ({
   selectedConversation,
   loading,
   onSelectConversation,
-  onDeleteConversation,
-  onUpdateConversation
 }) => {
   return (
     <div className="flex w-full flex-col pt-2">
@@ -38,12 +30,9 @@ export const ChatFolders: FC<Props> = ({
           searchTerm={searchTerm}
           conversations={conversations.filter((c) => c.folderId)}
           currentFolder={folder}
-          // conversation props
           selectedConversation={selectedConversation}
           loading={loading}
           onSelectConversation={onSelectConversation}
-          onDeleteConversation={onDeleteConversation}
-          onUpdateConversation={onUpdateConversation}
         />
       ))}
     </div>

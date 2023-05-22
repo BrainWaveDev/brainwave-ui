@@ -12,7 +12,7 @@ import {
 import { FC, KeyboardEvent, useEffect, useState } from 'react';
 import { ConversationComponent } from '../../Chatbar/Conversation';
 import { useAppDispatch, useAppSelector } from 'context/redux/store';
-import { deleteFolder, updateFolderName } from 'context/redux/folderSlice';
+import { optimisticFoldersOperations, updateFolderName } from 'context/redux/folderSlice';
 import { deleteFolder as DBDeleteFodler, renameFolder, updateFolder } from '@/utils/app/folders';
 interface Props {
   searchTerm: string;
@@ -22,11 +22,6 @@ interface Props {
   selectedConversation: Conversation | undefined;
   loading: boolean;
   onSelectConversation: (conversation: ConversationIdentifiable) => void;
-  onDeleteConversation: (conversation: ConversationIdentifiable) => void;
-  onUpdateConversation: (
-    conversation: ConversationIdentifiable,
-    data: KeyValuePair
-  ) => void;
 }
 
 export const ChatFolder: FC<Props> = ({
@@ -37,8 +32,6 @@ export const ChatFolder: FC<Props> = ({
   selectedConversation,
   loading,
   onSelectConversation,
-  onDeleteConversation,
-  onUpdateConversation
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -53,38 +46,19 @@ export const ChatFolder: FC<Props> = ({
   };
   const dispatch = useAppDispatch();
   const handleRename = () => {
-    dispatch(updateFolderName({
-      id: currentFolder.id,
-      newName: renameValue
-    }))
-    renameFolder(currentFolder.id, renameValue)
-    .catch((err) => {
-      //TODO: handle error
-      console.error(err);
-    });
-    setRenameValue('');
-    setIsRenaming(false);
+    dispatch(optimisticFoldersOperations.updateFolderName(currentFolder.id, renameValue));
   };
 
   const handleDeleteFolder = () => {
-    setIsDeleting(true);
-    dispatch(deleteFolder({
-      id: currentFolder.id
-    }));
-    DBDeleteFodler(currentFolder.id)
-    .catch((err) => {
-      // TODO: handle error
-      console.error(err);
-    });
-    setIsDeleting(false);
+    dispatch(optimisticFoldersOperations.deleteFolder(currentFolder.id));
   };
 
   const handleDrop = (e: any, folder: Folder) => {
     if (e.dataTransfer) {
       setIsOpen(true);
 
-      const conversation = JSON.parse(e.dataTransfer.getData('conversation'));
-      onUpdateConversation(conversation, { key: 'folderId', value: folder.id });
+      // const conversation = JSON.parse(e.dataTransfer.getData('conversation'));
+      // onUpdateConversation(conversation, { key: 'folderId', value: folder.id });
 
       e.target.style.background = 'none';
     }
@@ -226,8 +200,6 @@ export const ChatFolder: FC<Props> = ({
                   conversation={conversation}
                   loading={loading}
                   onSelectConversation={() => onSelectConversation(conversation)}
-                  onDeleteConversation={() => onDeleteConversation(conversation)}
-                  onUpdateConversation={(data) => onUpdateConversation(conversation, data)}
                 />
               </div>
             );

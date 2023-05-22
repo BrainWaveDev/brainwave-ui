@@ -7,7 +7,6 @@ import {
   ConversationSummary,
   ConversationIdentifiable
 } from '../../types/chat';
-import { KeyValuePair } from '../../types/data';
 import { Prompt } from '../../types/prompt';
 import {
   cleanConversationHistory,
@@ -15,15 +14,10 @@ import {
 } from '@/utils/app/clean';
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/prompts';
 import {
-  clearAllConversations,
-  createConversation,
-  deleteConversation,
   inseartMessage,
   retriveConversation,
   retriveConversations,
-  saveConversation,
-  updateConversation,
-  updateConversationFolder
+  saveConversation
 } from '@/utils/app/conversation';
 import {
   retrieveListOfFolders,
@@ -39,9 +33,10 @@ import { randomNumberId } from '@/utils/app/createDBOperation';
 import { getDocumentListServerSideProps } from '@/utils/supabase-admin';
 import { Document } from '../../types';
 import { clearSourcesFromMessages } from '@/utils/app/messages';
-import { RootState, useAppDispatch, useAppSelector } from 'context/redux/store';
+import { useAppDispatch, useAppSelector } from 'context/redux/store';
 import { OpenAIModelID, OpenAIModels, fallbackModelID } from 'types/openai';
 import { setFolders } from 'context/redux/folderSlice';
+import { setConversations } from 'context/redux/conversationsSlice';
 
 interface ChatProps {
   defaultModelId: OpenAIModelID;
@@ -64,7 +59,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
   const [lightMode, setLightMode] = useState<'dark' | 'light'>('dark');
   const [messageIsStreaming, setMessageIsStreaming] = useState<boolean>(false);
 
-  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation>();
   const [currentMessage, setCurrentMessage] = useState<Message>();
@@ -78,6 +72,9 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
   const [searchSpace, setSearchSpace] = useState<Set<number>>(
     new Set<number>(documents.map((document) => document.id))
   );
+
+  const conversations = useAppSelector((state) => state.conversations);
+
   const dispatch = useAppDispatch();
   useEffect(() => {
     // loading after login
@@ -95,7 +92,7 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
 
     retriveConversations(user_id)
       .then((data) => {
-        setConversations(data);
+        dispatch(setConversations(data));
         if (data.length > 0) {
           retriveConversation(data[0].id).then((conversation) => {
             setSelectedConversation(conversation);
@@ -279,126 +276,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
   };
 
 
-  // CONVERSATION OPERATIONS  --------------------------------------------
-
-  const handleNewConversation = () => {
-    const defaultModel = OpenAIModels[defaultModelId];
-    const newConversation: Conversation = {
-      id: randomNumberId(),
-      name: `${t('New Conversation')}`,
-      messages: [],
-      model: defaultModel,
-      prompt: DEFAULT_SYSTEM_PROMPT,
-      folderId: null
-    };
-
-    const updatedConversations = [...conversations, newConversation];
-
-    setSelectedConversation(newConversation);
-    setConversations(updatedConversations);
-
-    // if success, update the conversation with the database id
-    createConversation(newConversation, session?.user!)
-      .then((data) => {
-        setConversations(
-          updatedConversations.map((c) => {
-            if (c.id === newConversation.id) {
-              return {
-                ...c,
-                id: data.id
-              };
-            }
-            return c;
-          })
-        );
-        setSelectedConversation({
-          ...newConversation,
-          id: data.id
-        });
-      })
-      .catch((_) => {
-        setConversations(conversations);
-      });
-
-    setLoading(false);
-  };
-
-  const handleDeleteConversation = (conversation: ConversationIdentifiable) => {
-    const updatedConversations = conversations.filter(
-      (c) => c.id !== conversation.id
-    );
-    setConversations(updatedConversations);
-    deleteConversation(conversation.id!).catch((_) => {
-      // if error, restore the conversation
-      setConversations(conversations);
-    });
-  };
-
-  const handleUpdateConversation = async (
-    conversation: ConversationIdentifiable | ConversationSummary,
-    data: KeyValuePair
-  ) => {
-    const updatedConversation = {
-      ...conversation,
-      [data.key]: data.value
-    };
-
-    let isUpdated = false;
-
-    if ([data.key].find((key) => key === 'folderId')) {
-      setConversations(
-        conversations.map((c) => {
-          if (c.id === conversation.id) {
-            return {
-              ...c,
-              folderId: data.value
-            };
-          }
-          return c;
-        })
-      );
-      isUpdated = await updateConversationFolder(conversation.id!, data.value);
-    }
-
-    if ([data.key].find((key) => key === 'name')) {
-      setConversations(
-        conversations.map((c) => {
-          if (c.id === conversation.id) {
-            return {
-              ...c,
-              name: data.value
-            };
-          }
-          return c;
-        })
-      );
-      isUpdated = await updateConversation(updatedConversation);
-    }
-
-    if (isUpdated) {
-      try {
-        const [selectedConvData, allConvData] = await Promise.all([
-          retriveConversation(conversation.id!),
-          retriveConversations(session?.user?.id!)
-        ]);
-        setSelectedConversation(selectedConvData);
-        setConversations(allConvData);
-      } catch (error) {
-        console.warn(error);
-      }
-    } else {
-      setConversations(conversations);
-    }
-  };
-
-  const handleClearConversations = () => {
-    setConversations([]);
-    setSelectedConversation(undefined);
-    clearAllConversations(session?.user?.id!).catch((_) => {
-      console.error('Error clearing conversations');
-    });
-  };
-
   const handleEditMessage = (message: Message, messageIndex: number) => {
     if (!selectedConversation) {
       throw new Error('No conversation selected, this should not happen');
@@ -521,17 +398,12 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
         >
           <Chatbar
             loading={messageIsStreaming}
-            conversations={conversations}
             lightMode={lightMode}
             selectedConversation={selectedConversation}
             showSidebar={showSidebar}
             handleToggleChatbar={handleToggleChatbar}
             onToggleLightMode={handleLightMode}
-            onNewConversation={handleNewConversation}
             onSelectConversation={handleSelectConversation}
-            onDeleteConversation={handleDeleteConversation}
-            onUpdateConversation={handleUpdateConversation}
-            onClearConversations={handleClearConversations}
           />
           <div className="flex flex-1 w-full">
             <Chat
@@ -540,7 +412,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
               loading={loading}
               prompts={prompts}
               onSend={handleSend}
-              onUpdateConversation={handleUpdateConversation}
               onEditMessage={handleEditMessage}
               stopConversationRef={stopConversationRef}
               documents={documents}
