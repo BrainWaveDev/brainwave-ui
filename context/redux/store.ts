@@ -1,14 +1,17 @@
 'use client'
-import {Action, applyMiddleware, configureStore} from '@reduxjs/toolkit';
+import { Action, configureStore } from '@reduxjs/toolkit';
 import folderSlice from './folderSlice';
-import { useDispatch, useSelector } from 'react-redux'
-import type { TypedUseSelectorHook } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux';
+import type { TypedUseSelectorHook } from 'react-redux';
 import conversationsSlice from './conversationsSlice';
-import thunk, { ThunkAction } from 'redux-thunk';
+import { ThunkAction } from 'redux-thunk';
+import documentSlice from './documentSlice';
+
 export const store = configureStore({
    reducer:{
       folders: folderSlice,
       conversations: conversationsSlice,
+      documents: documentSlice,
    },
 });
 

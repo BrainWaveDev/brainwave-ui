@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import React from 'react';
 import { AppProps } from 'next/app';
 import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
@@ -10,7 +9,6 @@ import type { Database } from 'types/supabase';
 
 import 'styles/main.css';
 import 'styles/chrome-bug.css';
-import { ReduxProvider } from 'context/redux/ReduxProvider';
 import { Provider } from 'react-redux';
 import { store } from 'context/redux/store';
 

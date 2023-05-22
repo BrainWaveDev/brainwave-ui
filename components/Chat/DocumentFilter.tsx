@@ -2,10 +2,11 @@ import React, { Dispatch, SetStateAction, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { Cross2Icon, MixerHorizontalIcon } from '@radix-ui/react-icons';
 import classes from './Chat.module.css';
-import { Document } from '../../types';
+import { Document } from '@/types/document';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { CheckIcon } from '@radix-ui/react-icons';
 import classNames from 'classnames';
+import { useAppSelector } from 'context/redux/store';
 
 const DocumentRow = ({
   document,
@@ -79,11 +80,9 @@ const DocumentRow = ({
 };
 
 const DocumentFilter = ({
-  documents,
   searchSpace,
   setSearchSpace
 }: {
-  documents: Document[];
   searchSpace: Set<number>;
   setSearchSpace: Dispatch<SetStateAction<Set<number>>>;
 }) => {
@@ -95,6 +94,7 @@ const DocumentFilter = ({
     }
   };
 
+  const documents = useAppSelector((state) => state.documents);
   const [searchString, setSearchString] = useState('');
   const filteredDocuments = documents.filter((document) =>
     document.name.includes(searchString)

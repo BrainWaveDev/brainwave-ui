@@ -18,7 +18,7 @@ import { ChatMessage } from './ChatMessage';
 import AppLogo from '@/components/icons/AppLogo';
 import classNames from 'classnames';
 import DocumentFilter from '@/components/Chat/DocumentFilter';
-import { Document } from '../../types';
+import { Document } from '@/types/document';
 
 interface Props {
   conversation: Conversation | undefined;
@@ -27,7 +27,6 @@ interface Props {
   onSend: (message: Message, deleteCount?: number) => void;
   onEditMessage: (message: Message, messageIndex: number) => void;
   stopConversationRef: MutableRefObject<boolean>;
-  documents: Document[];
   searchSpace: Set<number>;
   setSearchSpace: Dispatch<SetStateAction<Set<number>>>;
 }
@@ -40,7 +39,6 @@ export const Chat: FC<Props> = memo(
     onSend,
     onEditMessage,
     stopConversationRef,
-    documents,
     searchSpace,
     setSearchSpace
   }) => {
@@ -161,7 +159,6 @@ export const Chat: FC<Props> = memo(
             onScroll={handleScroll}
           >
             <DocumentFilter
-              documents={documents}
               searchSpace={searchSpace}
               setSearchSpace={setSearchSpace}
             />

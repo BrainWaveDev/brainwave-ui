@@ -18,6 +18,8 @@ import AlertModal, {
 } from '@/components/ui/AlertModal';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import Dropzone from 'react-dropzone';
+import { useAppDispatch } from 'context/redux/store';
+import { optimisticDocumentActions } from 'context/redux/documentSlice';
 
 // Valid file type
 const validFileTypes = [
@@ -28,18 +30,14 @@ const validFileTypes = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 ];
 
-export default function FileInput({
-  updateDocumentList
-}: {
-  updateDocumentList: () => Promise<void>;
-}) {
+export default function FileInput() {
   const { user, isLoading } = useUser();
   const [files, setFiles] = useState<FileInfo[]>([]);
   // const [previewElements, setPreviewElements] = useState<FileInfo[]>([]);
-  const { dispatch: dispatchError } = useErrorContext();
+  const { errorDispatch: dispatchError } = useErrorContext();
   const [modalState, setModalState] = useState<ModalState | null>(null);
   const [displayFileUpload, setDisplayFileUpload] = useState(true);
-
+  const dispatch = useAppDispatch();
   const ModalActionButtons = (
     <>
       <AlertDialog.Action
@@ -191,7 +189,7 @@ export default function FileInput({
 
       setFiles(updatedFiles);
       await updateFilePreviewAfterUpload();
-      await updateDocumentList();
+      dispatch(optimisticDocumentActions.fetchAllDocument(user!.id));
     }
   };
 

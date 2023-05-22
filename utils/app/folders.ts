@@ -1,4 +1,4 @@
-import { Folder } from '../../types/folder';
+import { Folder } from '@/types/folder';
 import { supabase } from '../supabase-client';
 
 export const saveFolder = async (folder: Folder) => {
@@ -6,14 +6,11 @@ export const saveFolder = async (folder: Folder) => {
     name: folder.name,
     user_id: folder.user_id!,
   })
-  .select()
-  .single()
-  ;
-
+    .select()
+    .single();
   if (error) {
     throw error;
   }
-
   return data;
 
 };
@@ -45,7 +42,7 @@ export const retrieveListOfFolders = async (userId: string) => {
     throw error;
   }
 
-  return data.map((dbFolder) =>{
+  return data.map((dbFolder) => {
     return {
       id: dbFolder.id,
       name: dbFolder.name,
@@ -66,7 +63,7 @@ export const updateFolder = async (folder: Folder) => {
   return data;
 };
 
-export const renameFolder = async (id:number,newName:string) => {
+export const renameFolder = async (id: number, newName: string) => {
   const { data, error } = await supabase.from("folder").update({
     name: newName,
   }).eq("id", id);

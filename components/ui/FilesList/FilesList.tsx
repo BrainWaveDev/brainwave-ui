@@ -1,5 +1,5 @@
 import SearchIcon from '@/components/icons/SearchIcon';
-import { Document } from '../../../types';
+import { Document } from '@/types/document';
 import classNames from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
 import PageIndex from '@/components/ui/FileInput/PageIndex';
@@ -13,12 +13,8 @@ import AlertModal, {
 } from '@/components/ui/AlertModal';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import SelectBar, { SelectItem } from '../Select/Select';
-import { SelectGroup } from '@radix-ui/react-select';
-
-interface Props {
-  documents: Document[];
-  deleteDocumentAction: (ids: number[]) => Promise<boolean>;
-}
+import { useAppDispatch, useAppSelector } from 'context/redux/store';
+import { optimisticDocumentActions } from 'context/redux/documentSlice';
 
 const ONE_PAGE_SIZE = 5;
 
@@ -49,7 +45,7 @@ export const enum Columns {
   status
 }
 
-export default function FilesList(props: Props) {
+export default function FilesList() {
   const [currentPage, setCurrentPage] = useState(0);
   const [filter, setFilter] = useState('');
   const [sortByColumn, setSortByColumn] = useState<number | null>(null);
@@ -65,6 +61,9 @@ export default function FilesList(props: Props) {
     value: 'Status',
     columnId: Columns.status
   });
+
+  const documents = useAppSelector((state) => state.documents);
+  const dispatch = useAppDispatch();
 
   // ===================================================
   // Modal
@@ -84,12 +83,8 @@ export default function FilesList(props: Props) {
         onClick={async () => {
           setModalState(setModalOpen(false));
           setDeletingDocuments(true);
-          const filesRemoved = await props.deleteDocumentAction(
-            Array.from(selectedDocuments)
-          );
-          if (filesRemoved) {
-            setSelectedDocuments(new Set<number>());
-          }
+          dispatch(optimisticDocumentActions.deleteDocuments(Array.from(selectedDocuments)))
+          setSelectedDocuments(new Set<number>());
           setDeletingDocuments(false);
         }}
       >
@@ -118,7 +113,7 @@ export default function FilesList(props: Props) {
   const selectAllDocuments = (selectAll: boolean) => {
     if (selectAll) {
       setSelectedDocuments(
-        new Set<number>(props.documents.map((document) => document.id))
+        new Set<number>(documents.map((document) => document.id))
       );
     } else {
       setSelectedDocuments(new Set<number>());
@@ -224,7 +219,7 @@ export default function FilesList(props: Props) {
     }
   };
 
-  const sortedAndFilteredDocuments = sortAndFilterDocuments(props.documents);
+  const sortedAndFilteredDocuments = sortAndFilterDocuments(documents);
   const documentPages = splitArray(sortedAndFilteredDocuments, ONE_PAGE_SIZE);
   const totalPages = documentPages.length;
   const displayedDocuments = selectDisplayedDocuments(
@@ -321,8 +316,8 @@ export default function FilesList(props: Props) {
                       sortAscending={sortAscending}
                       handleColumnClick={handleColumnClick}
                       allDocumentsSelected={
-                        props.documents.length > 0 &&
-                        selectedDocuments.size === props.documents.length
+                        documents.length > 0 &&
+                        selectedDocuments.size === documents.length
                       }
                       selectAllDocuments={selectAllDocuments}
                       smallScreenSelectedColumn={smallScreenTableHeader}

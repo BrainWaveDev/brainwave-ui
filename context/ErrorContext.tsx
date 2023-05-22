@@ -23,7 +23,7 @@ type Action =
 
 type ErrorContext = {
   errorState: State;
-  dispatch: (action: Action) => void;
+  errorDispatch: (action: Action) => void;
 };
 
 const initialState: State = {
@@ -32,7 +32,7 @@ const initialState: State = {
 
 const ErrorContext = createContext<ErrorContext>({
   errorState: initialState,
-  dispatch: (action: Action) => {}
+  errorDispatch: (action: Action) => {}
 });
 
 const reducer = (state: State, action: Action) => {
@@ -56,7 +56,7 @@ export default function ErrorProvider({
   const [errorState, dispatch] = useReducer(reducer, initialState);
 
   return (
-    <ErrorContext.Provider value={{ errorState, dispatch }}>
+    <ErrorContext.Provider value={{ errorState, errorDispatch: dispatch }}>
       {children}
     </ErrorContext.Provider>
   );

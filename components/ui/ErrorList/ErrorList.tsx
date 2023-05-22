@@ -61,7 +61,7 @@ const Error = ({
 export default function ErrorList() {
   const {
     errorState: { errors },
-    dispatch
+    errorDispatch: dispatch
   } = useErrorContext();
 
   return (

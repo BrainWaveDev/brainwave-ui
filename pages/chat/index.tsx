@@ -22,6 +22,7 @@ import {
 import {
   retrieveListOfFolders,
 } from '@/utils/app/folders';
+import { Document } from '@/types/document';
 import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -31,7 +32,6 @@ import toast from 'react-hot-toast';
 import { useSessionContext } from '@supabase/auth-helpers-react';
 import { randomNumberId } from '@/utils/app/createDBOperation';
 import { getDocumentListServerSideProps } from '@/utils/supabase-admin';
-import { Document } from '../../types';
 import { clearSourcesFromMessages } from '@/utils/app/messages';
 import { useAppDispatch, useAppSelector } from 'context/redux/store';
 import { OpenAIModelID, OpenAIModels, fallbackModelID } from 'types/openai';
@@ -52,7 +52,6 @@ export interface DocumentInfo {
 }
 
 const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
-  const { t } = useTranslation('chat');
 
   // STATE ----------------------------------------------
   const [loading, setLoading] = useState<boolean>(false);
@@ -65,7 +64,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
 
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
 
-  const [prompts, setPrompts] = useState<Prompt[]>([]);
   const { isLoading, session, error } = useSessionContext();
 
   // Managing documents for the filter component
@@ -343,11 +341,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
       setShowSidebar(showChatbar === 'true');
     }
 
-    const prompts = localStorage.getItem('prompts');
-    if (prompts) {
-      setPrompts(JSON.parse(prompts));
-    }
-
     const conversationHistory = localStorage.getItem('conversationHistory');
     if (conversationHistory) {
       const parsedConversationHistory: Conversation[] =
@@ -413,7 +406,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
               onSend={handleSend}
               onEditMessage={handleEditMessage}
               stopConversationRef={stopConversationRef}
-              documents={documents}
               searchSpace={searchSpace}
               setSearchSpace={setSearchSpace}
             />
