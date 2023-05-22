@@ -18,7 +18,7 @@ export default function HomePage({
     }
     // client fetch for redux, since SEO is not important here
     const user = session?.user;
-    dispatch(optimisticDocumentActions.fetchAllDocument(user?.id!))
+    dispatch(optimisticDocumentActions.fetchAllDocuments(user?.id!))
   }, [isLoading, error]);
 
   return (

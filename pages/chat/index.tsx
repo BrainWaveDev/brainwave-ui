@@ -16,15 +16,10 @@ import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/prompts';
 import {
   inseartMessage,
   retriveConversation,
-  retriveConversations,
   saveConversation
 } from '@/utils/app/conversation';
-import {
-  retrieveListOfFolders,
-} from '@/utils/app/folders';
 import { Document } from '@/types/document';
 import { GetServerSideProps } from 'next';
-import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import { useEffect, useRef, useState } from 'react';
@@ -35,8 +30,9 @@ import { getDocumentListServerSideProps } from '@/utils/supabase-admin';
 import { clearSourcesFromMessages } from '@/utils/app/messages';
 import { useAppDispatch, useAppSelector } from 'context/redux/store';
 import { OpenAIModelID, OpenAIModels, fallbackModelID } from 'types/openai';
-import { setFolders } from 'context/redux/folderSlice';
-import { setConversations } from 'context/redux/conversationsSlice';
+import { optimisticConversationsActions, setConversations } from 'context/redux/conversationsSlice';
+import { optimisticDocumentActions } from 'context/redux/documentSlice';
+import { optimisticFoldersAction } from 'context/redux/folderSlice';
 
 interface ChatProps {
   defaultModelId: OpenAIModelID;
@@ -80,26 +76,9 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
       return;
     }
     const user_id = session?.user?.id!;
-    retrieveListOfFolders(user_id)
-      .then((data) => {
-        dispatch(setFolders(data));
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-
-    retriveConversations(user_id)
-      .then((data) => {
-        dispatch(setConversations(data));
-        if (data.length > 0) {
-          retriveConversation(data[0].id).then((conversation) => {
-            setSelectedConversation(conversation);
-          });
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    dispatch(optimisticFoldersAction.fetchAllFolders(user_id))
+    dispatch(optimisticConversationsActions.fetchAllConversations(user_id));
+    dispatch(optimisticDocumentActions.fetchAllDocuments(user_id));
   }, [isLoading, error]);
 
   // REFS ----------------------------------------------

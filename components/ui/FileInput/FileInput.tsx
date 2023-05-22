@@ -189,7 +189,7 @@ export default function FileInput() {
 
       setFiles(updatedFiles);
       await updateFilePreviewAfterUpload();
-      dispatch(optimisticDocumentActions.fetchAllDocument(user!.id));
+      dispatch(optimisticDocumentActions.fetchAllDocuments(user!.id));
     }
   };
 

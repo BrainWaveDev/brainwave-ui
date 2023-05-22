@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import { Folder } from 'types/folder'
 import { randomNumberId } from '@/utils/app/createDBOperation'
-import { saveFolder, deleteFolder as deleteFolderFromDB, renameFolder as renameFolderInDB  } from '@/utils/app/folders'
+import { saveFolder, deleteFolder as deleteFolderFromDB, renameFolder as renameFolderInDB, fetchAllFolders  } from '@/utils/app/folders'
 import { AppThunk } from './store'
 
 type FoldersState = Folder[]
@@ -87,11 +87,19 @@ const thunkUpdateFolderName =
             }
         }
 
+const thunkFetchAllFolders =
+    (user_id: string): AppThunk =>
+        async (dispatch, getState) => {
+            const folders = await fetchAllFolders(user_id)
+            dispatch(setFolders(folders))
+        }
 
-export const optimisticFoldersOperations = {
+
+export const optimisticFoldersAction = {
     creatrNewFolder: thunkCreateNewFolder,
     deleteFolder: thunkDeleteFolder,
-    updateFolderName: thunkUpdateFolderName
+    updateFolderName: thunkUpdateFolderName,
+    fetchAllFolders: thunkFetchAllFolders,
 }
 
 

@@ -59,7 +59,7 @@ const thunkDeleteDocuments = (document_ids: number[]): AppThunk => {
 
 
 export const optimisticDocumentActions = {
-    fetchAllDocument: thunkAddAllDocuments,
+    fetchAllDocuments: thunkAddAllDocuments,
     deleteDocuments: thunkDeleteDocuments,
 }
 

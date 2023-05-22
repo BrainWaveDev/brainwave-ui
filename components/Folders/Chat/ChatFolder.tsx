@@ -12,7 +12,7 @@ import {
 import { FC, KeyboardEvent, useEffect, useState } from 'react';
 import { ConversationComponent } from '../../Chatbar/Conversation';
 import { useAppDispatch, useAppSelector } from 'context/redux/store';
-import { optimisticFoldersOperations, updateFolderName } from 'context/redux/folderSlice';
+import { optimisticFoldersAction, updateFolderName } from 'context/redux/folderSlice';
 import { deleteFolder as DBDeleteFodler, renameFolder, updateFolder } from '@/utils/app/folders';
 interface Props {
   searchTerm: string;
@@ -46,11 +46,11 @@ export const ChatFolder: FC<Props> = ({
   };
   const dispatch = useAppDispatch();
   const handleRename = () => {
-    dispatch(optimisticFoldersOperations.updateFolderName(currentFolder.id, renameValue));
+    dispatch(optimisticFoldersAction.updateFolderName(currentFolder.id, renameValue));
   };
 
   const handleDeleteFolder = () => {
-    dispatch(optimisticFoldersOperations.deleteFolder(currentFolder.id));
+    dispatch(optimisticFoldersAction.deleteFolder(currentFolder.id));
   };
 
   const handleDrop = (e: any, folder: Folder) => {

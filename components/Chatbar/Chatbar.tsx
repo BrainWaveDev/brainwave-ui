@@ -9,7 +9,7 @@ import { Conversations } from './Conversations';
 import classNames from 'classnames';
 import ChevronLeft from '@/components/icons/ChevronLeft';
 import { useAppDispatch, useAppSelector } from 'context/redux/store';
-import { optimisticFoldersOperations } from 'context/redux/folderSlice';
+import { optimisticFoldersAction } from 'context/redux/folderSlice';
 import { useSessionContext } from '@supabase/auth-helpers-react';
 import { optimisticConversationsActions } from 'context/redux/conversationsSlice';
 
@@ -66,7 +66,7 @@ export const Chatbar: FC<Props> = ({
 
   const dispatch = useAppDispatch()
   const handleCreateFolder = () => {
-    dispatch(optimisticFoldersOperations.creatrNewFolder(session?.user!.id!))
+    dispatch(optimisticFoldersAction.creatrNewFolder(session?.user!.id!))
   }
 
   const handleCreateNewConversation = () => {

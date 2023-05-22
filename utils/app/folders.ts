@@ -35,7 +35,7 @@ export const retrieveFolder = async (folderId: number) => {
   return data;
 };
 
-export const retrieveListOfFolders = async (userId: string) => {
+export const fetchAllFolders = async (userId: string) => {
   const { data, error } = await supabase.from("folder").select("*").eq("user_id", userId);
 
   if (error) {

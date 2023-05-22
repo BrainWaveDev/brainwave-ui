@@ -6,7 +6,7 @@ import { AppThunk } from './store';
 import { randomNumberId } from '@/utils/app/createDBOperation';
 import { OpenAIModels } from 'types/openai';
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/prompts';
-import { clearAllConversations, createConversation, deleteConversation as deleteConversationFromDB, saveConversation,updateConversation as updateConvesationDB } from '@/utils/app/conversation';
+import { clearAllConversations, createConversation, deleteConversation as deleteConversationFromDB, fetchAllConversations, saveConversation,updateConversation as updateConvesationDB } from '@/utils/app/conversation';
 
 type ConversationsState = ConversationSummary[]
 
@@ -114,12 +114,21 @@ const thunkClearConversations =
             }
         }
 
+const thunkFetchAllConversations =
+    (user_id:string): AppThunk =>
+        async (dispatch, getState) => {
+            const conversations = await fetchAllConversations(user_id)
+            dispatch(setConversations(conversations))
+        }
+        
+
 export const optimisticConversationsActions = {
     createConversation: thunkCreateNewConversation,
     deleteConversation: thunkDeleteConversation,
     // update conversation does not update messages
     updateConversation: thunkUpdateConversation,
     clearConversations: thunkClearConversations,
+    fetchAllConversations: thunkFetchAllConversations,
 }
 
 

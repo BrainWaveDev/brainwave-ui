@@ -95,6 +95,7 @@ const DocumentFilter = ({
   };
 
   const documents = useAppSelector((state) => state.documents);
+  debugger;
   const [searchString, setSearchString] = useState('');
   const filteredDocuments = documents.filter((document) =>
     document.name.includes(searchString)

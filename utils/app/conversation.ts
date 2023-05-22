@@ -146,7 +146,7 @@ export const retriveConversation = async (conversationId: number) => {
   return res;
 };
 
-export const retriveConversations = async (userId: string) => {
+export const fetchAllConversations = async (userId: string) => {
   const { data, error } = await supabase
     .from('conversation')
     .select('*')
