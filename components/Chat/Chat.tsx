@@ -1,7 +1,5 @@
 import { Conversation, Message } from '../../types/chat';
-import { KeyValuePair } from '../../types/data';
 import { OpenAIModels } from '../../types/openai';
-import { Prompt } from '../../types/prompt';
 import { throttle } from '../../utils';
 import { IconArrowDown } from '@tabler/icons-react';
 import {
@@ -26,7 +24,6 @@ interface Props {
   conversation: Conversation | undefined;
   messageIsStreaming: boolean;
   loading: boolean;
-  prompts: Prompt[];
   onSend: (message: Message, deleteCount?: number) => void;
   onEditMessage: (message: Message, messageIndex: number) => void;
   stopConversationRef: MutableRefObject<boolean>;
@@ -40,7 +37,6 @@ export const Chat: FC<Props> = memo(
     conversation,
     messageIsStreaming,
     loading,
-    prompts,
     onSend,
     onEditMessage,
     stopConversationRef,
@@ -196,7 +192,6 @@ export const Chat: FC<Props> = memo(
             conversationIsEmpty={conversationIsEmpty}
             // need to pass in the model here in the future
             model={OpenAIModels['gpt-3.5-turbo']}
-            prompts={prompts}
             onSend={(message) => {
               setCurrentMessage(message);
               onSend(message);

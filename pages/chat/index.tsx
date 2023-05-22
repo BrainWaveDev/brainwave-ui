@@ -410,7 +410,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
               conversation={selectedConversation}
               messageIsStreaming={messageIsStreaming}
               loading={loading}
-              prompts={prompts}
               onSend={handleSend}
               onEditMessage={handleEditMessage}
               stopConversationRef={stopConversationRef}

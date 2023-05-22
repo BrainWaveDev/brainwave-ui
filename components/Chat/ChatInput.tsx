@@ -15,7 +15,6 @@ interface Props {
   messageIsStreaming: boolean;
   model: OpenAIModel;
   conversationIsEmpty: boolean;
-  prompts: Prompt[];
   onSend: (message: Message) => void;
   onRegenerate: () => void;
   stopConversationRef: MutableRefObject<boolean>;
