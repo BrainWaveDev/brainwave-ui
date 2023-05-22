@@ -6,12 +6,14 @@ import type { TypedUseSelectorHook } from 'react-redux';
 import conversationsSlice from './conversationsSlice';
 import { ThunkAction } from 'redux-thunk';
 import documentSlice from './documentSlice';
+import lightmodeSlice from './lightmodeSlice';
 
 export const store = configureStore({
    reducer:{
       folders: folderSlice,
       conversations: conversationsSlice,
       documents: documentSlice,
+      lightmode: lightmodeSlice,
    },
 });
 

@@ -1,23 +1,21 @@
-import { SupportedExportFormats } from '../../types/export';
-import { IconFileExport, IconMoon, IconSun } from '@tabler/icons-react';
+import { IconMoon, IconSun } from '@tabler/icons-react';
 import { useTranslation } from 'next-i18next';
 import { FC } from 'react';
-import { Import } from '../Settings/Import';
 import { SidebarButton } from '../Sidebar/SidebarButton';
 import { ClearConversations } from './ClearConversations';
+import { useAppSelector } from 'context/redux/store';
 
 interface Props {
-  lightMode: 'light' | 'dark';
   conversationsCount: number;
   onToggleLightMode: (mode: 'light' | 'dark') => void;
 }
 
 export const ChatbarSettings: FC<Props> = ({
-  lightMode,
   conversationsCount,
   onToggleLightMode,
 }) => {
   const { t } = useTranslation('sidebar');
+  const lightMode = useAppSelector(state => state.lightmode).mode
   return (
     <div className="flex flex-col items-center space-y-1 border-t border-white/20 pt-1 text-sm">
       {conversationsCount > 0 ? (

@@ -33,6 +33,7 @@ import { OpenAIModelID, OpenAIModels, fallbackModelID } from 'types/openai';
 import { optimisticConversationsActions, setConversations } from 'context/redux/conversationsSlice';
 import { optimisticDocumentActions } from 'context/redux/documentSlice';
 import { optimisticFoldersAction } from 'context/redux/folderSlice';
+import { setLightMode } from 'context/redux/lightmodeSlice';
 
 interface ChatProps {
   defaultModelId: OpenAIModelID;
@@ -51,7 +52,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
 
   // STATE ----------------------------------------------
   const [loading, setLoading] = useState<boolean>(false);
-  const [lightMode, setLightMode] = useState<'dark' | 'light'>('dark');
   const [messageIsStreaming, setMessageIsStreaming] = useState<boolean>(false);
 
   const [selectedConversation, setSelectedConversation] =
@@ -68,7 +68,7 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
   );
 
   const conversations = useAppSelector((state) => state.conversations);
-
+  const lightmode = useAppSelector((state) => state.lightmode);
   const dispatch = useAppDispatch();
   useEffect(() => {
     // loading after login
@@ -76,6 +76,7 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
       return;
     }
     const user_id = session?.user?.id!;
+    // when swich beteen pages, the redux store will be empty, so we need to fetch data from supabase aging, need to do something about this
     dispatch(optimisticFoldersAction.fetchAllFolders(user_id))
     dispatch(optimisticConversationsActions.fetchAllConversations(user_id));
     dispatch(optimisticDocumentActions.fetchAllDocuments(user_id));
@@ -232,7 +233,7 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
   // BASIC HANDLERS --------------------------------------------
 
   const handleLightMode = (mode: 'dark' | 'light') => {
-    setLightMode(mode);
+    dispatch(setLightMode(mode))
     localStorage.setItem('theme', mode);
   };
 
@@ -362,7 +363,7 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div
-        className={`flex h-[calc(100vh_-_4rem)] min-w-full flex-col text-sm text-white dark:text-white ${lightMode}`}
+        className={`flex h-[calc(100vh_-_4rem)] min-w-full flex-col text-sm text-white dark:text-white ${lightmode}`}
       >
         <div
           className="flex h-full w-full pt-0 relative"
@@ -370,7 +371,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
         >
           <Chatbar
             loading={messageIsStreaming}
-            lightMode={lightMode}
             selectedConversation={selectedConversation}
             showSidebar={showSidebar}
             handleToggleChatbar={handleToggleChatbar}
