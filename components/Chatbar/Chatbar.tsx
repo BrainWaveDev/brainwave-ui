@@ -15,7 +15,6 @@ import { optimisticConversationsActions } from 'context/redux/conversationsSlice
 
 interface Props {
   loading: boolean;
-  lightMode: 'light' | 'dark';
   selectedConversation: Conversation | undefined;
   showSidebar: boolean;
   handleToggleChatbar: () => void;
@@ -25,7 +24,6 @@ interface Props {
 
 export const Chatbar: FC<Props> = ({
   loading,
-  lightMode,
   selectedConversation,
   showSidebar,
   handleToggleChatbar,
@@ -177,7 +175,6 @@ export const Chatbar: FC<Props> = ({
       </div>
 
       <ChatbarSettings
-        lightMode={lightMode}
         conversationsCount={conversations.length}
         onToggleLightMode={onToggleLightMode}
       />
