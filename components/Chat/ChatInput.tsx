@@ -1,6 +1,5 @@
-import { Message } from '../../types/chat';
+import { useAppDispatch, useAppSelector } from 'context/redux/store';
 import { OpenAIModel } from '../../types/openai';
-import { Prompt } from '../../types/prompt';
 import { IconPlayerStop, IconRepeat, IconSend } from '@tabler/icons-react';
 import { useTranslation } from 'next-i18next';
 import {
@@ -10,23 +9,17 @@ import {
   useEffect,
   useState
 } from 'react';
+import { optimisticCurrentConversationAction } from 'context/redux/currentConversationSlice';
+import { useSessionContext } from '@supabase/auth-helpers-react';
 
 interface Props {
-  messageIsStreaming: boolean;
   model: OpenAIModel;
-  conversationIsEmpty: boolean;
-  onSend: (message: Message) => void;
-  onRegenerate: () => void;
   stopConversationRef: MutableRefObject<boolean>;
   textareaRef: MutableRefObject<HTMLTextAreaElement | null>;
 }
 
 export const ChatInput: FC<Props> = ({
-  messageIsStreaming,
   model,
-  conversationIsEmpty,
-  onSend,
-  onRegenerate,
   stopConversationRef,
   textareaRef
 }) => {
@@ -34,6 +27,13 @@ export const ChatInput: FC<Props> = ({
 
   const [content, setContent] = useState<string>();
   const [isTyping, setIsTyping] = useState<boolean>(false);
+  const currentConversationState = useAppSelector(
+    state => state.currentConverstaion
+  );
+  const messageIsStreaming = currentConversationState.messageIsStreaming;
+  const currentConversation = currentConversationState.conversation;
+  const dispatch = useAppDispatch();
+  const { session } = useSessionContext();
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -62,8 +62,16 @@ export const ChatInput: FC<Props> = ({
       return;
     }
 
-    onSend({ role: 'user', content });
-    setContent('');
+    if (!currentConversation) return;
+    // 1. Update the current conversation messages
+    dispatch(optimisticCurrentConversationAction.userSent({
+      content,
+      role: 'user',
+    }, session?.user?.id!))
+
+    content && setContent('');
+    // 2. fetch the response from the api
+    dispatch(optimisticCurrentConversationAction.startStreaming(session!))
 
     if (window.innerWidth < 640 && textareaRef && textareaRef.current) {
       textareaRef.current.blur();
@@ -96,9 +104,8 @@ export const ChatInput: FC<Props> = ({
     if (textareaRef && textareaRef.current) {
       textareaRef.current.style.height = 'inherit';
       textareaRef.current.style.height = `${textareaRef.current?.scrollHeight}px`;
-      textareaRef.current.style.overflow = `${
-        textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
-      }`;
+      textareaRef.current.style.overflow = `${textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
+        }`;
     }
   }, [content]);
 
@@ -118,14 +125,16 @@ export const ChatInput: FC<Props> = ({
           </button>
         )}
 
-        {!messageIsStreaming && !conversationIsEmpty && (
-          <button
-            className="absolute top-0 left-0 right-0 mb-3 md:mb-0 md:mt-2 mx-auto flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white py-2 px-4 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white"
-            onClick={onRegenerate}
-          >
-            <IconRepeat size={16} /> {t('Regenerate response')}
-          </button>
-        )}
+        {!messageIsStreaming
+          && (
+            <button
+              className="absolute top-0 left-0 right-0 mb-3 md:mb-0 md:mt-2 mx-auto flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white py-2 px-4 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white"
+            // onClick={onRegenerate}
+            // TODO: Regenerate response
+            >
+              <IconRepeat size={16} /> {t('Regenerate response')}
+            </button>
+          )}
 
         <div className="relative mx-2 flex w-full flex-grow flex-col rounded-md border border-black/10 bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] dark:border-gray-900/50 dark:bg-[#40414F] dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] sm:mx-4">
           <textarea
@@ -135,11 +144,10 @@ export const ChatInput: FC<Props> = ({
               resize: 'none',
               bottom: `${textareaRef?.current?.scrollHeight}px`,
               maxHeight: '400px',
-              overflow: `${
-                textareaRef.current && textareaRef.current.scrollHeight > 400
+              overflow: `${textareaRef.current && textareaRef.current.scrollHeight > 400
                   ? 'auto'
                   : 'hidden'
-              }`
+                }`
             }}
             placeholder={t('Type a message...') || ''}
             value={content}
