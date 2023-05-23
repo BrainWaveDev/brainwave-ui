@@ -7,7 +7,7 @@ import * as Checkbox from '@radix-ui/react-checkbox';
 import { CheckIcon } from '@radix-ui/react-icons';
 import classNames from 'classnames';
 import { useAppDispatch, useAppSelector } from 'context/redux/store';
-import { clearSearchSpace, selectAllSeachSpace, selectSearchSpace } from 'context/redux/currentConversationSlice';
+import { clearSearchSpace, selectAllSearchSpace, selectSearchSpace } from 'context/redux/searchSpaceSlice';
 
 const DocumentRow = ({
   document,
@@ -83,7 +83,7 @@ const DocumentRow = ({
 const DocumentFilter = ({
 }: {
 }) => {
-  const searchSpace = useAppSelector((state) => state.currentConverstaion).searchSpace;
+  const searchSpace = useAppSelector((state) => state.searchSpace).searchSpace;
   const dispatch = useAppDispatch();
   
 
@@ -154,7 +154,7 @@ const DocumentFilter = ({
                     )}
                     aria-label="Select all documents"
                     onClick={() =>
-                      dispatch(selectAllSeachSpace(documents.map((doc) => doc.id)))
+                      dispatch(selectAllSearchSpace(documents.map((doc) => doc.id)))
                     }
                   >
                     All

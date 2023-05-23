@@ -7,7 +7,6 @@ import { Session } from '@supabase/auth-helpers-react';
 interface SelectedConversationState {
   conversation: Conversation | undefined;
   currentMessage: Message | undefined;
-  searchSpace : number[];
   messageIsStreaming: boolean;
   loading: boolean;
 }
@@ -15,9 +14,8 @@ interface SelectedConversationState {
 const initialState: SelectedConversationState = {
   conversation: undefined,
   currentMessage: undefined,
-  searchSpace : [],
   messageIsStreaming: false,
-  loading: true
+  loading: true,
 };
 
 const currentConversationSlice = createSlice({
@@ -59,25 +57,8 @@ const currentConversationSlice = createSlice({
         lastMessage.content += action.payload;
       }
     },
-    clearSearchSpace: (state) => {
-      state.searchSpace = [];
-    },
-    selectAllSeachSpace: (state,action:PayloadAction<number[]>) => {
-      state.searchSpace = action.payload;
-    },
     setIsStreaming: (state, action: PayloadAction<boolean>) => {
       state.messageIsStreaming = action.payload;
-    },
-    selectSearchSpace: (state,action:PayloadAction<number>) => {
-      // if exost in search space remove it
-      // else add it
-      const index = state.searchSpace.indexOf(action.payload)
-      if (index === -1) {
-        state.searchSpace.push(action.payload)
-      }
-      else {
-        state.searchSpace.splice(index,1)
-      }
     },
     clearSource: (state) => {
       const { conversation } = state;
@@ -97,12 +78,11 @@ const currentConversationSlice = createSlice({
       });
       state.conversation = {
         ...conversation,
-        messages: updatedMessage
+        messages: updatedMessage,
       };
-    }
+    },
   },
 });
-
 const thunkRetriveConversationDetails =
   (summary: ConversationSummary): AppThunk =>
     async (dispatch, getState) => {
@@ -146,7 +126,7 @@ export const thunkUserSent =
     }
 
 export const thunkStreamingResponse =
-  (session: Session): AppThunk =>
+  (session: Session,search_space:number[]): AppThunk =>
     async (dispatch, getState) => {
       const { conversation } = getState().currentConverstaion;
 
@@ -168,7 +148,7 @@ export const thunkStreamingResponse =
           jwt: session?.access_token,
           messages: messages,
           model: conversation.model,
-          search_space: [],
+          search_space: search_space,
         }),
       });
 
@@ -222,9 +202,6 @@ export const {
   clearSource,
   userSent,
   selectCurrentConversation,
-  clearSearchSpace,
-  selectAllSeachSpace,
-  selectSearchSpace
 } = currentConversationSlice.actions;
 
 export default currentConversationSlice.reducer;

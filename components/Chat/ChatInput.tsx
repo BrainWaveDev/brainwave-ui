@@ -30,6 +30,7 @@ export const ChatInput: FC<Props> = ({
   const currentConversationState = useAppSelector(
     state => state.currentConverstaion
   );
+  const searchSpace = useAppSelector(state => state.searchSpace).searchSpace;
   const messageIsStreaming = currentConversationState.messageIsStreaming;
   const currentConversation = currentConversationState.conversation;
   const dispatch = useAppDispatch();
@@ -71,7 +72,7 @@ export const ChatInput: FC<Props> = ({
 
     content && setContent('');
     // 2. fetch the response from the api
-    dispatch(optimisticCurrentConversationAction.startStreaming(session!))
+    dispatch(optimisticCurrentConversationAction.startStreaming(session!,searchSpace))
 
     if (window.innerWidth < 640 && textareaRef && textareaRef.current) {
       textareaRef.current.blur();

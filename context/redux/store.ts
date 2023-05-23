@@ -8,6 +8,7 @@ import { ThunkAction } from 'redux-thunk';
 import documentSlice from './documentSlice';
 import lightmodeSlice from './lightmodeSlice';
 import currentConversationSlice from './currentConversationSlice';
+import searchSpaceSlice from './searchSpaceSlice';
 
 export const store = configureStore({
    reducer:{
@@ -15,7 +16,8 @@ export const store = configureStore({
       conversations: conversationsSlice,
       documents: documentSlice,
       lightmode: lightmodeSlice,
-      currentConverstaion: currentConversationSlice
+      currentConverstaion: currentConversationSlice,
+      searchSpace: searchSpaceSlice,
    },
 });
 
