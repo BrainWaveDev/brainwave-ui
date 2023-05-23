@@ -6,7 +6,8 @@ import { Document } from '@/types/document';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { CheckIcon } from '@radix-ui/react-icons';
 import classNames from 'classnames';
-import { useAppSelector } from 'context/redux/store';
+import { useAppDispatch, useAppSelector } from 'context/redux/store';
+import { clearSearchSpace, selectAllSeachSpace, selectSearchSpace } from 'context/redux/currentConversationSlice';
 
 const DocumentRow = ({
   document,
@@ -80,22 +81,13 @@ const DocumentRow = ({
 };
 
 const DocumentFilter = ({
-  searchSpace,
-  setSearchSpace
 }: {
-  searchSpace: Set<number>;
-  setSearchSpace: Dispatch<SetStateAction<Set<number>>>;
 }) => {
-  const onSelectedChange = (id: number) => {
-    if (searchSpace.delete(id)) {
-      setSearchSpace(new Set(searchSpace));
-    } else {
-      setSearchSpace(new Set(searchSpace.add(id)));
-    }
-  };
+  const searchSpace = useAppSelector((state) => state.currentConverstaion).searchSpace;
+  const dispatch = useAppDispatch();
+  
 
   const documents = useAppSelector((state) => state.documents);
-  debugger;
   const [searchString, setSearchString] = useState('');
   const filteredDocuments = documents.filter((document) =>
     document.name.includes(searchString)
@@ -150,7 +142,7 @@ const DocumentFilter = ({
                       'transition duration-150 border border-gray-100'
                     )}
                     aria-label="Disselect all documents"
-                    onClick={() => setSearchSpace(new Set())}
+                    onClick={() => dispatch(clearSearchSpace())}
                   >
                     None
                   </button>
@@ -162,7 +154,7 @@ const DocumentFilter = ({
                     )}
                     aria-label="Select all documents"
                     onClick={() =>
-                      setSearchSpace(new Set(documents.map((d) => d.id)))
+                      dispatch(selectAllSeachSpace(documents.map((doc) => doc.id)))
                     }
                   >
                     All
@@ -200,8 +192,10 @@ const DocumentFilter = ({
                   filteredDocuments.map((document, index) => (
                     <DocumentRow
                       document={document}
-                      selected={searchSpace.has(document.id)}
-                      onSelectedChange={onSelectedChange}
+                      selected={searchSpace.includes(document.id)}
+                      onSelectedChange={() => {
+                        dispatch(selectSearchSpace(document.id))
+                      }}
                       key={index}
                     />
                   ))}
@@ -218,9 +212,9 @@ const DocumentFilter = ({
                   'text-xs text-gray-500 mx-auto text-center mt-3 pb-2'
                 }
               >
-                {searchSpace.size === documents.length
+                {searchSpace.length === documents.length
                   ? 'Results will be based on all documents.'
-                  : searchSpace.size === 0
+                  : searchSpace.length === 0
                   ? 'Results will be based on general knowledge.'
                   : 'Results will be based on the selected documents.'}
               </p>

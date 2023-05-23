@@ -2,11 +2,10 @@ import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { stripe } from './stripe';
 import { toDateTime } from './helpers';
-import { Document, Price, Product } from '../types';
 import type { Database } from 'types/supabase';
 import { GetServerSidePropsContext } from 'next';
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
-import { getDocumentList } from '@/utils/supabase-client';
+import { Price, Product } from '../types';
 
 // Note: supabaseAdmin uses the SERVICE_ROLE_KEY which you must only use in a secure server-side context
 // as it has admin priviliges and overwrites RLS policies!
@@ -199,10 +198,9 @@ const getDocumentListServerSideProps = async (
   let documents: Document[] = [];
 
   try {
-    documents = await getDocumentList(supabase);
+    // documents = await retriveAll(supabase, session.user.id);
     return {
       props: {
-        documents,
         error: null,
         ...additionalProps
       }

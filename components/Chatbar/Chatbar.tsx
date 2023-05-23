@@ -1,4 +1,4 @@
-import { Conversation, ConversationIdentifiable, ConversationSummary } from '../../types/chat';
+import { ConversationSummary } from '../../types/chat';
 import { IconFolderPlus, IconMessagesOff, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'next-i18next';
 import { FC, useEffect, useState } from 'react';
@@ -12,23 +12,18 @@ import { useAppDispatch, useAppSelector } from 'context/redux/store';
 import { optimisticFoldersAction } from 'context/redux/folderSlice';
 import { useSessionContext } from '@supabase/auth-helpers-react';
 import { optimisticConversationsActions } from 'context/redux/conversationsSlice';
+import { selectCurrentConversation } from 'context/redux/currentConversationSlice';
 
 interface Props {
-  loading: boolean;
-  selectedConversation: Conversation | undefined;
   showSidebar: boolean;
   handleToggleChatbar: () => void;
   onToggleLightMode: (mode: 'light' | 'dark') => void;
-  onSelectConversation: (conversation: ConversationIdentifiable) => void;
 }
 
 export const Chatbar: FC<Props> = ({
-  loading,
-  selectedConversation,
   showSidebar,
   handleToggleChatbar,
   onToggleLightMode,
-  onSelectConversation,
 }) => {
   const { t } = useTranslation('sidebar');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -69,6 +64,7 @@ export const Chatbar: FC<Props> = ({
 
   const handleCreateNewConversation = () => {
     dispatch(optimisticConversationsActions.createConversation(session?.user!.id!))
+    
   };
 
 
@@ -142,9 +138,6 @@ export const Chatbar: FC<Props> = ({
                 (conversation) => conversation.folderId
               )}
               folders={folders}
-              selectedConversation={selectedConversation}
-              loading={loading}
-              onSelectConversation={onSelectConversation}
             />
           </div>
         )}
@@ -158,12 +151,9 @@ export const Chatbar: FC<Props> = ({
             onDragLeave={removeHighlight}
           >
             <Conversations
-              loading={loading}
               conversations={filteredConversations.filter(
                 (conversation) => !conversation.folderId
               )}
-              selectedConversation={selectedConversation}
-              onSelectConversation={onSelectConversation}
             />
           </div>
         ) : (

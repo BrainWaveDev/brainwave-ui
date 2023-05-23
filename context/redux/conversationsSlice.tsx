@@ -1,12 +1,13 @@
 'use client'
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import { ConversationIdentifiable, ConversationSummary } from 'types/chat'
+import { Conversation, ConversationIdentifiable, ConversationSummary } from 'types/chat'
 import { AppThunk } from './store';
 import { randomNumberId } from '@/utils/app/createDBOperation';
 import { OpenAIModels } from 'types/openai';
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/prompts';
 import { clearAllConversations, createConversation, deleteConversation as deleteConversationFromDB, fetchAllConversations, saveConversation,updateConversation as updateConvesationDB } from '@/utils/app/conversation';
+import { clearSelectedConversation, selectCurrentConversation } from './currentConversationSlice';
 
 type ConversationsState = ConversationSummary[]
 
@@ -61,19 +62,19 @@ function updateConversationProperty<K extends keyof ConversationSummary>(
 const thunkCreateNewConversation =
     (user_id: string): AppThunk =>
         async (dispatch, getState) => {
-            const tempConversation: ConversationIdentifiable = {
+            const tempConversation: Conversation = {
                 id: randomNumberId(),
                 name: 'New Conversation',
-            }
-            dispatch(addCoverstation({
-                ...tempConversation,
                 model: OpenAIModels['gpt-3.5-turbo'],
                 folderId: null,
                 prompt: DEFAULT_SYSTEM_PROMPT,
-            }))
+                messages: [],
+            }
+            dispatch(addCoverstation(tempConversation))
             try {
                 const conversation = await createConversation(tempConversation,user_id)
                 dispatch(conversationsSlice.actions.replaceWithDBConversation({tempConversation,dbCoversation:conversation}))
+                dispatch(selectCurrentConversation(conversation))
             }catch(e){
                 dispatch(deleteConversation({ id: tempConversation.id }))
             }
@@ -83,6 +84,7 @@ const thunkDeleteConversation =
     (conversation: ConversationSummary): AppThunk => 
     async (dispatch, getState) => {
         dispatch(deleteConversation({ id: conversation.id }))
+        dispatch(clearSelectedConversation())
         try {
             await deleteConversationFromDB(conversation.id)
         } catch (e) {

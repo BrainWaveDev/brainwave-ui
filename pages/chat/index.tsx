@@ -1,39 +1,25 @@
 import { Chat } from '@/components/Chat/Chat';
 import { Chatbar } from '@/components/Chatbar/Chatbar';
 import {
-  RequestBody,
   Conversation,
-  Message,
-  ConversationSummary,
-  ConversationIdentifiable
+  Message
 } from '../../types/chat';
-import { Prompt } from '../../types/prompt';
 import {
-  cleanConversationHistory,
-  cleanSelectedConversation
+  cleanConversationHistory
 } from '@/utils/app/clean';
-import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/prompts';
-import {
-  inseartMessage,
-  retriveConversation,
-  saveConversation
-} from '@/utils/app/conversation';
 import { Document } from '@/types/document';
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import { useEffect, useRef, useState } from 'react';
-import toast from 'react-hot-toast';
 import { useSessionContext } from '@supabase/auth-helpers-react';
-import { randomNumberId } from '@/utils/app/createDBOperation';
-import { getDocumentListServerSideProps } from '@/utils/supabase-admin';
-import { clearSourcesFromMessages } from '@/utils/app/messages';
 import { useAppDispatch, useAppSelector } from 'context/redux/store';
-import { OpenAIModelID, OpenAIModels, fallbackModelID } from 'types/openai';
+import { OpenAIModelID, fallbackModelID } from 'types/openai';
 import { optimisticConversationsActions, setConversations } from 'context/redux/conversationsSlice';
 import { optimisticDocumentActions } from 'context/redux/documentSlice';
 import { optimisticFoldersAction } from 'context/redux/folderSlice';
 import { setLightMode } from 'context/redux/lightmodeSlice';
+import { getDocumentListServerSideProps } from '@/utils/supabase-admin';
 
 interface ChatProps {
   defaultModelId: OpenAIModelID;
@@ -48,26 +34,17 @@ export interface DocumentInfo {
   selected: boolean;
 }
 
-const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
+const ChatUI: React.FC<ChatProps> = () => {
 
   // STATE ----------------------------------------------
-  const [loading, setLoading] = useState<boolean>(false);
-  const [messageIsStreaming, setMessageIsStreaming] = useState<boolean>(false);
 
-  const [selectedConversation, setSelectedConversation] =
-    useState<Conversation>();
-  const [currentMessage, setCurrentMessage] = useState<Message>();
+  // const [selectedConversation, setSelectedConversation] = useState<Conversation>();
+
 
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
 
   const { isLoading, session, error } = useSessionContext();
 
-  // Managing documents for the filter component
-  const [searchSpace, setSearchSpace] = useState<Set<number>>(
-    new Set<number>(documents.map((document) => document.id))
-  );
-
-  const conversations = useAppSelector((state) => state.conversations);
   const lightmode = useAppSelector((state) => state.lightmode);
   const dispatch = useAppDispatch();
   useEffect(() => {
@@ -87,148 +64,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stopConversationRef = useRef<boolean>(false);
 
-  // FETCH RESPONSE ----------------------------------------------
-
-  const handleSend = async (message: Message) => {
-    if (!selectedConversation) return;
-
-    // Remove sources from selectedConversation
-    clearSourcesFromMessages(selectedConversation.messages);
-
-    let updatedConversation = {
-      ...selectedConversation,
-      messages: [...selectedConversation.messages, message]
-    };
-
-    setSelectedConversation(updatedConversation);
-    setLoading(true);
-    setMessageIsStreaming(true);
-
-    if (error || !session || !session.access_token) {
-      setLoading(false);
-      setMessageIsStreaming(false);
-      toast.error(
-        error?.message ? error.message : 'Error getting current user session'
-      );
-      return;
-    }
-
-    const requestBody: RequestBody = {
-      jwt: session.access_token,
-      model: updatedConversation.model,
-      messages: updatedConversation.messages,
-      search_space: Array.from(searchSpace)
-    };
-
-    const controller = new AbortController();
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      signal: controller.signal,
-      body: JSON.stringify(requestBody)
-    });
-
-    if (!response.ok || !response.body) {
-      setLoading(false);
-      setMessageIsStreaming(false);
-      if (!response.ok) toast.error(response.statusText);
-      return;
-    }
-
-    const data = response.body;
-
-    if (updatedConversation.messages.length === 1) {
-      const { content } = message;
-      const customName =
-        content.length > 30 ? content.substring(0, 30) + '...' : content;
-
-      updatedConversation = {
-        ...updatedConversation,
-        name: customName
-      };
-    }
-
-    setLoading(false);
-
-    const reader = data.getReader();
-    const decoder = new TextDecoder();
-    let done = false;
-    let isFirst = true;
-    let text = '';
-
-    while (!done) {
-      if (stopConversationRef.current) {
-        controller.abort();
-        done = true;
-        break;
-      }
-      const { value, done: doneReading } = await reader.read();
-      done = doneReading;
-
-      const chunkValue = decoder.decode(value);
-
-      text += chunkValue;
-
-      if (isFirst) {
-        isFirst = false;
-        const updatedMessages: Message[] = [
-          ...updatedConversation.messages,
-          { id: undefined, role: 'assistant', content: chunkValue }
-        ];
-
-        updatedConversation = {
-          ...updatedConversation,
-          messages: updatedMessages
-        };
-
-        setSelectedConversation(updatedConversation);
-      } else {
-        const updatedMessages: Message[] = updatedConversation.messages.map(
-          (message, index) => {
-            if (index === updatedConversation.messages.length - 1) {
-              return {
-                ...message,
-                content: text
-              };
-            }
-
-            return message;
-          }
-        );
-
-        updatedConversation = {
-          ...updatedConversation,
-          messages: updatedMessages
-        };
-
-        setSelectedConversation(updatedConversation);
-      }
-    }
-
-    saveConversation(updatedConversation, session.user.id!).catch((error) => {
-      console.error(error);
-    });
-
-    const updatedConversations: ConversationSummary[] = conversations.map(
-      (conversation) => {
-        if (conversation.id === selectedConversation.id) {
-          return updatedConversation;
-        }
-
-        return conversation;
-      }
-    );
-
-    if (updatedConversations.length === 0) {
-      updatedConversations.push(updatedConversation);
-    }
-
-    setConversations(updatedConversations);
-
-    setMessageIsStreaming(false);
-  };
 
   // BASIC HANDLERS --------------------------------------------
 
@@ -242,67 +77,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
     localStorage.setItem('showChatbar', JSON.stringify(!showSidebar));
   };
 
-  const handleSelectConversation = (conversation: ConversationIdentifiable) => {
-    setSelectedConversation(undefined);
-    retriveConversation(conversation.id!)
-      .then((data) => {
-        setSelectedConversation(data);
-      })
-      .catch((error) => {
-        console.warn(error);
-      });
-  };
-
-
-  const handleEditMessage = (message: Message, messageIndex: number) => {
-    if (!selectedConversation) {
-      throw new Error('No conversation selected, this should not happen');
-    }
-    const updatedMessages = selectedConversation.messages
-      .map((m, i) => {
-        if (i < messageIndex) {
-          return m;
-        }
-      })
-      .filter((m) => m) as Message[];
-
-    const updatedConversation = {
-      ...selectedConversation,
-      messages: updatedMessages
-    };
-
-    const prev_message = currentMessage;
-    const prev_conversation = selectedConversation;
-    setSelectedConversation(updatedConversation);
-    setCurrentMessage(message);
-    inseartMessage(
-      message,
-      messageIndex,
-      selectedConversation.id!,
-      session?.user?.id!
-    ).catch((_) => {
-      // if error, restore the conversation
-      setSelectedConversation(prev_conversation);
-      setCurrentMessage(prev_message);
-      console.error('Error editing message');
-    });
-  };
-
-  // EFFECTS  --------------------------------------------
-
-  useEffect(() => {
-    if (!currentMessage) {
-      return;
-    }
-    handleSend(currentMessage);
-    setCurrentMessage(undefined);
-  }, [currentMessage]);
-
-  useEffect(() => {
-    if (window.innerWidth < 640) {
-      setShowSidebar(false);
-    }
-  }, [selectedConversation]);
 
   // ON LOAD --------------------------------------------
 
@@ -331,24 +105,6 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
       setConversations(cleanedConversationHistory);
     }
 
-    const selectedConversation = localStorage.getItem('selectedConversation');
-    if (selectedConversation) {
-      const parsedSelectedConversation: Conversation =
-        JSON.parse(selectedConversation);
-      const cleanedSelectedConversation = cleanSelectedConversation(
-        parsedSelectedConversation
-      );
-      setSelectedConversation(cleanedSelectedConversation);
-    } else {
-      setSelectedConversation({
-        id: randomNumberId(),
-        name: 'New conversation',
-        messages: [],
-        model: OpenAIModels[defaultModelId],
-        prompt: DEFAULT_SYSTEM_PROMPT,
-        folderId: null
-      });
-    }
   }, []);
 
   return (
@@ -370,23 +126,13 @@ const ChatUI: React.FC<ChatProps> = ({ defaultModelId, documents }) => {
           ref={containerRef}
         >
           <Chatbar
-            loading={messageIsStreaming}
-            selectedConversation={selectedConversation}
             showSidebar={showSidebar}
             handleToggleChatbar={handleToggleChatbar}
             onToggleLightMode={handleLightMode}
-            onSelectConversation={handleSelectConversation}
           />
           <div className="flex flex-1 w-full">
             <Chat
-              conversation={selectedConversation}
-              messageIsStreaming={messageIsStreaming}
-              loading={loading}
-              onSend={handleSend}
-              onEditMessage={handleEditMessage}
               stopConversationRef={stopConversationRef}
-              searchSpace={searchSpace}
-              setSearchSpace={setSearchSpace}
             />
           </div>
         </div>

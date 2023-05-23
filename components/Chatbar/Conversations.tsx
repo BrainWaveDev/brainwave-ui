@@ -2,23 +2,20 @@ import { Conversation, ConversationIdentifiable, ConversationSummary } from '../
 import { KeyValuePair } from '../../types/data';
 import { FC } from 'react';
 import { ConversationComponent } from './Conversation';
-import { useAppDispatch } from 'context/redux/store';
+import { useAppDispatch, useAppSelector } from 'context/redux/store';
 import { deleteConversation, updateConversation } from 'context/redux/conversationsSlice';
+import { optimisticCurrentConversationAction } from 'context/redux/currentConversationSlice';
 
 interface Props {
-  loading: boolean;
   conversations: ConversationSummary[];
-  selectedConversation: Conversation | undefined;
-  onSelectConversation: (conversation: ConversationIdentifiable) => void;
 }
 
 export const Conversations: FC<Props> = ({
-  loading,
   conversations,
-  selectedConversation,
-  onSelectConversation,
 }) => {
 
+  const dispatch = useAppDispatch();
+  const currentConversation = useAppSelector((state) => state.currentConverstaion).conversation;
   return (
     <div className="flex w-full flex-col gap-1">
       {conversations
@@ -28,9 +25,10 @@ export const Conversations: FC<Props> = ({
           <ConversationComponent
             key={conversation.id}
             conversation={conversation}
-            isSelected={selectedConversation?.id === conversation.id}
-            loading={loading}
-            onSelectConversation={() => onSelectConversation(conversation)}
+            isSelected={currentConversation?.id === conversation.id}
+            onSelectConversation={() => {
+              dispatch(optimisticCurrentConversationAction.retriveAndSelectConversation(conversation))
+            }}
           />
         ))}
     </div>

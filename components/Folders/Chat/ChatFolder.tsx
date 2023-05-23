@@ -1,5 +1,4 @@
 import { Conversation, ConversationIdentifiable, ConversationSummary } from '../../../types/chat';
-import { KeyValuePair } from '../../../types/data';
 import { Folder } from '../../../types/folder';
 import {
   IconCaretDown,
@@ -12,26 +11,18 @@ import {
 import { FC, KeyboardEvent, useEffect, useState } from 'react';
 import { ConversationComponent } from '../../Chatbar/Conversation';
 import { useAppDispatch, useAppSelector } from 'context/redux/store';
-import { optimisticFoldersAction, updateFolderName } from 'context/redux/folderSlice';
-import { deleteFolder as DBDeleteFodler, renameFolder, updateFolder } from '@/utils/app/folders';
+import { optimisticFoldersAction } from 'context/redux/folderSlice';
+import { optimisticCurrentConversationAction } from 'context/redux/currentConversationSlice';
 interface Props {
   searchTerm: string;
   conversations: ConversationSummary[];
   currentFolder: Folder;
-  // conversation props
-  selectedConversation: Conversation | undefined;
-  loading: boolean;
-  onSelectConversation: (conversation: ConversationIdentifiable) => void;
 }
 
 export const ChatFolder: FC<Props> = ({
   searchTerm,
   conversations,
   currentFolder,
-  // conversation props
-  selectedConversation,
-  loading,
-  onSelectConversation,
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -45,6 +36,7 @@ export const ChatFolder: FC<Props> = ({
     }
   };
   const dispatch = useAppDispatch();
+  const currentConversation = useAppSelector((state) => state.currentConverstaion).conversation;
   const handleRename = () => {
     dispatch(optimisticFoldersAction.updateFolderName(currentFolder.id, renameValue));
   };
@@ -67,6 +59,12 @@ export const ChatFolder: FC<Props> = ({
   const allowDrop = (e: any) => {
     e.preventDefault();
   };
+  
+  const handleSelect = (conversation:ConversationSummary) => {
+    dispatch(optimisticCurrentConversationAction
+      .retriveAndSelectConversation(conversation)
+    )
+  }
 
   const highlightDrop = (e: any) => {
     e.target.style.background = '#343541';
@@ -191,21 +189,20 @@ export const ChatFolder: FC<Props> = ({
       </div>
 
       {isOpen
-        ? conversations.map((conversation, index) => {
+        && conversations.map((conversation, index) => {
           if (conversation.folderId === currentFolder.id) {
             return (
               <div key={index} className="ml-5 gap-2 border-l pl-2">
                 <ConversationComponent
-                  isSelected={selectedConversation?.id === conversation.id}
+                  isSelected={currentConversation?.id === conversation.id}
                   conversation={conversation}
-                  loading={loading}
-                  onSelectConversation={() => onSelectConversation(conversation)}
+                  onSelectConversation={() => handleSelect(conversation)}
                 />
               </div>
             );
           }
         })
-        : null}
+      }
     </>
   );
 };

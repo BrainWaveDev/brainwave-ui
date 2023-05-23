@@ -18,38 +18,29 @@ import { ChatMessage } from './ChatMessage';
 import AppLogo from '@/components/icons/AppLogo';
 import classNames from 'classnames';
 import DocumentFilter from '@/components/Chat/DocumentFilter';
-import { Document } from '@/types/document';
+import { useAppDispatch, useAppSelector } from 'context/redux/store';
+import { optimisticCurrentConversationAction, userSent } from 'context/redux/currentConversationSlice';
+import { useSessionContext } from '@supabase/auth-helpers-react';
 
 interface Props {
-  conversation: Conversation | undefined;
-  messageIsStreaming: boolean;
-  loading: boolean;
-  onSend: (message: Message, deleteCount?: number) => void;
-  onEditMessage: (message: Message, messageIndex: number) => void;
   stopConversationRef: MutableRefObject<boolean>;
-  searchSpace: Set<number>;
-  setSearchSpace: Dispatch<SetStateAction<Set<number>>>;
 }
 
 export const Chat: FC<Props> = memo(
   ({
-    conversation,
-    messageIsStreaming,
-    loading,
-    onSend,
-    onEditMessage,
     stopConversationRef,
-    searchSpace,
-    setSearchSpace
   }) => {
-    const [currentMessage, setCurrentMessage] = useState<Message>();
     const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true);
-    const [showScrollDownButton, setShowScrollDownButton] =
-      useState<boolean>(false);
+    const [showScrollDownButton, setShowScrollDownButton] =useState<boolean>(false);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const currentConversation = useAppSelector((state) => state.currentConverstaion).conversation;
+
+    const dispatch = useAppDispatch();
+    const {session} = useSessionContext();
 
     const handleScroll = () => {
       if (chatContainerRef.current) {
@@ -79,25 +70,22 @@ export const Chat: FC<Props> = memo(
         messagesEndRef.current?.scrollIntoView(true);
       }
     };
-    const throttledScrollDown = throttle(scrollDown, 250);
+   
 
     // appear scroll down button only when user scrolls up
 
     const conversationIsEmpty =
-      conversation === undefined ||
-      conversation.messages.length === 0 ||
-      conversation === null;
+    currentConversation === undefined ||
+    currentConversation.messages.length === 0 ||
+    currentConversation === null;
 
-    useEffect(() => {
-      // may have problems with conversation undefined
-      if (conversationIsEmpty) {
-        return;
-      }
-      throttledScrollDown();
-      setCurrentMessage(
-        conversation.messages[conversation.messages.length - 2]
-      );
-    }, [conversation, throttledScrollDown]);
+    const handleEditMessage = (message: Message,messageIndex:number) => {
+      // do something here
+    };
+
+  
+
+
 
     useEffect(() => {
       const observer = new IntersectionObserver(
@@ -159,22 +147,20 @@ export const Chat: FC<Props> = memo(
             onScroll={handleScroll}
           >
             <DocumentFilter
-              searchSpace={searchSpace}
-              setSearchSpace={setSearchSpace}
             />
             {conversationIsEmpty ? (
               EmptyConversationCover
             ) : (
               <div className={'mt-1.5'}>
-                {conversation.messages.map((message, index) => (
+                {currentConversation.messages.map((message, index) => (
                   <ChatMessage
                     key={index}
                     message={message}
                     messageIndex={index}
-                    onEditMessage={onEditMessage}
+                    onEditMessage={handleEditMessage}
                   />
                 ))}
-                {loading && <ChatLoader />}
+                {/* {true && <ChatLoader />} */}
                 <div
                   className="h-[162px] bg-white dark:bg-[#343541]"
                   ref={messagesEndRef}
@@ -185,19 +171,8 @@ export const Chat: FC<Props> = memo(
           <ChatInput
             stopConversationRef={stopConversationRef}
             textareaRef={textareaRef}
-            messageIsStreaming={messageIsStreaming}
-            conversationIsEmpty={conversationIsEmpty}
             // need to pass in the model here in the future
             model={OpenAIModels['gpt-3.5-turbo']}
-            onSend={(message) => {
-              setCurrentMessage(message);
-              onSend(message);
-            }}
-            onRegenerate={() => {
-              if (currentMessage) {
-                onSend(currentMessage, 2);
-              }
-            }}
           />
         </>
 
