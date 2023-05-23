@@ -121,8 +121,19 @@ const thunkFetchAllConversations =
         async (dispatch, getState) => {
             const conversations = await fetchAllConversations(user_id)
             dispatch(setConversations(conversations))
+            
         }
-        
+const thunkInitConversations =
+    (user_id:string): AppThunk =>
+        async (dispatch, getState) => {
+            await dispatch(thunkFetchAllConversations(user_id))
+            const conversations = getState().conversations
+            if (conversations.length === 0) return
+            dispatch(selectCurrentConversation({
+                ...conversations[0],
+                messages: []
+            }))
+        }
 
 export const optimisticConversationsActions = {
     createConversation: thunkCreateNewConversation,
@@ -131,6 +142,7 @@ export const optimisticConversationsActions = {
     updateConversation: thunkUpdateConversation,
     clearConversations: thunkClearConversations,
     fetchAllConversations: thunkFetchAllConversations,
+    initAllConversations: thunkInitConversations
 }
 
 

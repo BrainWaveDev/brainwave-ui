@@ -55,7 +55,7 @@ const ChatUI: React.FC<ChatProps> = () => {
     const user_id = session?.user?.id!;
     // when swich beteen pages, the redux store will be empty, so we need to fetch data from supabase aging, need to do something about this
     dispatch(optimisticFoldersAction.fetchAllFolders(user_id))
-    dispatch(optimisticConversationsActions.fetchAllConversations(user_id));
+    dispatch(optimisticConversationsActions.initAllConversations(user_id));
     dispatch(optimisticDocumentActions.fetchAllDocuments(user_id));
   }, [isLoading, error]);
 
