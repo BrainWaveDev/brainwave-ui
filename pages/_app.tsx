@@ -21,7 +21,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   }, []);
 
   return (
-    <div className="bg-black h-full">
+    <div className="h-full w-full flex flex-row">
       <SessionContextProvider supabaseClient={supabaseClient}>
         <MyUserContextProvider>
           <ErrorProvider>

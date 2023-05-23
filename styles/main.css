@@ -10,7 +10,7 @@
 
 *:focus,
 *:focus-visible {
-    @apply outline-none ring-2 ring-teal-400 ring-opacity-50;
+    @apply outline-none;
 }
 
 textarea:focus {
@@ -37,7 +37,7 @@ body {
     'Helvetica', sans-serif;
     text-rendering: optimizeLegibility;
     -moz-osx-font-smoothing: grayscale;
-    @apply text-white antialiased;
+    @apply text-white antialiased bg-zinc-900;
 }
 
 body {

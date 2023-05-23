@@ -1,10 +1,11 @@
-import { PropsWithChildren } from 'react';
+import React, { PropsWithChildren, useCallback, useState } from 'react';
 import Head from 'next/head';
-import Navbar from '../Navbar';
 import classes from './Layout.module.css';
 import ErrorList from '@/components/ui/ErrorList/ErrorList';
 import { PageMeta } from '../../../types';
 import classNames from 'classnames';
+import Sidebar from '../Sidebar';
+import Header from '@/components/ui/Header';
 
 interface Props extends PropsWithChildren {
   meta?: PageMeta;
@@ -19,6 +20,11 @@ export default function Layout({ children, meta: pageMeta }: Props) {
     ...pageMeta
   };
 
+  // Manage Sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Use cached version of the function to avoid re-rendering
+  const toggleSideBar = useCallback(() => setSidebarOpen((prev) => !prev), []);
+
   return (
     <>
       <Head>
@@ -27,18 +33,12 @@ export default function Layout({ children, meta: pageMeta }: Props) {
         <link href="/public/favicon.ico" rel="shortcut icon" />
         <meta content={meta.description} name="description" />
       </Head>
-      <Navbar />
-      <main
-        id="skip"
-        className={classNames(
-          'min-h-[calc(100vh_-_4rem)] bg-gray-100',
-          classes.main
-        )}
-      >
+      <Sidebar open={sidebarOpen} setOpen={toggleSideBar} />
+      <main id="skip" className={classNames(classes.main)}>
+        <Header sidebarOpen={sidebarOpen} toggleSideBar={toggleSideBar} />
         {children}
       </main>
       <ErrorList />
-      {/*<Footer />*/}
     </>
   );
 }
