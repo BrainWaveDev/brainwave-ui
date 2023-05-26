@@ -1,25 +1,35 @@
-import { createRef, memo } from 'react';
+import { ChangeEvent, createRef, memo } from 'react';
 import classNames from 'classnames';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+  getSidebarStateFromStorage,
+  setSidebar
+} from '../../context/redux/sidebarSlice';
+import { useAppDispatch } from '../../context/redux/store';
 
 interface Props {
   placeholder: string;
   searchTerm: string;
   onSearch: (searchTerm: string) => void;
-  sidebarOpen: boolean;
-  openSidebar: () => void;
 }
 
 export default memo(function Search({
   placeholder,
   searchTerm,
-  onSearch,
-  sidebarOpen,
-  openSidebar
+  onSearch
 }: Props) {
-  const searchRef = createRef<HTMLInputElement>();
+  // =========================
+  // Redux State
+  // =========================
+  const dispatch = useAppDispatch();
+  const sidebarOpen = getSidebarStateFromStorage();
+  const openSidebar = () => dispatch(setSidebar(true));
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // =========================
+  // Local State
+  // =========================
+  const searchRef = createRef<HTMLInputElement>();
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     onSearch(e.target.value);
   };
   const clearSearch = () => {
