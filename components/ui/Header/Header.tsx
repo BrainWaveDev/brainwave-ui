@@ -1,6 +1,11 @@
 import classNames from 'classnames';
 import React, { memo } from 'react';
 import { useRouter } from 'next/router';
+import {
+  getSidebarStateFromStorage,
+  toggleSidebar
+} from '../../../context/redux/sidebarSlice';
+import { useAppDispatch } from '../../../context/redux/store';
 
 // Selects appropriate header tag based on the page
 const HeaderTag = (pathname: string) => {
@@ -14,16 +19,22 @@ const HeaderTag = (pathname: string) => {
   }
 };
 
-export default memo(function Header({
-  sidebarOpen,
-  toggleSideBar
-}: {
-  sidebarOpen: boolean;
-  toggleSideBar: () => void;
-}) {
+export default memo(function Header() {
+  // ==============================
+  // Sidebar State from Redux Store
+  // ==============================
+  const sidebarOpen = getSidebarStateFromStorage();
+  const dispatch = useAppDispatch();
+  const onToggleSidebar = () => dispatch(toggleSidebar());
+
+  // ==============================
   // Selects appropriate header tag based on the page
+  // ==============================
   const router = useRouter();
-  // Animate sidebar open/close button
+
+  // ==============================
+  // Tailwind Classes
+  // ==============================
   const sideBarSpanClass =
     'w-5 h-0.5 my-0.5 bg-neutral7 dark:bg-neutral4 rounded-full transition-all';
 
@@ -35,7 +46,7 @@ export default memo(function Header({
         'dark:border-zinc-700 dark:shadow-[0_0.75rem_2.5rem_-0.75rem_rgba(0,0,0,0.15)]',
         'overflow-visible'
       )}
-      onClick={toggleSideBar}
+      onClick={onToggleSidebar}
     >
       <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
         {HeaderTag(router.pathname)}
