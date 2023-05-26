@@ -1,17 +1,21 @@
-import React, { PropsWithChildren, useCallback, useState } from 'react';
+import React, { PropsWithChildren } from 'react';
 import Head from 'next/head';
 import classes from './Layout.module.css';
 import ErrorList from '@/components/ui/ErrorList/ErrorList';
-import { PageMeta } from '../../../types';
+import { PageMeta } from '@/types/index';
 import classNames from 'classnames';
 import Sidebar from '../Sidebar';
 import Header from '@/components/ui/Header';
+import useThemeDetector from '../../../hooks/useThemeDetector';
 
 interface Props extends PropsWithChildren {
   meta?: PageMeta;
 }
 
 export default function Layout({ children, meta: pageMeta }: Props) {
+  // ==============================
+  // Meta Information
+  // ==============================
   const meta = {
     title: 'BrainWave: Intelligent AI Assistance',
     description:
@@ -20,10 +24,20 @@ export default function Layout({ children, meta: pageMeta }: Props) {
     ...pageMeta
   };
 
-  // Manage Sidebar state
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  // Use cached version of the function to avoid re-rendering
-  const toggleSideBar = useCallback(() => setSidebarOpen((prev) => !prev), []);
+  // ==============================
+  // Theme State
+  // ==============================
+  useThemeDetector();
+
+  // ==============================
+  // Tailwind Classes
+  // ==============================
+  const mainContentClasses = classNames(
+    'min-h-[calc(100%_-_4.5rem)]',
+    'h-[calc(100%_-_4.5rem)]',
+    'max-h-[calc(100%_-_4.5rem)]',
+    'overflow-y-scroll'
+  );
 
   return (
     <>
@@ -33,10 +47,10 @@ export default function Layout({ children, meta: pageMeta }: Props) {
         <link href="/public/favicon.ico" rel="shortcut icon" />
         <meta content={meta.description} name="description" />
       </Head>
-      <Sidebar open={sidebarOpen} setOpen={toggleSideBar} />
+      <Sidebar />
       <main id="skip" className={classNames(classes.main)}>
-        <Header sidebarOpen={sidebarOpen} toggleSideBar={toggleSideBar} />
-        {children}
+        <Header />
+        <div className={mainContentClasses}>{children}</div>
       </main>
       <ErrorList />
     </>
