@@ -1,42 +1,51 @@
-import { IconCheck, IconTrash, IconX } from '@tabler/icons-react';
-import { useTranslation } from 'next-i18next';
 import { FC, useState } from 'react';
 import { SidebarButton } from '../Sidebar/SidebarButton';
+import { CheckIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAppDispatch } from 'context/redux/store';
 import { optimisticConversationsActions } from 'context/redux/conversationsSlice';
-import { useSessionContext } from '@supabase/auth-helpers-react';
 
 export const ClearConversations: FC = () => {
+  // ==============================
+  // Redux State
+  // ==============================
+  const dispatch = useAppDispatch();
+
+  // ==============================
+  // Local State
+  // ==============================
   const [isConfirming, setIsConfirming] = useState<boolean>(false);
 
-  const { t } = useTranslation('sidebar');
-  const {session} = useSessionContext();
-  const dispatch = useAppDispatch();
+  // ==============================
+  // Handles
+  // ==============================
   const handleClearConversations = () => {
-    dispatch(optimisticConversationsActions.clearConversations(session?.user?.id!));
+    dispatch(optimisticConversationsActions.clearConversations());
     setIsConfirming(false);
   };
+
+  // ==============================
+  // Tailwind Classes
+  // ==============================
+  const IconClasses =
+    'ml-auto h-[18px] w-[18px] min-w-[20px] text-neutral-400 hover:text-neutral-100';
+
   return isConfirming ? (
-    <div className="flex w-full cursor-pointer items-center rounded-lg py-3 px-3 hover:bg-gray-500/10">
-      <IconTrash size={18} />
-
-      <div className="ml-3 flex-1 text-left text-[12.5px] leading-3 text-white">
-        {t('Are you sure?')}
+    <div className="flex w-full cursor-pointer items-center rounded-lg py-2.5 px-2 hover:bg-gray-500/10">
+      <TrashIcon className={'w-[18px] h-[18px]'} strokeWidth={2} />
+      <div className="ml-3 flex-1 text-left text-sm leading-3 text-white">
+        Are you sure?
       </div>
-
-      <div className="flex w-[40px]">
-        <IconCheck
-          className="ml-auto min-w-[20px] mr-1 text-neutral-400 hover:text-neutral-100"
-          size={18}
+      <div className="flex w-[40px] gap-x-1 mr-0.5">
+        <CheckIcon
+          className={IconClasses}
           onClick={(e) => {
             e.stopPropagation();
             handleClearConversations();
           }}
         />
-
-        <IconX
-          className="ml-auto min-w-[20px] text-neutral-400 hover:text-neutral-100"
-          size={18}
+        <XMarkIcon
+          className={IconClasses}
           onClick={(e) => {
             e.stopPropagation();
             setIsConfirming(false);
@@ -46,8 +55,8 @@ export const ClearConversations: FC = () => {
     </div>
   ) : (
     <SidebarButton
-      text={t('Clear conversations')}
-      icon={<IconTrash size={18} />}
+      text={'Clear conversations'}
+      icon={<TrashIcon className={'w-[18px] h-[18px]'} strokeWidth={2} />}
       onClick={() => setIsConfirming(true)}
     />
   );
