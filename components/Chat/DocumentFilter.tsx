@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useState } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { Cross2Icon, MixerHorizontalIcon } from '@radix-ui/react-icons';
 import classes from './Chat.module.css';
@@ -6,92 +6,43 @@ import { Document } from '@/types/document';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { CheckIcon } from '@radix-ui/react-icons';
 import classNames from 'classnames';
-import { useAppDispatch, useAppSelector } from 'context/redux/store';
-import { clearSearchSpace, selectAllSearchSpace, selectSearchSpace } from 'context/redux/searchSpaceSlice';
+import { useAppDispatch } from 'context/redux/store';
+import {
+  clearSearchSpace,
+  getSearchSpaceFromStore,
+  selectAllSearchSpace,
+  selectSearchSpace
+} from 'context/redux/searchSpaceSlice';
 import { DocumentTextIcon } from '@heroicons/react/24/solid';
+import { getDocumentsFromStore } from '../../context/redux/documentSlice';
 
-const DocumentRow = ({
-  document,
-  selected,
-  onSelectedChange
-}: {
-  document: Document;
-  selected: boolean;
-  onSelectedChange: (id: number) => void;
-}) => {
-  let documentName: string;
-
-  if (document.name.length > 30) {
-    documentName = document.name.substring(0, 31);
-    if (documentName.endsWith('.')) {
-      documentName += '..';
-    } else {
-      documentName += '...';
-    }
-  } else {
-    documentName = document.name;
-  }
-
-  return (
-    <div
-      className="flex items-center place-content-between w-full py-2 hover:bg-teal-50 px-5 cursor-pointer z-[5]"
-      onClick={() => onSelectedChange(document.id)}
-    >
-      <div className={'flex flex-row items-center gap-x-2'}>
-        <div className="flex items-center w-6 h-6 fill-teal-400 bg-teal-50 rounded-full">
-          <DocumentTextIcon
-            strokeWidth="1.5"
-            className="w-5 h-5 mx-auto fill-teal-400"
-            fill={'fill-teal-400'}
-          />
-        </div>
-        <h2
-          className={classNames(
-            'text-sm text-gray-800 dark:text-white',
-            selected ? 'font-semibold' : 'font-normal'
-          )}
-        >
-          {documentName}
-        </h2>
-      </div>
-      <Checkbox.Root
-        className="shadow-blackA7 hover:bg-teal-50 flex h-5 w-5 appearance-none items-center justify-center rounded-[4px] bg-white shadow outline-none focus:ring-0"
-        id="c1"
-        checked={selected}
-        onCheckedChange={(checked) => {
-          if (typeof checked === 'boolean') {
-            onSelectedChange(document.id);
-          }
-        }}
-      >
-        <Checkbox.Indicator className="text-teal-400">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
-    </div>
-  );
-};
-
-const DocumentFilter = ({
-}: {
-}) => {
-  const searchSpace = useAppSelector((state) => state.searchSpace).searchSpace;
+export default function DocumentFilter() {
+  // ===========================
+  // Redux Store
+  // ===========================
   const dispatch = useAppDispatch();
+  const documents = getDocumentsFromStore();
+  const searchSpace = getSearchSpaceFromStore();
 
-
-  const documents = useAppSelector((state) => state.documents);
+  // ===========================
+  // Filter state
+  // ===========================
   const [searchString, setSearchString] = useState('');
-  const filteredDocuments = documents.filter((document) =>
-    document.name.includes(searchString)
+  const allDocumentIds = useMemo(
+    () => documents.map((doc) => doc.id),
+    [documents]
+  );
+  const filteredDocuments = useMemo(
+    () => documents.filter((document) => document.name.includes(searchString)),
+    [documents, searchString]
   );
 
   return (
     <div
       className={classNames(
         'sm:absolute sm:top-0 left-0 right-0 z-10 py-4 flex items-center place-content-center',
-        'bg-transparent border-nonerelative sticky top-4'
-        // I think this looks slightly better, let me know what you think - @Irving
-        // shadow-[0_0_8px_rgba(0,0,0,0.08)] border-black/10 border-b '
+        'bg-transparent border-nonerelative sticky top-4',
+        'shadow-[0_0_8px_rgba(0,0,0,0.08)] border-black/10 border-b'
       )}
     >
       <Popover.Root>
@@ -146,14 +97,13 @@ const DocumentFilter = ({
                     )}
                     aria-label="Select all documents"
                     onClick={() =>
-                      dispatch(selectAllSearchSpace(documents.map((doc) => doc.id)))
+                      dispatch(selectAllSearchSpace(allDocumentIds))
                     }
                   >
                     All
                   </button>
                 </div>
               </div>
-              {/*<Separator.Root className="bg-gray-200 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px my-2" />*/}
               <fieldset className="flex gap-5 items-center mt-3 relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none pl-2">
                   <svg
@@ -186,7 +136,7 @@ const DocumentFilter = ({
                       document={document}
                       selected={searchSpace.includes(document.id)}
                       onSelectedChange={() => {
-                        dispatch(selectSearchSpace(document.id))
+                        dispatch(selectSearchSpace(document.id));
                       }}
                       key={index}
                     />
@@ -222,6 +172,56 @@ const DocumentFilter = ({
       </Popover.Root>
     </div>
   );
-};
+}
 
-export default DocumentFilter;
+const DocumentRow = memo(
+  ({
+    document,
+    selected,
+    onSelectedChange
+  }: {
+    document: Document;
+    selected: boolean;
+    onSelectedChange: (id: number) => void;
+  }) => {
+    return (
+      <div
+        className="flex items-center place-content-between w-full py-2 hover:bg-teal-50 px-5 cursor-pointer z-[5]"
+        onClick={() => onSelectedChange(document.id)}
+      >
+        <div className={'flex flex-row items-center gap-x-2'}>
+          <div className="flex items-center w-6 h-6 fill-teal-400 bg-teal-50 rounded-full">
+            <DocumentTextIcon
+              strokeWidth="1.5"
+              className="w-5 h-5 mx-auto fill-teal-400"
+              fill={'fill-teal-400'}
+            />
+          </div>
+          <h2
+            className={classNames(
+              'text-sm text-gray-800 dark:text-white',
+              selected ? 'font-semibold' : 'font-normal',
+              'truncate'
+            )}
+          >
+            {document.name}
+          </h2>
+        </div>
+        <Checkbox.Root
+          className="shadow-blackA7 hover:bg-teal-50 flex h-5 w-5 appearance-none items-center justify-center rounded-[4px] bg-white shadow outline-none focus:ring-0"
+          id="c1"
+          checked={selected}
+          onCheckedChange={(checked) => {
+            if (typeof checked === 'boolean') {
+              onSelectedChange(document.id);
+            }
+          }}
+        >
+          <Checkbox.Indicator className="text-teal-400">
+            <CheckIcon />
+          </Checkbox.Indicator>
+        </Checkbox.Root>
+      </div>
+    );
+  }
+);
