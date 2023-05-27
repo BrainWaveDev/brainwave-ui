@@ -25,12 +25,16 @@ const SettingsDropdown = ({
   sortAscending: boolean;
   handleColumnClick: (column: number) => void;
 }) => {
-  // Manage menu state
+  // ==============================
+  // Local state
+  // ==============================
   const [open, setOpen] = React.useState(false);
   const toggleOpen = (state: boolean) => setOpen(state);
 
+  // ====== Column Names ==========
   const columns = ['Name', 'Size', 'Type', 'Date Uploaded', 'Status'];
 
+  // ====== Tailwind Classes ======
   const dropdownContentClasses = classNames(
     'relative z-20 w-48 md:w-56 bg-white px-1.5 py-2 shadow-lg',
     'dark:bg-zinc-700',
@@ -67,7 +71,7 @@ const SettingsDropdown = ({
               'rounded-full h-6 w-6 inline-flex items-center justify-center text-gray-600 absolute',
               'top-[3px] right-[3px] hover:bg-gray-100 active:bg-gray-100 outline-none border-gray-200',
               'bg-white dark:bg-zinc-700 dark:border-zinc-500 dark:text-gray-400 dark:hover:text-gray-200',
-              'dark:hover:bg-zinc-600 shadow-sm cursor-pointer'
+              'dark:hover:bg-zinc-600 cursor-pointer'
             )}
             aria-label="Close"
             onClick={() => setOpen(false)}
@@ -107,7 +111,7 @@ const SettingsDropdown = ({
           <DropdownMenu.RadioGroup
             value={sortByColumn !== null ? sortByColumn.toString() : undefined}
             onValueChange={(value) => handleColumnClick(parseInt(value))}
-            className={'flex flex-col md:pt-0.5 block table-layout:hidden'}
+            className={'flex flex-col md:pt-0.5 table-layout:hidden'}
           >
             {columns.map((name, index) => (
               <DropdownMenu.RadioItem
