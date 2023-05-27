@@ -1,13 +1,12 @@
 import { memo } from 'react';
 import { ConversationComponent } from './Conversation';
-import { getConversationsFromStorage } from 'context/redux/conversationsSlice';
+import { ConversationSummary } from '@/types/chat';
 
-export default memo(function Conversations() {
-  // =======================
-  // Redux State
-  // =======================
-  const conversations = getConversationsFromStorage();
-
+export default memo(function Conversations({
+  conversations
+}: {
+  conversations: ConversationSummary[];
+}) {
   return (
     <div className="flex w-full flex-col gap-1">
       {conversations
