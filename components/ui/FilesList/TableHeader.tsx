@@ -95,7 +95,7 @@ export default memo(function TableHeader({
       <tr className={'hidden table-layout:flex py-0 md:py-1'}>
         <th
           className={classNames(
-            'py-3.5 px-4 font-normal text-left text-gray-500 dark:text-gray-300',
+            'py-3.5 px-5 font-normal text-left text-gray-500 dark:text-gray-300',
             columnWidths.name
           )}
         >
@@ -132,56 +132,6 @@ export default memo(function TableHeader({
             handleColumnClick={() => handleColumnClick(Columns.size)}
           />
         </th>
-
-      <th
-        scope="col"
-        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 hidden sm:table-cell"
-      >
-        <ColumnName
-          name={'Kind'}
-          selected={sortByColumn === Columns.kind}
-          sortAscending={sortAscending}
-          handleColumnClick={() => handleColumnClick(Columns.kind)}
-        />
-      </th>
-
-      <th
-        scope="col"
-        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 hidden sm:table-cell"
-      >
-        <ColumnName
-          name={'Date Uploaded'}
-          selected={sortByColumn === Columns.dateUploaded}
-          sortAscending={sortAscending}
-          handleColumnClick={() => handleColumnClick(Columns.dateUploaded)}
-        />
-      </th>
-
-      <th
-        scope="col"
-        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 hidden sm:table-cell"
-      >
-        <ColumnName
-          name={'Status'}
-          selected={sortByColumn === Columns.status}
-          sortAscending={sortAscending}
-          handleColumnClick={() => handleColumnClick(Columns.status)}
-        />
-      </th>
-
-      {/* small screen only */}
-      <th
-        scope="col"
-        className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400 flex sm:hidden"
-      >
-        <ColumnName
-          name={smallScreenSelectedColumn.value}
-          selected={true}
-          sortAscending={sortAscending}
-          handleColumnClick={() => handleColumnClick(smallScreenSelectedColumn.columnId)}
-        />
-      </th>
-    </tr>
         <th
           scope="col"
           className={classNames(
@@ -214,7 +164,7 @@ export default memo(function TableHeader({
           scope="col"
           className={classNames(
             'py-3.5 text-base font-normal text-left text-gray-500 dark:text-gray-300',
-            columnWidths.size
+            columnWidths.status
           )}
         >
           <ColumnName
