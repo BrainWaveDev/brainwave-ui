@@ -70,19 +70,22 @@ export const ChatFolder: FC<Props> = ({ searchTerm, currentFolder }) => {
       })
     );
   };
-
   const handleRename = () => {
     dispatch(
       optimisticFoldersAction.updateFolderName(currentFolder.id, renameValue)
     );
+    setIsRenaming(false);
   };
   const handleDeleteFolder = () => {
     dispatch(optimisticFoldersAction.deleteFolder(currentFolder.id));
+    setIsDeleting(false);
   };
   const handleEnterDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       handleRename();
+    } else if (e.key === 'Escape') {
+      setIsRenaming(false);
     }
   };
   const handleDrop = (e: any, folder: Folder) => {
@@ -160,13 +163,8 @@ export const ChatFolder: FC<Props> = ({ searchTerm, currentFolder }) => {
               className="min-w-[20px] p-1 text-neutral-400 hover:text-neutral-100"
               onClick={(e) => {
                 e.stopPropagation();
-                if (isDeleting) {
-                  handleDeleteFolder();
-                } else if (isRenaming) {
-                  handleRename();
-                }
-                setIsDeleting(false);
-                setIsRenaming(false);
+                if (isDeleting) handleDeleteFolder();
+                else if (isRenaming) handleRename();
               }}
             >
               <CheckIcon
