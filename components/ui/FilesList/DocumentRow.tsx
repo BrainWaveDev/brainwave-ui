@@ -7,6 +7,7 @@ import { DocumentTextIcon } from '@heroicons/react/24/solid';
 import { FileType } from '@/components/ui/FilesList/FilesList';
 import * as Accordion from '@radix-ui/react-accordion';
 import { ChevronDownIcon } from '@radix-ui/react-icons';
+import LoadingWrapper from '@/components/ui/LoadingWrapper/LoadingWrapper';
 
 function DocumentRow({
   doc,
@@ -72,7 +73,7 @@ function DocumentRow({
           <td className={'w-full'}>
             <div
               className={
-                'h-fit py-3.5 w-full flex items-center place-content-center'
+                'h-16 py-3.5 w-full flex items-center place-content-center relative'
               }
             >
               <RotatingLines
@@ -92,8 +93,18 @@ function DocumentRow({
           animate={{ opacity: 1, display: 'flex' }}
           exit={{ opacity: 0, display: 'none' }}
           transition={{ duration: 0 }}
-          className={'bg-transparent'}
+          className={`bg-transparent relative ${
+            loading && 'pointer-events-none'
+          }`}
         >
+          {loading && (
+            <LoadingWrapper
+              className={classNames(
+                '!rounded-md z-10 !bg-gray-100 dark:!bg-zinc-900',
+                'top-2 bottom-2 table-layout:!top-1.5 table-layout:!bottom-1.5'
+              )}
+            />
+          )}
           {/* According element is used to display information about each document */}
           <td className={'w-full block table-layout:hidden'}>
             <Accordion.Root
@@ -182,7 +193,6 @@ function DocumentRow({
                 checked={selected}
                 onChange={(_) => setSelectedDocuments(doc.id)}
               />
-
               <div
                 className="flex items-center gap-x-2 max-w-[85%] group"
                 onClick={() => setSelectedDocuments(doc.id)}

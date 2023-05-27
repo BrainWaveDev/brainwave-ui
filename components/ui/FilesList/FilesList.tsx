@@ -1,4 +1,3 @@
-import SearchIcon from '@/components/icons/SearchIcon';
 import { Document } from '@/types/document';
 import classNames from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -11,17 +10,20 @@ import AlertModal, {
   setModalOpen
 } from '@/components/ui/AlertModal';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
-import SelectBar, { SelectItem } from '../Select/Select';
-import { useAppDispatch, useAppSelector } from 'context/redux/store';
-import { optimisticDocumentActions } from 'context/redux/documentSlice';
+import { useAppDispatch } from 'context/redux/store';
+import {
+  getDocumentsFromStore,
+  optimisticDocumentActions
+} from 'context/redux/documentSlice';
 import DocumentRow from '@/components/ui/FilesList/DocumentRow';
 import { TrashIcon } from '@heroicons/react/24/solid';
 import SettingsDropdown from '@/components/ui/FilesList/SettingsDropdown';
-
-interface Props {
-  documents: Document[];
-  deleteDocumentAction: (ids: number[]) => Promise<boolean>;
-}
+import {
+  endLoading,
+  getLoadingStateFromStore,
+  LoadingTrigger,
+  startLoading
+} from '../../../context/redux/loadingSlice';
 
 export type DocumentsPerPage = '5' | '10' | '15' | '20';
 
@@ -60,7 +62,22 @@ export const ColumnWidths = {
   status: 'w-[12.5%]'
 };
 
-export default function FilesList(props: Props) {
+export default function FilesList() {
+  // ===================================================
+  // Redux State
+  // ===================================================
+  const documents = getDocumentsFromStore();
+  const fetchingDocuments = getLoadingStateFromStore(
+    LoadingTrigger.FetchingDocuments
+  );
+  const deletingDocuments = getLoadingStateFromStore(
+    LoadingTrigger.DeletingDocuments
+  );
+  const dispatch = useAppDispatch();
+
+  // ===================================================
+  // Local State
+  // ===================================================
   const [currentPage, setCurrentPage] = useState(0);
   const [filter, setFilter] = useState('');
   const selectFilter = useCallback((filter: string) => setFilter(filter), []);
@@ -83,16 +100,7 @@ export default function FilesList(props: Props) {
     });
   }, []);
 
-  const [deletingDocuments, setDeletingDocuments] = useState(false);
   const [modalState, setModalState] = useState<ModalState | null>(null);
-  const [smallScreenTableHeader, setSmallScreenTableHeader] = useState<SelectItem & { columnId: Columns }>({
-    display: 'Status',
-    value: 'Status',
-    columnId: Columns.status
-  });
-
-  const documents = useAppSelector((state) => state.documents);
-  const dispatch = useAppDispatch();
 
   // ===================================================
   // Modal
@@ -111,10 +119,14 @@ export default function FilesList(props: Props) {
         asChild
         onClick={async () => {
           setModalState(setModalOpen(false));
-          setDeletingDocuments(true);
-          dispatch(optimisticDocumentActions.deleteDocuments(Array.from(selectedDocuments)))
+          dispatch(startLoading(LoadingTrigger.DeletingDocuments));
+          dispatch(
+            optimisticDocumentActions.deleteDocuments(
+              Array.from(selectedDocuments)
+            )
+          );
           setSelectedDocuments(new Set<number>());
-          setDeletingDocuments(false);
+          dispatch(endLoading(LoadingTrigger.DeletingDocuments));
         }}
       >
         <button className="text-red11 bg-red4 hover:bg-red5 focus:shadow-red7 inline-flex h-[35px] items-center justify-center rounded-[4px] px-[15px] font-medium leading-none outline-none focus:shadow-[0_0_0_2px]">
@@ -133,8 +145,9 @@ export default function FilesList(props: Props) {
     setModalState({
       open: true,
       title: 'Confirm deletion',
-      description: `This action cannot be reverted. Are you want to delete selected document${selectedDocuments.size > 1 ? 's' : ''
-        }?`,
+      description: `This action cannot be reverted. Are you want to delete selected document${
+        selectedDocuments.size > 1 ? 's' : ''
+      }?`,
       type: ModalType.Alert
     });
   };
@@ -148,6 +161,17 @@ export default function FilesList(props: Props) {
       setSelectedDocuments(new Set<number>());
     }
   };
+
+  // ===================================================
+  // Get number of documents per page based on window height
+  // ===================================================
+  const displayOptions: DocumentsPerPage[] = ['5', '10', '15', '20'];
+  const [documentsPerPage, setDocumentsPerPage] =
+    useState<DocumentsPerPage>('5');
+  const selectDocumentsPerPage = useCallback(
+    (value: string) => setDocumentsPerPage(value as DocumentsPerPage),
+    []
+  );
 
   // ===================================================
   // Document filter and sorting
@@ -188,7 +212,7 @@ export default function FilesList(props: Props) {
           case Columns.dateUploaded:
             returnValue =
               new Date(a.metadata.lastModified) >
-                new Date(b.metadata.lastModified)
+              new Date(b.metadata.lastModified)
                 ? 1
                 : -1;
             break;
@@ -234,7 +258,10 @@ export default function FilesList(props: Props) {
           key={document.id}
           doc={document}
           selected={selectedDocuments.has(document.id)}
-          loading={deletingDocuments && selectedDocuments.has(document.id)}
+          loading={
+            (deletingDocuments && selectedDocuments.has(document.id)) ||
+            fetchingDocuments
+          }
           setSelectedDocuments={onDocumentSelect}
           columnWidths={ColumnWidths}
         />
@@ -245,7 +272,10 @@ export default function FilesList(props: Props) {
           key={document.id}
           doc={document}
           selected={selectedDocuments.has(document.id)}
-          loading={deletingDocuments && selectedDocuments.has(document.id)}
+          loading={
+            (deletingDocuments && selectedDocuments.has(document.id)) ||
+            fetchingDocuments
+          }
           setSelectedDocuments={onDocumentSelect}
           columnWidths={ColumnWidths}
         />
@@ -253,19 +283,20 @@ export default function FilesList(props: Props) {
     }
   };
 
+  // ===================================================
+  // Find documents to display by applying filter and sorting
+  // ===================================================
   const documentPages = useMemo(() => {
-    const sortedAndFilteredDocuments = sortAndFilterDocuments(props.documents);
+    const sortedAndFilteredDocuments = sortAndFilterDocuments(documents);
     return splitArray(sortedAndFilteredDocuments, parseInt(documentsPerPage));
   }, [
-    props.documents,
+    documents,
     filter,
     sortByColumn,
     sortAscending,
     selectedDocuments,
     documentsPerPage
   ]);
-  const sortedAndFilteredDocuments = sortAndFilterDocuments(documents);
-  const documentPages = splitArray(sortedAndFilteredDocuments, ONE_PAGE_SIZE);
   const totalPages = documentPages.length;
   const displayedDocuments = useMemo(
     () => selectDisplayedDocuments(documentPages, totalPages),
@@ -273,7 +304,7 @@ export default function FilesList(props: Props) {
   );
 
   // ===================================================
-  // TailwindCSS classes
+  // Tailwind Classes
   // ===================================================
   const paginationButtonClasses = classNames(
     'flex items-center px-3.5 py-1.5 text-base text-gray-500 hover:text-gray-700',
@@ -283,7 +314,9 @@ export default function FilesList(props: Props) {
     'transition duration-125 shadow-sm border-gray-200 dark:border-zinc-700'
   );
 
+  // ===================================================
   // Document removal button passed to the table header
+  // ===================================================
   const FileListControls = (
     <>
       <AnimatePresence>
@@ -331,7 +364,7 @@ export default function FilesList(props: Props) {
       <div className={'w-full'}>
         <table
           className={classNames(
-            'block w-full mt-0 pt-2 pb-9 px-6 lg:px-16 min-h-full'
+            'block w-full mt-0 pt-2 pb-9 px-6 lg:px-16 min-h-full relative'
           )}
         >
           <TableHeader
@@ -340,8 +373,8 @@ export default function FilesList(props: Props) {
             sortAscending={sortAscending}
             handleColumnClick={handleColumnClick}
             allDocumentsSelected={
-              props.documents.length > 0 &&
-              selectedDocuments.size === props.documents.length
+              documents.length > 0 &&
+              selectedDocuments.size === documents.length
             }
             selectAllDocuments={selectAllDocuments}
             controls={FileListControls}

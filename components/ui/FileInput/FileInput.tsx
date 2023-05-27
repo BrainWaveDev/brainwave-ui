@@ -17,7 +17,6 @@ import AlertModal, {
   setModalOpen
 } from '@/components/ui/AlertModal';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
-import Dropzone from 'react-dropzone';
 import { useAppDispatch } from 'context/redux/store';
 import { optimisticDocumentActions } from 'context/redux/documentSlice';
 import { useDropzone } from 'react-dropzone';
@@ -33,11 +32,26 @@ const validFileTypes = [
 ];
 
 export default function FileInput() {
-  const { user, isLoading } = useUser();
-  const [files, setFiles] = useState<FileInfo[]>([]);
-  const { dispatch: dispatchError } = useErrorContext();
-  const [modalState, setModalState] = useState<ModalState | null>(null);
+  // ==============================
+  // Redux State
+  // ==============================
+  const dispatch = useAppDispatch();
 
+  // ==============================
+  // User's Information
+  // ==============================
+  const { user, isLoading } = useUser();
+
+  // ==============================
+  // Local State
+  // ==============================
+  const [files, setFiles] = useState<FileInfo[]>([]);
+  const [modalState, setModalState] = useState<ModalState | null>(null);
+  const { errorDispatch } = useErrorContext();
+
+  // ==============================
+  // Modal Buttons
+  // ==============================
   const ModalActionButtons = (
     <>
       <AlertDialog.Action
@@ -51,7 +65,9 @@ export default function FileInput() {
     </>
   );
 
-  // Logic for handling image upload
+  // ==============================
+  // File Handlers
+  // ==============================
   const fileInputHandler = useCallback(
     (selectedFiles: File[] | FileList | null) => {
       if (selectedFiles === null) return;
@@ -117,6 +133,7 @@ export default function FileInput() {
   };
 
   const uploadFiles = async () => {
+    // TODO: Handle file upload in Redux Thunk
     if (files && files.length > 0 && !isLoading) {
       // Each file upload will be handled in a separate promise
       const fileUploads: Promise<any>[] = [];
@@ -142,13 +159,9 @@ export default function FileInput() {
 
       const results = await Promise.allSettled(fileUploads);
       results.forEach((result, index) => {
-        const filename =
-          files[index].name.length > 20
-            ? `${files[index].name.slice(0, 20)}...`
-            : files[index].name;
-
-        let errorMessage = null;
         const file = files[index];
+        const filename = file.name;
+        let errorMessage = null;
 
         if (result.status === 'fulfilled') {
           const { error } = result.value;
@@ -169,7 +182,7 @@ export default function FileInput() {
           file.uploadState = UploadState.UploadFailed;
           errorMessage = (
             <>
-              Couldn't upload <strong>{filename}</strong>.
+              Couldn't upload <span className={'truncate'}>{filename}</span>.
             </>
           );
         }
@@ -178,10 +191,10 @@ export default function FileInput() {
 
         if (errorMessage) {
           const newError = new ErrorAlert(errorMessage);
-          dispatchError({ type: 'addError', error: newError });
+          errorDispatch({ type: 'addError', error: newError });
           // Automatically clear error alert
           setTimeout(() => {
-            dispatchError({
+            errorDispatch({
               type: 'removeError',
               id: newError.id
             });
@@ -191,11 +204,13 @@ export default function FileInput() {
 
       setFiles(updatedFiles);
       await updateFilePreviewAfterUpload();
-      dispatch(optimisticDocumentActions.fetchAllDocuments(user!.id));
+      dispatch(optimisticDocumentActions.fetchAllDocuments());
     }
   };
 
-  // Define dropzone component
+  // ==============================
+  // Dropzone Component
+  // ==============================
   const { getRootProps, getInputProps, open, isDragActive } = useDropzone({
     onDrop: fileInputHandler,
     noClick: true
