@@ -95,7 +95,7 @@ export default memo(function TableHeader({
       <tr className={'hidden table-layout:flex py-0 md:py-1'}>
         <th
           className={classNames(
-            'py-3.5 px-5 font-normal text-left text-gray-500 dark:text-gray-300',
+            'py-3.5 pl-4 pr-5 font-normal text-left text-gray-500 dark:text-gray-300',
             columnWidths.name
           )}
         >
