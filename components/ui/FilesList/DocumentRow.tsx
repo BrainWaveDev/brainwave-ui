@@ -1,4 +1,4 @@
-import { Document } from '../../../types';
+import { Document } from '@/types/document';
 import React, { ForwardedRef, memo, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotatingLines } from 'react-loader-spinner';
@@ -171,7 +171,7 @@ function DocumentRow({
           </td>
           <td
             className={classNames(
-              'hidden table-layout:block px-4 py-5 text-xs md:text-sm lg:text-base my-auto font-medium',
+              'hidden table-layout:block px-4 py-5 text-xs md:text-sm lg:text-base font-medium',
               columnWidths.name
             )}
           >
