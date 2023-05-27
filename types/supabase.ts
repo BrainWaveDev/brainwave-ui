@@ -14,6 +14,7 @@ export interface Database {
           created_at: string | null
           folder_id: number | null
           id: number
+          model: string | null
           name: string
           updated_at: string | null
           user_id: string
@@ -22,14 +23,16 @@ export interface Database {
           created_at?: string | null
           folder_id?: number | null
           id?: number
+          model?: string | null
           name?: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string
         }
         Update: {
           created_at?: string | null
           folder_id?: number | null
           id?: number
+          model?: string | null
           name?: string
           updated_at?: string | null
           user_id?: string
@@ -109,7 +112,7 @@ export interface Database {
           id?: number
           name?: string
           updated_ad?: string | null
-          user_id: string
+          user_id?: string
         }
         Update: {
           created_at?: string | null
@@ -119,13 +122,14 @@ export interface Database {
           user_id?: string
         }
       }
-      message: {
+      messages: {
         Row: {
           content: string | null
           conversation_id: number
           created_at: string | null
           id: number
-          sender: string
+          index: number
+          role: string
           user_id: string
         }
         Insert: {
@@ -133,15 +137,17 @@ export interface Database {
           conversation_id: number
           created_at?: string | null
           id?: number
-          sender: string
-          user_id: string
+          index: number
+          role: string
+          user_id?: string
         }
         Update: {
           content?: string | null
           conversation_id?: number
           created_at?: string | null
           id?: number
-          sender?: string
+          index?: number
+          role?: string
           user_id?: string
         }
       }
@@ -150,12 +156,27 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      check_document_status: {
+      check_document_status:
+        | {
+            Args: {
+              document_id: number
+              parse_attempts: number
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              document_id: number
+              parse_attempts: number
+              document_name: string
+            }
+            Returns: undefined
+          }
+      delete_documents: {
         Args: {
-          document_id: number
-          parse_attempts: number
+          ids: number[]
         }
-        Returns: undefined
+        Returns: string
       }
       delete_storage_item: {
         Args: Record<PropertyKey, never>
@@ -179,26 +200,49 @@ export interface Database {
         }
         Returns: unknown
       }
-      match_document_chunks: {
-        Args: {
-          user_id: string
-          embedding: string
-          match_threshold: number
-          match_count: number
-          min_content_length: number
-        }
-        Returns: {
-          document_owner: string
-          document_name: string
-          content: string
-          similarity: number
-        }[]
-      }
+      match_document_chunks:
+        | {
+            Args: {
+              user_id: string
+              embedding: string
+              match_threshold: number
+              match_count: number
+              min_content_length: number
+            }
+            Returns: {
+              document_owner: string
+              document_name: string
+              content: string
+              similarity: number
+            }[]
+          }
+        | {
+            Args: {
+              user_id: string
+              min_content_length: number
+              match_threshold: number
+              match_count: number
+              embedding: string
+              search_space: number[]
+            }
+            Returns: {
+              document_owner: string
+              document_name: string
+              content: string
+              similarity: number
+            }[]
+          }
       reparse_file_request: {
         Args: {
           document_id: number
         }
         Returns: undefined
+      }
+      replace_document_chunks: {
+        Args: {
+          chunks: Json
+        }
+        Returns: Json
       }
       set_document_status:
         | {
