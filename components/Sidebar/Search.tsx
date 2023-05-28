@@ -7,17 +7,13 @@ import {
 } from '../../context/redux/sidebarSlice';
 import { useAppDispatch } from '../../context/redux/store';
 
-interface Props {
-  placeholder: string;
-  searchTerm: string;
-  onSearch: (searchTerm: string) => void;
-}
-
 export default memo(function Search({
-  placeholder,
   searchTerm,
-  onSearch
-}: Props) {
+  setSearchTerm
+}: {
+  searchTerm: string;
+  setSearchTerm: (searchTerm: string) => void;
+}) {
   // =========================
   // Redux State
   // =========================
@@ -30,10 +26,10 @@ export default memo(function Search({
   // =========================
   const searchRef = createRef<HTMLInputElement>();
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-    onSearch(e.target.value);
+    setSearchTerm(e.target.value);
   };
   const clearSearch = () => {
-    onSearch('');
+    setSearchTerm('');
   };
 
   return (
@@ -54,7 +50,7 @@ export default memo(function Search({
           !sidebarOpen && 'cursor-pointer text-opacity-0'
         )}
         type="text"
-        placeholder={(sidebarOpen && placeholder) || ''}
+        placeholder={sidebarOpen ? 'Search conversations...' : ''}
         value={searchTerm}
         onChange={handleSearchChange}
         ref={searchRef}

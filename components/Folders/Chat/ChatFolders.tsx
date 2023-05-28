@@ -1,4 +1,3 @@
-import { FC } from 'react';
 import { ChatFolder } from './ChatFolder';
 import { getFoldersFromStorage } from '../../../context/redux/folderSlice';
 
@@ -6,12 +5,11 @@ interface Props {
   searchTerm: string;
 }
 
-export const ChatFolders: FC<Props> = ({ searchTerm }) => {
+export const ChatFolders = ({ searchTerm }: Props) => {
   // =======================
   // Redux State
   // =======================
   const folders = getFoldersFromStorage();
-
   return (
     <div className="flex w-full flex-col pt-2">
       {folders.map((folder, index) => (

@@ -30,8 +30,14 @@ export const ChatFolder: FC<Props> = ({ searchTerm, currentFolder }) => {
   const dispatch = useAppDispatch();
   const conversations = getConversationsFromStorage();
   const folderConversations = useMemo(
-    () => conversations.filter((c) => c.folderId === currentFolder.id),
-    [conversations, currentFolder.id]
+    () =>
+      conversations.filter(
+        (c) =>
+          c.folderId === currentFolder.id &&
+          // Only display conversations that match the search term
+          c.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [conversations, currentFolder.id, searchTerm]
   );
 
   // =======================
