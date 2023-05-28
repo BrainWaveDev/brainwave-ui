@@ -1,157 +1,198 @@
-'use client'
-import { createSlice } from '@reduxjs/toolkit'
-import type { PayloadAction } from '@reduxjs/toolkit'
-import { Conversation, ConversationIdentifiable, ConversationSummary } from 'types/chat'
-import { AppThunk } from './store';
+'use client';
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
+import {
+  Conversation,
+  ConversationIdentifiable,
+  ConversationSummary
+} from 'types/chat';
+import { AppThunk, useAppSelector } from './store';
 import { randomNumberId } from '@/utils/app/createDBOperation';
 import { OpenAIModels } from 'types/openai';
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/prompts';
-import { clearAllConversations, createConversation, deleteConversation as deleteConversationFromDB, fetchAllConversations, saveConversation,updateConversation as updateConvesationDB } from '@/utils/app/conversation';
-import { clearSelectedConversation, selectCurrentConversation } from './currentConversationSlice';
+import {
+  clearAllConversations,
+  createConversation,
+  deleteConversation as deleteConversationFromDB,
+  fetchAllConversations,
+  updateConversation as updateConversationDB
+} from '@/utils/app/conversation';
+import {
+  clearSelectedConversation,
+  selectCurrentConversation
+} from './currentConversationSlice';
+import { SupabaseClient } from '@supabase/supabase-js';
 
-type ConversationsState = ConversationSummary[]
+type ConversationsState = ConversationSummary[];
 
-const initialState = [] as ConversationsState
+const initialState = [] as ConversationsState;
 
 const conversationsSlice = createSlice({
-    name: 'conversations',
-    initialState,
-    reducers: {
-        addCoverstation(state, action: PayloadAction<ConversationSummary>) {
-            return [action.payload, ...state]
-        },
-        setConversations(state, action: PayloadAction<ConversationSummary[]>) {
-            return action.payload
-        },
-        deleteConversation(state, action: PayloadAction<{ id: number }>) {
-            return state.filter(conversation => conversation.id !== action.payload.id)
-        },
-        updateConversation(state, action: PayloadAction< ConversationSummary >) {
-            const conversation = state.find(conversation => conversation.id === action.payload.id)
-            if (conversation) {
-                conversation.name = action.payload.name
-                conversation.model = action.payload.model
-                conversation.prompt = action.payload.prompt
-                conversation.folderId = action.payload.folderId
-            }
-            return state
-          },
-          
-        clearConversations(state) {
-            return []
-        },
-        replaceWithDBConversation(state, action: PayloadAction<{tempConversation:ConversationIdentifiable ,dbCoversation:ConversationSummary}>) {
-            const index = state.findIndex(conversation => conversation.id === action.payload.tempConversation.id)
-            if (index !== -1) {
-                state[index] = action.payload.dbCoversation
-            }
-            return state
-        }
+  name: 'conversations',
+  initialState,
+  reducers: {
+    addConversation(state, action: PayloadAction<ConversationSummary>) {
+      return [...state, action.payload];
     },
-})
+    setConversations(state, action: PayloadAction<ConversationSummary[]>) {
+      return action.payload;
+    },
+    deleteConversation(state, action: PayloadAction<{ id: number }>) {
+      return state.filter(
+        (conversation) => conversation.id !== action.payload.id
+      );
+    },
+    updateConversation(state, action: PayloadAction<ConversationSummary>) {
+      return state.map((conversation) => {
+        // Substitute the updated conversation
+        if (conversation.id === action.payload.id) {
+          return {
+            ...conversation,
+            ...action.payload
+          };
+        } else {
+          return conversation;
+        }
+      });
+    },
+    clearConversations() {
+      return [];
+    },
+    replaceWithDBConversation(
+      state,
+      action: PayloadAction<{
+        tempConversation: ConversationIdentifiable;
+        dbConversation: ConversationSummary;
+      }>
+    ) {
+      const index = state.findIndex(
+        (conversation) => conversation.id === action.payload.tempConversation.id
+      );
+      if (index !== -1) {
+        state[index] = action.payload.dbConversation;
+      } else {
+        // TODO: Throw error
+      }
+    }
+  }
+});
 
 function updateConversationProperty<K extends keyof ConversationSummary>(
-  conversation: ConversationSummary, 
-  key: K, 
+  conversation: ConversationSummary,
+  key: K,
   value: ConversationSummary[K]
 ) {
   conversation[key] = value;
 }
 
+const thunkCreateNewConversation = (): AppThunk => async (dispatch) => {
+  const tempConversation: Conversation = {
+    id: randomNumberId(),
+    name: 'New Conversation',
+    model: OpenAIModels['gpt-3.5-turbo'],
+    folderId: null,
+    prompt: DEFAULT_SYSTEM_PROMPT,
+    messages: []
+  };
 
-const thunkCreateNewConversation =
-    (user_id: string): AppThunk =>
-        async (dispatch, getState) => {
-            const tempConversation: Conversation = {
-                id: randomNumberId(),
-                name: 'New Conversation',
-                model: OpenAIModels['gpt-3.5-turbo'],
-                folderId: null,
-                prompt: DEFAULT_SYSTEM_PROMPT,
-                messages: [],
-            }
-            dispatch(addCoverstation(tempConversation))
-            try {
-                const conversation = await createConversation(tempConversation,user_id)
-                dispatch(conversationsSlice.actions.replaceWithDBConversation({tempConversation,dbCoversation:conversation}))
-                dispatch(selectCurrentConversation(conversation))
-            }catch(e){
-                dispatch(deleteConversation({ id: tempConversation.id }))
-            }
-        }
+  dispatch(addConversation(tempConversation));
+  try {
+    const conversation = await createConversation(tempConversation);
+    dispatch(
+      conversationsSlice.actions.replaceWithDBConversation({
+        tempConversation,
+        dbConversation: conversation
+      })
+    );
+    dispatch(selectCurrentConversation(conversation));
+  } catch (e) {
+    dispatch(deleteConversation({ id: tempConversation.id }));
+  }
+};
 
 const thunkDeleteConversation =
-    (conversation: ConversationSummary): AppThunk => 
-    async (dispatch, getState) => {
-        dispatch(deleteConversation({ id: conversation.id }))
-        dispatch(clearSelectedConversation())
-        try {
-            await deleteConversationFromDB(conversation.id)
-        } catch (e) {
-            dispatch(addCoverstation(conversation))
-        }
+  (conversation: ConversationSummary): AppThunk =>
+  async (dispatch) => {
+    dispatch(deleteConversation({ id: conversation.id }));
+    dispatch(clearSelectedConversation());
+    try {
+      await deleteConversationFromDB(conversation.id);
+    } catch (e) {
+      dispatch(addConversation(conversation));
     }
+  };
 
 const thunkUpdateConversation =
-    (conversation: ConversationSummary): AppThunk =>
-        async (dispatch, getState) => {
-            dispatch(conversationsSlice.actions.updateConversation(conversation))
-            try {
-                await updateConvesationDB(conversation)
-            } catch (e) {
-                dispatch(conversationsSlice.actions.updateConversation(conversation))
-            }
-        }
+  (conversation: ConversationSummary): AppThunk =>
+  async (dispatch, getState) => {
+    // Find original conversation
+    const originalConversation = getState().conversations.find(
+      (c) => c.id === conversation.id
+    );
+    // TODO: This should throw an error
+    if (!originalConversation) {
+      console.error('Conversation not found');
+      return;
+    }
+    dispatch(conversationsSlice.actions.updateConversation(conversation));
+    try {
+      await updateConversationDB(conversation);
+    } catch (e) {
+      dispatch(
+        conversationsSlice.actions.updateConversation(originalConversation)
+      );
+    }
+  };
 
-const thunkClearConversations =
-    (user_id:string): AppThunk =>
-        async (dispatch, getState) => {
-            const conversations = getState().conversations
-            dispatch(clearConversations())
-            try {
-                await clearAllConversations(user_id)
-            }
-            catch (e) {
-                dispatch(setConversations(conversations))
-            }
-        }
+const thunkClearConversations = (): AppThunk => async (dispatch) => {
+  try {
+    await clearAllConversations();
+    dispatch(clearConversations());
+  } catch (e: any) {
+    // TODO: Show errors to user
+    console.error(e.message);
+  }
+};
 
 const thunkFetchAllConversations =
-    (user_id:string): AppThunk =>
-        async (dispatch, getState) => {
-            const conversations = await fetchAllConversations(user_id)
-            dispatch(setConversations(conversations))
-            
-        }
-const thunkInitConversations =
-    (user_id:string): AppThunk =>
-        async (dispatch, getState) => {
-            await dispatch(thunkFetchAllConversations(user_id))
-            const conversations = getState().conversations
-            if (conversations.length === 0) return
-            dispatch(selectCurrentConversation({
-                ...conversations[0],
-                messages: []
-            }))
-        }
+  (supabaseClient?: SupabaseClient): AppThunk =>
+  async (dispatch) => {
+    const conversations = await fetchAllConversations(supabaseClient);
+    dispatch(setConversations(conversations));
+  };
+
+const thunkInitConversations = (): AppThunk => async (dispatch, getState) => {
+  await dispatch(thunkFetchAllConversations());
+  const conversations = getState().conversations;
+  if (conversations.length === 0) return;
+  dispatch(
+    selectCurrentConversation({
+      ...conversations[0],
+      messages: []
+    })
+  );
+};
 
 export const optimisticConversationsActions = {
-    createConversation: thunkCreateNewConversation,
-    deleteConversation: thunkDeleteConversation,
-    // update conversation does not update messages
-    updateConversation: thunkUpdateConversation,
-    clearConversations: thunkClearConversations,
-    fetchAllConversations: thunkFetchAllConversations,
-    initAllConversations: thunkInitConversations
-}
-
+  createConversation: thunkCreateNewConversation,
+  deleteConversation: thunkDeleteConversation,
+  // update conversation does not update messages
+  updateConversation: thunkUpdateConversation,
+  clearConversations: thunkClearConversations,
+  fetchAllConversations: thunkFetchAllConversations,
+  initAllConversations: thunkInitConversations
+};
 
 export const {
-    addCoverstation,
-    setConversations,
-    deleteConversation,
-    updateConversation,
-    clearConversations,
-    replaceWithDBConversation
-} = conversationsSlice.actions
-export default conversationsSlice.reducer
+  addConversation,
+  setConversations,
+  deleteConversation,
+  updateConversation,
+  clearConversations,
+  replaceWithDBConversation
+} = conversationsSlice.actions;
+
+export const getConversationsFromStorage = () =>
+  useAppSelector((state) => state.conversations);
+
+export default conversationsSlice.reducer;
