@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import classNames from 'classnames';
 import classes from './Sidebar.module.css';
 import SidebarOpen from '@/components/icons/SidebarOpen';
@@ -62,11 +62,6 @@ export default function Sidebar() {
   // Link Highlighting
   // ===================================================
   const router = useRouter();
-
-  // ===================================================
-  // Local State
-  // ===================================================
-  const [searchTerm, setSearchTerm] = useState<string>('');
 
   // ============================================================
   // Tailwind Classes
@@ -182,10 +177,7 @@ export default function Sidebar() {
                   leaveTo="transform scale-95 opacity-0"
                 >
                   <Disclosure.Panel>
-                    <Chatbar
-                      searchTerm={searchTerm}
-                      setSearchTerm={(value: string) => setSearchTerm(value)}
-                    />
+                    <Chatbar />
                   </Disclosure.Panel>
                 </Transition>
               </>
