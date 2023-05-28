@@ -3,18 +3,18 @@ import {
   ConversationIdentifiable,
   ConversationSummary,
   Message
-} from '../../types/chat';
+} from '@/types/chat';
 import { supabase } from '../supabase-client';
 import { isGeneratedId, randomNumberId } from './createDBOperation';
 import { OpenAIModels } from 'types/openai';
 import { DEFAULT_SYSTEM_PROMPT } from './prompts';
-import { clear, get, remove, set } from './localcache';
+import { get, remove, removeAll, set } from './localcache';
+import { SupabaseClient } from '@supabase/supabase-js';
 
-
-export const randomPlaceholderConveration = () => {
+export const randomPlaceholderConversation = () => {
   return {
     id: randomNumberId(),
-    name: "new conversation",
+    name: 'new conversation',
     model: OpenAIModels['gpt-3.5-turbo'],
     prompt: DEFAULT_SYSTEM_PROMPT,
     messages: [],
@@ -24,22 +24,15 @@ export const randomPlaceholderConveration = () => {
 };
 
 export const updateConversation = async (
-  updatedConversation: ConversationSummary
+  updatedConversation: ConversationIdentifiable
 ) => {
   try {
-    var builder: any = supabase
+    const { data, error } = await supabase
       .from('conversation')
-    if (updatedConversation.folderId) {
-      builder = builder.update({
-        name: updatedConversation.name,
-        folder_id: updatedConversation.folderId
+      .update({
+        name: updatedConversation.name
       })
-    } else {
-      builder = builder.update({
-        name: updatedConversation.name,
-      })
-    }
-    const { data, error } = await builder.eq('id', updatedConversation.id)
+      .eq('id', updatedConversation.id)
       .select();
 
     if (error) {
@@ -84,14 +77,12 @@ export const updateConversationFolder = async (
 };
 
 export const createConversation = async (
-  conversation: ConversationIdentifiable,
-  user_id: string
+  conversation: ConversationIdentifiable
 ) => {
   const { data } = await supabase
     .from('conversation')
     .insert({
-      name: conversation.name,
-      user_id: user_id,
+      name: conversation.name
     })
     .select()
     .throwOnError()
@@ -110,7 +101,7 @@ export const createConversation = async (
   return res;
 };
 
-export const retriveConversation = async (conversationId: number) => {
+export const retrieveConversation = async (conversationId: number) => {
   const { exist, resource } = get('conversation', conversationId.toString());
   if (exist) {
     return resource!;
@@ -145,11 +136,12 @@ export const retriveConversation = async (conversationId: number) => {
   return res;
 };
 
-export const fetchAllConversations = async (userId: string) => {
-  const { data, error } = await supabase
+export const fetchAllConversations = async (
+  supabaseClient?: SupabaseClient
+) => {
+  const { data, error } = await (supabaseClient ?? supabase)
     .from('conversation')
     .select('*')
-    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -180,9 +172,9 @@ export const saveConversation = async (
   conversation: Conversation,
   user_id: string
 ) => {
-  var to_upsert = {
+  let to_upsert = {
     name: conversation.name,
-    user_id: user_id,
+    user_id: user_id
   } as any;
 
   if (!isGeneratedId(conversation.id)) {
@@ -200,7 +192,7 @@ export const saveConversation = async (
 
   const messages = conversation.messages
     .map((m, idx) => {
-      var res = {
+      let res = {
         conversation_id: data!.id,
         content: m.content,
         role: m.role,
@@ -238,16 +230,12 @@ export const saveConversation = async (
   return res;
 };
 
-export const clearAllConversations = async (user_id: string) => {
-  clear();
-  await supabase
-    .from('conversation')
-    .delete()
-    .eq('user_id', user_id)
-    .throwOnError();
+export const clearAllConversations = async () => {
+  removeAll('conversation');
+  await supabase.from('conversation').delete().throwOnError();
 };
 
-export const inseartMessage = async (
+export const insertMessage = async (
   message: Message,
   index: number,
   conversation_id: number,
