@@ -34,8 +34,10 @@ const folderSlice = createSlice({
       const folder = state.find((folder) => folder.id === action.payload.id);
       if (folder) {
         folder.name = action.payload.newName;
+      } else {
+        // TODO: Show error to user
+        console.error('Failed to find folder with ID: ', action.payload.id);
       }
-      return state;
     },
     setFolders(state, action: PayloadAction<Folder[]>) {
       return action.payload;
@@ -47,8 +49,10 @@ const folderSlice = createSlice({
       const folder = state.find((folder) => folder.id === action.payload.id);
       if (folder) {
         folder.id = action.payload.newId;
+      } else {
+        // TODO: Show error to user
+        console.error('Failed to find folder with ID: ', action.payload.id);
       }
-      return state;
     }
   }
 });

@@ -72,6 +72,10 @@ const conversationsSlice = createSlice({
         state[index] = action.payload.dbConversation;
       } else {
         // TODO: Throw error
+        console.error(
+          "Couldn't find conversation with ID " +
+            action.payload.tempConversation.id
+        );
       }
     }
   }

@@ -13,11 +13,15 @@ const searchSpaceSlice = createSlice({
   name: 'searchSpace',
   initialState,
   reducers: {
-    clearSearchSpace: (state) => {
-      state.searchSpace = [];
+    clearSearchSpace: () => {
+      return {
+        searchSpace: []
+      };
     },
     selectAllSearchSpace: (state, action: PayloadAction<number[]>) => {
-      state.searchSpace = action.payload;
+      return {
+        searchSpace: action.payload
+      };
     },
     selectSearchSpace: (state, action: PayloadAction<number>) => {
       const index = state.searchSpace.indexOf(action.payload);

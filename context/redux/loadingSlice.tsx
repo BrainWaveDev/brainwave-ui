@@ -29,14 +29,10 @@ const loadingSlice = createSlice({
   initialState,
   reducers: {
     startLoading: (state, action: PayloadAction<LoadingTrigger>) => {
-      const newState = { ...state };
-      newState[action.payload] = true;
-      return newState;
+      state[action.payload] = true;
     },
     endLoading: (state, action: PayloadAction<LoadingTrigger>) => {
-      const newState = { ...state };
-      newState[action.payload] = false;
-      return newState;
+      state[action.payload] = false;
     }
   }
 });
