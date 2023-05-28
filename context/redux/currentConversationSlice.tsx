@@ -203,7 +203,7 @@ export const {
   selectCurrentConversation
 } = currentConversationSlice.actions;
 
-export const getCurrentConversationFromStore = () =>
-  useAppSelector((state) => state.currentConversation).conversation;
+export const getCurrentConversationStateFromStore = () =>
+  useAppSelector((state) => state.currentConversation);
 
 export default currentConversationSlice.reducer;
