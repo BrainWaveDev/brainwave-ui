@@ -10,7 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import classNames from 'classnames';
 import {
-  getCurrentConversationFromStore,
+  getCurrentConversationStateFromStore,
   optimisticCurrentConversationAction
 } from '../../context/redux/currentConversationSlice';
 import { optimisticConversationsActions } from '../../context/redux/conversationsSlice';
@@ -24,7 +24,8 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
   // Redux State
   // =======================
   const dispatch = useAppDispatch();
-  const currentConversation = getCurrentConversationFromStore();
+  const { conversation: currentConversation } =
+    getCurrentConversationStateFromStore();
   const isSelected = currentConversation?.id === conversation.id;
 
   // =======================
