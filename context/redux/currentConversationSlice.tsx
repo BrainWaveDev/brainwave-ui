@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Conversation, ConversationSummary, Message } from '@/types/chat';
-import { AppThunk } from './store';
-import { inseartMessage, retriveConversation } from '@/utils/app/conversation';
+import { AppThunk, useAppSelector } from './store';
+import { insertMessage, retrieveConversation } from '@/utils/app/conversation';
 import { Session } from '@supabase/auth-helpers-react';
 
 interface SelectedConversationState {
@@ -15,7 +15,7 @@ const initialState: SelectedConversationState = {
   conversation: undefined,
   currentMessage: undefined,
   messageIsStreaming: false,
-  loading: true,
+  loading: true
 };
 
 const currentConversationSlice = createSlice({
@@ -37,7 +37,7 @@ const currentConversationSlice = createSlice({
       conversation.messages.push(action.payload);
       state.conversation = conversation;
     },
-    appendLastAssisstantMessage: (state, action: PayloadAction<string>) => {
+    appendLastAssistantMessage: (state, action: PayloadAction<string>) => {
       const { conversation } = state;
       if (!conversation) return;
       const messages = conversation.messages;
@@ -47,11 +47,11 @@ const currentConversationSlice = createSlice({
       if (lastMessage.role !== 'assistant') {
         messages.push({
           content: action.payload,
-          role: 'assistant',
+          role: 'assistant'
         });
         state.conversation = {
           ...conversation,
-          messages,
+          messages
         };
       } else {
         lastMessage.content += action.payload;
@@ -78,130 +78,132 @@ const currentConversationSlice = createSlice({
       });
       state.conversation = {
         ...conversation,
-        messages: updatedMessage,
+        messages: updatedMessage
       };
-    },
-  },
-});
-const thunkRetriveConversationDetails =
-  (summary: ConversationSummary): AppThunk =>
-    async (dispatch, getState) => {
-      const tempConvesation: Conversation = {
-        ...summary,
-        messages: [],
-      }
-      dispatch(selectCurrentConversation(tempConvesation))
-      try {
-        const conversation = await retriveConversation(tempConvesation.id)
-        dispatch(selectCurrentConversation(conversation))
-      } catch (e) {
-        dispatch(clearSelectedConversation())
-      }
     }
-
+  }
+});
+const thunkRetrieveConversationDetails =
+  (summary: ConversationSummary): AppThunk =>
+  async (dispatch) => {
+    const tempConversation: Conversation = {
+      ...summary,
+      messages: []
+    };
+    dispatch(selectCurrentConversation(tempConversation));
+    try {
+      const conversation = await retrieveConversation(tempConversation.id);
+      dispatch(selectCurrentConversation(conversation));
+    } catch (e) {
+      dispatch(clearSelectedConversation());
+    }
+  };
 
 export const thunkUserSent =
   (message: Message, user_id: string): AppThunk =>
-    async (dispatch, getState) => {
+  async (dispatch, getState) => {
+    dispatch(userSent(message));
+    try {
+      const { conversation } = getState().currentConversation;
+      if (!conversation) return;
 
-      dispatch(userSent(message))
-      try {
-        const { conversation } = getState().currentConverstaion;
-        if (!conversation) return;
-
-        const messages = conversation.messages;
-        // insert message to db
-        await inseartMessage(
-          message,
-          messages.length - 1,
-          conversation.id,
-          user_id
-        );
-
-      } catch (e) {
-        // TODO: better error handling
-        console.error(e);
-        dispatch(clearSelectedConversation());
-      }
+      const messages = conversation.messages;
+      // insert message to db
+      await insertMessage(
+        message,
+        messages.length - 1,
+        conversation.id,
+        user_id
+      );
+    } catch (e) {
+      // TODO: better error handling
+      console.error(e);
+      dispatch(clearSelectedConversation());
     }
+  };
 
 export const thunkStreamingResponse =
-  (session: Session,search_space:number[]): AppThunk =>
-    async (dispatch, getState) => {
-      const { conversation } = getState().currentConverstaion;
+  (session: Session, search_space: number[]): AppThunk =>
+  async (dispatch, getState) => {
+    const { conversation } = getState().currentConversation;
 
-      if (!conversation) return;
-      const messages = conversation.messages;
-      const lastMessage = messages[messages.length - 1];
-      if (!lastMessage || lastMessage.role === 'assistant') {
-        //something went wrong, gotta fix
-        console.error(`${lastMessage} is not a user message or there is no last message`)
-        return
-      };
-      dispatch(currentConversationSlice.actions.setIsStreaming(true));
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          jwt: session?.access_token,
-          messages: messages,
-          model: conversation.model,
-          search_space: search_space,
-        }),
-      });
+    if (!conversation) return;
+    const messages = conversation.messages;
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || lastMessage.role === 'assistant') {
+      //something went wrong, gotta fix
+      console.error(
+        `${lastMessage} is not a user message or there is no last message`
+      );
+      return;
+    }
+    dispatch(currentConversationSlice.actions.setIsStreaming(true));
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        jwt: session?.access_token,
+        messages: messages,
+        model: conversation.model,
+        search_space: search_space
+      })
+    });
 
-      if (!response.ok || !response.body) {
-        console.error(`response is not ok or there is no body`)
-      }
-
-      const data = response.body;
-
-      if (!data) {
-        console.error(`there is no data`)
-        return
-      }
-
-      const reader = data.getReader();
-      const decoder = new TextDecoder('utf-8');
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        const chunkValue = decoder.decode(value);
-        dispatch(currentConversationSlice
-          .actions
-          .appendLastAssisstantMessage(chunkValue)
-        );
-      }
-      dispatch(currentConversationSlice.actions.setIsStreaming(false));
-      const updatedConversation = getState().currentConverstaion.conversation!;
-      const updatedLastMessage = updatedConversation?.messages[updatedConversation?.messages.length - 1]
-      if(updatedLastMessage?.role != 'assistant'){
-        console.error(`something went wrong, last message is not assistant message`)
-        return
-      }
-      await inseartMessage(
-        updatedLastMessage,
-        updatedConversation.messages.length - 1,
-        updatedConversation.id,
-        session.user?.id,
-      )
+    if (!response.ok || !response.body) {
+      console.error(`response is not ok or there is no body`);
     }
 
+    const data = response.body;
+
+    if (!data) {
+      console.error(`there is no data`);
+      return;
+    }
+
+    const reader = data.getReader();
+    const decoder = new TextDecoder('utf-8');
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      const chunkValue = decoder.decode(value);
+      dispatch(
+        currentConversationSlice.actions.appendLastAssistantMessage(chunkValue)
+      );
+    }
+    dispatch(currentConversationSlice.actions.setIsStreaming(false));
+    const updatedConversation = getState().currentConversation.conversation!;
+    const updatedLastMessage =
+      updatedConversation?.messages[updatedConversation?.messages.length - 1];
+    if (updatedLastMessage?.role != 'assistant') {
+      console.error(
+        `something went wrong, last message is not assistant message`
+      );
+      return;
+    }
+    await insertMessage(
+      updatedLastMessage,
+      updatedConversation.messages.length - 1,
+      updatedConversation.id,
+      session.user?.id
+    );
+  };
+
 export const optimisticCurrentConversationAction = {
-  retriveAndSelectConversation: thunkRetriveConversationDetails,
+  retrieveAndSelectConversation: thunkRetrieveConversationDetails,
   userSent: thunkUserSent,
-  startStreaming: thunkStreamingResponse,
-}
+  startStreaming: thunkStreamingResponse
+};
 
 export const {
-  updateCurrentConversation,
   clearSelectedConversation,
-  clearSource,
   userSent,
-  selectCurrentConversation,
+  selectCurrentConversation
 } = currentConversationSlice.actions;
+
+export const getCurrentConversationFromStore = () =>
+  useAppSelector((state) => state.currentConversation).conversation;
 
 export default currentConversationSlice.reducer;
