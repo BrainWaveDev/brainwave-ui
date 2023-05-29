@@ -47,11 +47,6 @@ export default memo(function Chat({ stopConversationRef }: Props) {
       behavior: 'smooth'
     });
   };
-  const scrollDown = () => {
-    if (autoScrollEnabled) {
-      messagesEndRef.current?.scrollIntoView(true);
-    }
-  };
 
   const conversationIsEmpty =
     !currentConversation || currentConversation.messages.length === 0;

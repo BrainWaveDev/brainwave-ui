@@ -36,7 +36,6 @@ const VectorSearch: NextApiHandler = async (req, res) => {
           'The user does not have an active session or is not authenticated'
       });
 
-    console.log(user);
 
     const sanitizedQuery = query.trim();
 

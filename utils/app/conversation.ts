@@ -241,6 +241,7 @@ export const insertMessage = async (
   conversation_id: number,
   user_id: string
 ) => {
+  console.debug('inserting message, conversation id = ', conversation_id );
   const { data } = await supabase
     .from('messages')
     .insert({

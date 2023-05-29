@@ -1,8 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Conversation, ConversationSummary, Message } from '@/types/chat';
 import { AppThunk, useAppSelector } from './store';
-import { insertMessage, retrieveConversation } from '@/utils/app/conversation';
+import { createConversation, insertMessage, retrieveConversation } from '@/utils/app/conversation';
 import { Session } from '@supabase/auth-helpers-react';
+import { addConversation, updateConversation } from './conversationsSlice';
+import { randomPlaceholderConversation } from '@/utils/app/conversation';
+import { create } from 'domain';
 
 interface SelectedConversationState {
   conversation: Conversation | undefined;
@@ -22,9 +25,6 @@ const currentConversationSlice = createSlice({
   name: 'selectedConversation',
   initialState,
   reducers: {
-    updateCurrentConversation: (state, action: PayloadAction<Conversation>) => {
-      state.conversation = action.payload;
-    },
     selectCurrentConversation: (state, action: PayloadAction<Conversation>) => {
       state.conversation = action.payload;
     },
@@ -33,7 +33,10 @@ const currentConversationSlice = createSlice({
     },
     userSent(state, action: PayloadAction<Message>) {
       const { conversation } = state;
-      if (!conversation) return;
+      if (!conversation) {
+        console.error('No conversation found');
+        return
+      };
       conversation.messages.push(action.payload);
       state.conversation = conversation;
     },
@@ -99,13 +102,25 @@ const thunkRetrieveConversationDetails =
     }
   };
 
-export const thunkUserSent =
-  (message: Message, user_id: string): AppThunk =>
+
+
+const thunkUserSent = (message: Message, user_id: string): AppThunk<Conversation> =>
   async (dispatch, getState) => {
+    console.log("thunkUserSent")
+    let { conversation } = getState().currentConversation;
+    if (!conversation) {
+      const placeholder = randomPlaceholderConversation();
+      dispatch(selectCurrentConversation(placeholder))
+      const dbConversation = await createConversation(placeholder);
+      dispatch(selectCurrentConversation(dbConversation));
+      conversation = dbConversation;
+      dispatch(addConversation(dbConversation))
+    };
     dispatch(userSent(message));
     try {
-      const { conversation } = getState().currentConversation;
-      if (!conversation) return;
+      if (!conversation) {
+        throw new Error('No conversation found, this should never happen');
+      };
 
       const messages = conversation.messages;
       // insert message to db
@@ -115,19 +130,22 @@ export const thunkUserSent =
         conversation.id,
         user_id
       );
-    } catch (e) {
+    } catch (e){
       // TODO: better error handling
-      console.error(e);
       dispatch(clearSelectedConversation());
+      throw e;
     }
+    return conversation
   };
 
 export const thunkStreamingResponse =
   (session: Session, search_space: number[]): AppThunk =>
   async (dispatch, getState) => {
     const { conversation } = getState().currentConversation;
-
-    if (!conversation) return;
+    if (!conversation) {
+      console.error(`there is no conversation, this should never happen`);
+      return
+    };
     const messages = conversation.messages;
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage || lastMessage.role === 'assistant') {

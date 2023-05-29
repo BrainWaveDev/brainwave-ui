@@ -90,7 +90,6 @@ const handler = async (req: Request): Promise<Response> => {
       search_req
     );
 
-    console.log(documentChunks);
 
     if (matchError) {
       console.error(matchError);

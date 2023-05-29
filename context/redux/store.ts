@@ -7,7 +7,7 @@ import conversationsSlice, {
 } from './conversationsSlice';
 import thunkMiddleware, { ThunkAction } from 'redux-thunk';
 import documentSlice, { optimisticDocumentActions } from './documentSlice';
-import currentConversationSlice from './currentConversationSlice';
+import currentConversationSlice, { selectCurrentConversation } from './currentConversationSlice';
 import searchSpaceSlice, { selectAllSearchSpace } from './searchSpaceSlice';
 import sidebarSlice from './sidebarSlice';
 import { createWrapper, HYDRATE } from 'next-redux-wrapper';
@@ -59,14 +59,14 @@ export const useAppDispatch = () => useDispatch<AppDispatch>();
 
 export const useAppSelector: TypedUseSelectorHook<AppState> = useSelector;
 export type AppThunk<ReturnType = void> = ThunkAction<
-  ReturnType,
+  Promise<ReturnType>,
   AppState,
   unknown,
   Action<string>
 >;
 
 export const wrapper = createWrapper<AppStore>(store, {
-  debug: true,
+  debug: false,
   // These are needed to serialize the store state for the server-side rendering
   serializeState: (state) => serialize(state),
   deserializeState: (state) => deserialize(state)
@@ -108,6 +108,7 @@ export const initStore = wrapper.getServerSideProps(
         await store.dispatch(
           selectAllSearchSpace(store.getState().documents.map((d) => d.id))
         );
+
       } else {
         await store.dispatch(selectAllSearchSpace([]));
       }

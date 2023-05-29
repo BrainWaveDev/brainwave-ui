@@ -26,7 +26,7 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
   const dispatch = useAppDispatch();
   const { conversation: currentConversation } =
     getCurrentConversationStateFromStore();
-  const isSelected = currentConversation?.id === conversation.id;
+  const isSelected = (currentConversation && currentConversation.id === conversation.id);
 
   // =======================
   // Local state
@@ -91,7 +91,7 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
 
   return (
     <div className="relative flex items-center my-0.5">
-      {isRenaming && isSelected ? (
+      {isRenaming? (
         <div
           className={classNames(
             'flex w-full items-center gap-3 px-2.5 py-1.5 rounded-lg shadow bg-blackA10'
@@ -134,7 +134,7 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
           </div>
         </button>
       )}
-      {(isDeleting || isRenaming) && isSelected && (
+      {(isDeleting || isRenaming) && (
         <div className="absolute right-1 z-10 flex text-gray-300">
           <button
             className="min-w-[20px] p-1 text-neutral-400 hover:text-neutral-100"

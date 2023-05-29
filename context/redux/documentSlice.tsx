@@ -36,7 +36,7 @@ const thunkAddAllDocuments = (supabaseClient?: SupabaseClient): AppThunk => {
       const documents = await fetchAllDocuments(supabaseClient);
       dispatch(documentSlice.actions.setAllDocuments(documents));
     } catch (e) {
-      console.log(e);
+      console.error(e);
     } finally {
       dispatch(endLoading(LoadingTrigger.FetchingDocuments));
     }

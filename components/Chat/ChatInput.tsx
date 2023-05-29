@@ -41,7 +41,7 @@ export const ChatInput: FC<Props> = ({
   const { session } = useSessionContext();
 
   // ============== Handlers =====================
-  const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+  const handleChange =   (e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     const maxLength = model.maxLength;
 
@@ -55,7 +55,7 @@ export const ChatInput: FC<Props> = ({
     setContent(value);
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (messageIsStreaming) {
       return;
     }
@@ -65,9 +65,8 @@ export const ChatInput: FC<Props> = ({
       return;
     }
 
-    if (!currentConversation) return;
     // 1. Update the current conversation messages
-    dispatch(
+    await dispatch(
       optimisticCurrentConversationAction.userSent(
         {
           content,
@@ -77,6 +76,7 @@ export const ChatInput: FC<Props> = ({
       )
     );
     content && setContent('');
+
     // 2. fetch the response from the api
     dispatch(
       optimisticCurrentConversationAction.startStreaming(session!, searchSpace)

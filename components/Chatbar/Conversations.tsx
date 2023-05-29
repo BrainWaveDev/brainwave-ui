@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { ConversationComponent } from './Conversation';
 import { ConversationSummary } from '@/types/chat';
+import { useAppSelector } from 'context/redux/store';
 
 export default memo(function Conversations({
   conversations
