@@ -36,7 +36,8 @@ export default function Layout({ children, meta: pageMeta }: Props) {
     'min-h-[calc(100%_-_4.5rem)]',
     'h-[calc(100%_-_4.5rem)]',
     'max-h-[calc(100%_-_4.5rem)]',
-    'overflow-y-scroll'
+    'overflow-y-scroll',
+    'scrollbar-hide'
   );
 
   return (
@@ -48,7 +49,7 @@ export default function Layout({ children, meta: pageMeta }: Props) {
         <meta content={meta.description} name="description" />
       </Head>
       <Sidebar />
-      <main id="skip" className={classNames(classes.main)}>
+      <main id="skip" className={classNames(classes.main,'scrollbar-hide')}>
         <Header />
         <div className={mainContentClasses}>{children}</div>
       </main>
