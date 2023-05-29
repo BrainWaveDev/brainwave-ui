@@ -125,28 +125,30 @@ export default function DocumentFilter() {
                   onInput={(e) => setSearchString(e.currentTarget.value)}
                 />
               </fieldset>
-              <div
-                className={classNames(
-                  'flex flex-col items-start mt-4 -mx-5 max-h-56 overflow-y-scroll',
-                  classes['shadow-inset-top-bottom']
-                )}
-              >
-                {filteredDocuments.length > 0 &&
-                  filteredDocuments.map((document, index) => (
-                    <DocumentRow
-                      document={document}
-                      selected={searchSpace.includes(document.id)}
-                      onSelectedChange={() => {
-                        dispatch(selectSearchSpace(document.id));
-                      }}
-                      key={index}
-                    />
-                  ))}
-                {filteredDocuments.length == 0 && searchString !== '' && (
-                  <p className={'text-sm text-gray-700 pl-5 py-2'}>
-                    No documents match the search criteria.
-                  </p>
-                )}
+              <div className='flex justify-center align-middle'>
+                <div
+                  className={classNames(
+                    'flex flex-col items-start mt-4 -mx-5 max-h-56 overflow-y-scroll max-w-full scrollbar-hide',
+                    classes['shadow-inset-top-bottom']
+                  )}
+                >
+                  {filteredDocuments.length > 0 &&
+                    filteredDocuments.map((document, index) => (
+                      <DocumentRow
+                        document={document}
+                        selected={searchSpace.includes(document.id)}
+                        onSelectedChange={() => {
+                          dispatch(selectSearchSpace(document.id));
+                        }}
+                        key={index}
+                      />
+                    ))}
+                  {filteredDocuments.length == 0 && searchString !== '' && (
+                    <p className={'text-sm text-gray-700 pl-5 py-2'}>
+                      No documents match the search criteria.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
             {documents.length > 0 && (
@@ -158,8 +160,8 @@ export default function DocumentFilter() {
                 {searchSpace.length === documents.length
                   ? 'Results will be based on all documents.'
                   : searchSpace.length === 0
-                  ? 'Results will be based on general knowledge.'
-                  : 'Results will be based on the selected documents.'}
+                    ? 'Results will be based on general knowledge.'
+                    : 'Results will be based on the selected documents.'}
               </p>
             )}
             <Popover.Close
@@ -190,7 +192,7 @@ const DocumentRow = memo(
         className="flex items-center place-content-between w-full py-2 hover:bg-teal-50 px-5 cursor-pointer z-[5]"
         onClick={() => onSelectedChange(document.id)}
       >
-        <div className={'flex flex-row items-center gap-x-2'}>
+        <div className={'inline-flex items-center gap-x-2 max-w-[90%]'}>
           <div className="flex items-center w-6 h-6 fill-teal-400 bg-teal-50 rounded-full">
             <DocumentTextIcon
               strokeWidth="1.5"
@@ -198,15 +200,15 @@ const DocumentRow = memo(
               fill={'fill-teal-400'}
             />
           </div>
-          <h2
-            className={classNames(
-              'text-sm text-gray-800 dark:text-white',
-              selected ? 'font-semibold' : 'font-normal',
-              'truncate'
-            )}
-          >
-            {document.name}
-          </h2>
+            <h2
+              className={classNames(
+                'text-sm text-gray-800 dark:text-white',
+                selected ? 'font-semibold' : 'font-normal',
+                'truncate text-ellipsis max-w-full flex-auto'
+              )}
+            >
+              {document.name}
+            </h2>
         </div>
         <Checkbox.Root
           className="shadow-blackA7 hover:bg-teal-50 flex h-5 w-5 appearance-none items-center justify-center rounded-[4px] bg-white shadow outline-none focus:ring-0"

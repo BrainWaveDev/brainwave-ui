@@ -106,6 +106,17 @@ module.exports = {
       addVariant('children-odd', '&>*:nth-child(odd)');
       addVariant('children-even', '&>*:nth-child(even)');
     },
+    plugin(function ({ addUtilities }) {
+      addUtilities({
+        '.scrollbar-hide': {
+          '-ms-overflow-style': 'none',
+          'scrollbar-width': 'none',
+          '&::-webkit-scrollbar': {
+            display: 'none'
+          }
+        }
+      });
+    }),
     flip
   ]
 };
