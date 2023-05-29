@@ -384,7 +384,7 @@ export default function FilesList() {
             className={classNames(
               'mt-0 flex flex-col w-full',
               'gap-y-1 pt-2 table-layout:gap-y-0 table-layout:pt-0 table-layout:divide-y',
-              'divide-gray-200 dark:divide-zinc-700 relative overflow-y-scroll'
+              'divide-gray-200 dark:divide-zinc-700 relative overflow-y-scroll scrollbar-hide'
             )}
           >
             {displayedDocuments.length > 0 ? (

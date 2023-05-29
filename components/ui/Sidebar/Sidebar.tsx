@@ -30,6 +30,7 @@ import {
 } from '../../../context/redux/sidebarSlice';
 import { optimisticConversationsActions } from 'context/redux/conversationsSlice';
 import { optimisticFoldersAction } from 'context/redux/folderSlice';
+import { useSessionContext } from '@supabase/auth-helpers-react';
 
 const NavLinks = [
   {
@@ -63,9 +64,13 @@ export default function Sidebar() {
   // ===================================================
   const router = useRouter();
 
-
+  // ===================================================
+  // sessions
+  // ===================================================
+  const { session } = useSessionContext();
   // ===================================================
   // Refs
+  // ===================================================
 
   const chatListButtonRef = useRef<HTMLButtonElement>(null);
   const isChatlistOpen = () => {
@@ -235,7 +240,7 @@ export default function Sidebar() {
               className="group mx-3 flex flex-shrink-0 cursor-pointer items-center transition-all duration-200"
               onClick={() => {
                 dispatch(
-                  optimisticFoldersAction.createNewFolder()
+                  optimisticFoldersAction.createNewFolder(session!.user.id)
                 )
                 if (!isChatlistOpen()) {
                   chatListButtonRef.current?.click()

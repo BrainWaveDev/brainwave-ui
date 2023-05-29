@@ -57,15 +57,7 @@ const folderSlice = createSlice({
   }
 });
 
-const thunkCreateNewFolder = (): AppThunk => async (dispatch) => {
-  // TODO: Show errors to the user
-  // Get user ID
-  const { session } = useSessionContext();
-  const userId = session?.user?.id;
-  if (!userId) {
-    console.error('Failed to retrieve user ID from session');
-    return;
-  }
+const thunkCreateNewFolder = (userId:string): AppThunk => async (dispatch) => {
 
   const tempFolder: Folder = {
     id: randomNumberId(),
