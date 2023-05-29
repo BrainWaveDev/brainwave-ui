@@ -44,14 +44,7 @@ export default memo(function Chatbar() {
   // =========================
   // Local State
   // =========================
-  const filteredConversations = useMemo(
-    () =>
-      conversations.filter((conversation) => {
-        const searchable = conversation.name.toLocaleLowerCase();
-        return searchable.toLowerCase().includes(searchTerm.toLowerCase());
-      }),
-    [searchTerm, conversations]
-  );
+  
 
   // =========================
   // Effects
@@ -106,9 +99,7 @@ export default memo(function Chatbar() {
             onDragLeave={removeHighlight}
           >
             <Conversations
-              conversations={filteredConversations.filter(
-                (conversation) => !conversation.folderId
-              )}
+              searchTerm={searchTerm}
             />
           </div>
         ) : (

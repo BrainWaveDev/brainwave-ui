@@ -106,7 +106,6 @@ const thunkRetrieveConversationDetails =
 
 const thunkUserSent = (message: Message, user_id: string): AppThunk<Conversation> =>
   async (dispatch, getState) => {
-    console.log("thunkUserSent")
     let { conversation } = getState().currentConversation;
     if (!conversation) {
       const placeholder = randomPlaceholderConversation();

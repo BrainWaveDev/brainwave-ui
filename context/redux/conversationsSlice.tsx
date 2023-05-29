@@ -100,6 +100,7 @@ const thunkCreateNewConversation = (): AppThunk => async (dispatch) => {
   };
 
   dispatch(addConversation(tempConversation));
+  dispatch(selectCurrentConversation(tempConversation));
   try {
     const conversation = await createConversation(tempConversation);
     dispatch(

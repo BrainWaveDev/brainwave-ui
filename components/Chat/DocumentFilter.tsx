@@ -42,7 +42,8 @@ export default function DocumentFilter() {
       className={classNames(
         'sm:absolute sm:top-0 left-0 right-0 z-10 py-4 flex items-center place-content-center',
         'bg-transparent border-nonerelative sticky top-4',
-        'shadow-[0_0_8px_rgba(0,0,0,0.08)] border-black/10 border-b'
+        // I think this looks slightly better, as leaving a large amount of space to just a single button would look weird
+        // 'shadow-[0_0_8px_rgba(0,0,0,0.08)] border-black/10 border-b' 
       )}
     >
       <Popover.Root>
@@ -52,7 +53,7 @@ export default function DocumentFilter() {
               classes.filterButton,
               documents.length > 0
                 ? 'cursor-pointer hover:bg-teal-50 active:bg-teal-50'
-                : 'cursor-not-allowed opacity-75'
+                : 'cursor-not-allowed opacity-75',
             )}
             aria-label="Filter documents"
             disabled={documents.length === 0}

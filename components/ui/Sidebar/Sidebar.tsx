@@ -1,11 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import classNames from 'classnames';
 import classes from './Sidebar.module.css';
 import SidebarOpen from '@/components/icons/SidebarOpen';
 import SidebarClose from '@/components/icons/SidebarClose';
 import Logo from '@/components/icons/Logo';
-// @ts-ignore
-import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChatBubbleLeftIcon,
   FolderIcon,
@@ -30,6 +28,8 @@ import {
   initSidebar,
   toggleSidebar
 } from '../../../context/redux/sidebarSlice';
+import { optimisticConversationsActions } from 'context/redux/conversationsSlice';
+import { optimisticFoldersAction } from 'context/redux/folderSlice';
 
 const NavLinks = [
   {
@@ -63,6 +63,16 @@ export default function Sidebar() {
   // ===================================================
   const router = useRouter();
 
+
+  // ===================================================
+  // Refs
+
+  const chatListButtonRef = useRef<HTMLButtonElement>(null);
+  const isChatlistOpen = () => {
+    return chatListButtonRef.current?.getAttribute('data-headlessui-state') === 'open';
+  };
+
+
   // ============================================================
   // Tailwind Classes
   // ============================================================
@@ -77,6 +87,8 @@ export default function Sidebar() {
     'inline-block w-6 h-7 transition-colors duration-75 fill-zinc-500',
     'group-hover:fill-white'
   );
+
+
 
   return (
     // TODO: Add animation for sidebar sidebarOpen and close
@@ -103,6 +115,8 @@ export default function Sidebar() {
           )}
         </button>
       </div>
+
+
       <div
         className={classNames(
           'flex flex-col grow justify-between flex-1 mt-3 w-full'
@@ -143,6 +157,8 @@ export default function Sidebar() {
             ))}
           </div>
           <Separator.Root className="bg-neutral6 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px" />
+
+          {/* ============== Chat list ============== */}
           <Disclosure as={'div'} className={'w-full'}>
             {({ open: chatListOpen }) => (
               <>
@@ -151,6 +167,7 @@ export default function Sidebar() {
                     'group flex items-center w-full h-7 px-2 py-6',
                     'gap-x-4 text-left text-md text-white/50 focus:ring-0'
                   )}
+                  ref={chatListButtonRef}
                 >
                   <ChevronDownIcon
                     className={classNames(
@@ -183,6 +200,7 @@ export default function Sidebar() {
               </>
             )}
           </Disclosure>
+
           {/* ============== New chat and folder buttons ============== */}
           <div className="flex items-center justify-center w-full rounded-lg border bg-neutral6 border-neutral-600 py-2.5">
             <button
@@ -191,7 +209,12 @@ export default function Sidebar() {
                 'gap-x-4 px-3 leading-normal text-white/50 hover:text-white transition-all duration-100'
               )}
               onClick={() => {
-                // TODO: Handle making a new chat
+                dispatch(
+                  optimisticConversationsActions.createConversation()
+                )
+                if (!isChatlistOpen()) {
+                  chatListButtonRef.current?.click()
+                }
               }}
             >
               <PlusCircleIcon
@@ -211,7 +234,12 @@ export default function Sidebar() {
             <button
               className="group mx-3 flex flex-shrink-0 cursor-pointer items-center transition-all duration-200"
               onClick={() => {
-                // TODO: Handle making a new folder
+                dispatch(
+                  optimisticFoldersAction.createNewFolder()
+                )
+                if (!isChatlistOpen()) {
+                  chatListButtonRef.current?.click()
+                }
               }}
             >
               <FolderPlusIcon

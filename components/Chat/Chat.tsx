@@ -48,8 +48,6 @@ export default memo(function Chat({ stopConversationRef }: Props) {
     });
   };
 
-  const conversationIsEmpty =
-    !currentConversation || currentConversation.messages.length === 0;
 
   // ============== Initiate Observers ==============
   useEffect(() => {
@@ -101,6 +99,36 @@ export default memo(function Chat({ stopConversationRef }: Props) {
     </div>
   );
 
+  const conditionalRender = () => {
+    if (currentConversation && currentConversation.messages.length > 0) {
+      return (
+        <div className={'mt-1.5'}>
+          {currentConversation.messages.map((message, index) => (
+            <ChatMessage
+              key={index}
+              message={message}
+              messageIndex={index}
+            />
+          ))}
+          <div
+            className="h-[162px] bg-white dark:bg-[#343541]"
+            ref={messagesEndRef}
+          />
+        </div>
+      )
+    }
+
+    if (currentConversation && currentConversation.messages.length === 0) {
+      return (
+        <div></div>
+      )
+    }
+
+    if (!currentConversation || currentConversation.messages.length === 0) {
+      return EmptyConversationCover
+    }
+  }
+
   return (
     <div className="relative flex-1 bg-white dark:bg-[#343541] min-h-full max-h-full">
       <>
@@ -112,23 +140,7 @@ export default memo(function Chat({ stopConversationRef }: Props) {
           onScroll={handleScroll}
         >
           <DocumentFilter />
-          {conversationIsEmpty ? (
-            EmptyConversationCover
-          ) : (
-            <div className={'mt-1.5'}>
-              {currentConversation.messages.map((message, index) => (
-                <ChatMessage
-                  key={index}
-                  message={message}
-                  messageIndex={index}
-                />
-              ))}
-              <div
-                className="h-[162px] bg-white dark:bg-[#343541]"
-                ref={messagesEndRef}
-              />
-            </div>
-          )}
+          {conditionalRender()}
         </div>
         <ChatInput
           stopConversationRef={stopConversationRef}
