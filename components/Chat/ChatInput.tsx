@@ -10,8 +10,9 @@ import {
   useState
 } from 'react';
 import {
-  getCurrentConversationStateFromStore,
-  optimisticCurrentConversationAction
+  getCurrentConversationFromStore,
+  optimisticCurrentConversationAction,
+  userSent
 } from 'context/redux/currentConversationSlice';
 import { useSessionContext } from '@supabase/auth-helpers-react';
 import { getSearchSpaceFromStore } from '../../context/redux/searchSpaceSlice';
@@ -28,8 +29,7 @@ export const ChatInput: FC<Props> = ({
   textareaRef
 }) => {
   // ============== Redux State ==============
-  const { conversation: currentConversation, messageIsStreaming } =
-    getCurrentConversationStateFromStore();
+  const { messageIsStreaming } = getCurrentConversationFromStore();
   const searchSpace = getSearchSpaceFromStore();
   const dispatch = useAppDispatch();
 
@@ -41,7 +41,7 @@ export const ChatInput: FC<Props> = ({
   const { session } = useSessionContext();
 
   // ============== Handlers =====================
-  const handleChange =   (e: ChangeEvent<HTMLTextAreaElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     const maxLength = model.maxLength;
 
@@ -65,6 +65,7 @@ export const ChatInput: FC<Props> = ({
       return;
     }
 
+    // TODO: Handle errors
     // 1. Update the current conversation messages
     await dispatch(
       optimisticCurrentConversationAction.userSent(
@@ -75,10 +76,10 @@ export const ChatInput: FC<Props> = ({
         session?.user?.id!
       )
     );
-    content && setContent('');
+    setContent('');
 
     // 2. fetch the response from the api
-    dispatch(
+    await dispatch(
       optimisticCurrentConversationAction.startStreaming(session!, searchSpace)
     );
     if (window.innerWidth < 640 && textareaRef && textareaRef.current) {
@@ -101,10 +102,10 @@ export const ChatInput: FC<Props> = ({
     return mobileRegex.test(userAgent);
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = async (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !isTyping && !isMobile() && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      await handleSend();
     }
   };
 
