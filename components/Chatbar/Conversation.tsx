@@ -10,7 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import classNames from 'classnames';
 import {
-  getCurrentConversationStateFromStore,
+  getCurrentConversationFromStore,
   optimisticCurrentConversationAction
 } from '../../context/redux/currentConversationSlice';
 import { optimisticConversationsActions } from '../../context/redux/conversationsSlice';
@@ -25,8 +25,9 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
   // =======================
   const dispatch = useAppDispatch();
   const { conversation: currentConversation } =
-    getCurrentConversationStateFromStore();
-  const isSelected = (currentConversation && currentConversation.id === conversation.id);
+    getCurrentConversationFromStore();
+  const isSelected =
+    currentConversation && currentConversation.id === conversation.id;
 
   // =======================
   // Local state
@@ -51,11 +52,13 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
         conversation
       )
     );
-  const handleDeleteConversation = () => {
-    dispatch(optimisticConversationsActions.deleteConversation(conversation));
+  const handleDeleteConversation = async () => {
+    await dispatch(
+      optimisticConversationsActions.deleteConversation(conversation)
+    );
   };
-  const handleUpdateConversationName = () => {
-    dispatch(
+  const handleUpdateConversationName = async () => {
+    await dispatch(
       optimisticConversationsActions.updateConversation({
         ...conversation,
         name: renameValue
@@ -77,9 +80,9 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
       e.dataTransfer.setData('conversation', JSON.stringify(conversation));
     }
   };
-  const handleRename = () => {
+  const handleRename = async () => {
     if (renameValue.trim().length > 0) {
-      handleUpdateConversationName();
+      await handleUpdateConversationName();
       setRenameValue('');
       setIsRenaming(false);
     }
@@ -88,10 +91,9 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
   // =================================================================
   // Tailwind Classes
   // =================================================================
-
   return (
     <div className="relative flex items-center my-0.5">
-      {isRenaming? (
+      {isRenaming ? (
         <div
           className={classNames(
             'flex w-full items-center gap-3 px-2.5 py-1.5 rounded-lg shadow bg-blackA10'

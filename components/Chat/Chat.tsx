@@ -6,7 +6,8 @@ import { ChatMessage } from './ChatMessage';
 import AppLogo from '@/components/icons/AppLogo';
 import classNames from 'classnames';
 import DocumentFilter from '@/components/Chat/DocumentFilter';
-import { getCurrentConversationStateFromStore } from '../../context/redux/currentConversationSlice';
+import { getCurrentConversationFromStore } from '../../context/redux/currentConversationSlice';
+import { ChatLoader } from '@/components/Chat/ChatLoader';
 
 interface Props {
   stopConversationRef: MutableRefObject<boolean>;
@@ -14,8 +15,8 @@ interface Props {
 
 export default memo(function Chat({ stopConversationRef }: Props) {
   // ============== Redux State ==============
-  const { conversation: currentConversation } =
-    getCurrentConversationStateFromStore();
+  const { conversation: currentConversation, loading } =
+    getCurrentConversationFromStore();
 
   // ============== Element References ==============
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -47,7 +48,6 @@ export default memo(function Chat({ stopConversationRef }: Props) {
       behavior: 'smooth'
     });
   };
-
 
   // ============== Initiate Observers ==============
   useEffect(() => {
@@ -99,36 +99,6 @@ export default memo(function Chat({ stopConversationRef }: Props) {
     </div>
   );
 
-  const conditionalRender = () => {
-    if (currentConversation && currentConversation.messages.length > 0) {
-      return (
-        <div className={'mt-1.5'}>
-          {currentConversation.messages.map((message, index) => (
-            <ChatMessage
-              key={index}
-              message={message}
-              messageIndex={index}
-            />
-          ))}
-          <div
-            className="h-[162px] bg-white dark:bg-[#343541]"
-            ref={messagesEndRef}
-          />
-        </div>
-      )
-    }
-
-    if (currentConversation && currentConversation.messages.length === 0) {
-      return (
-        <div></div>
-      )
-    }
-
-    if (!currentConversation || currentConversation.messages.length === 0) {
-      return EmptyConversationCover
-    }
-  }
-
   return (
     <div className="relative flex-1 bg-white dark:bg-[#343541] min-h-full max-h-full">
       <>
@@ -140,7 +110,24 @@ export default memo(function Chat({ stopConversationRef }: Props) {
           onScroll={handleScroll}
         >
           <DocumentFilter />
-          {conditionalRender()}
+          {currentConversation && currentConversation.messages.length > 0 ? (
+            <div className={'mt-1.5'}>
+              {currentConversation.messages.map((message, index) => (
+                <ChatMessage
+                  key={index}
+                  message={message}
+                  messageIndex={index}
+                />
+              ))}
+              {loading && <ChatLoader />}
+              <div
+                className="h-[162px] bg-white dark:bg-[#343541]"
+                ref={messagesEndRef}
+              />
+            </div>
+          ) : (
+            EmptyConversationCover
+          )}
         </div>
         <ChatInput
           stopConversationRef={stopConversationRef}

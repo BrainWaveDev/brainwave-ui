@@ -4,10 +4,10 @@ import {
 } from '@supabase/auth-helpers-nextjs';
 
 import { ProductWithPrice } from '../types';
-import { DocMetadata, Document } from '../types/document';
+import { Document } from '@/types/document';
 import type { Database } from 'types/supabase';
-import { SupabaseClient } from '@supabase/supabase-js';
 
+// The client used in the browser that doesn't need service key
 export const supabase = createBrowserSupabaseClient<Database>();
 
 export const getDocuments = async (): Promise<Document[]> => {
@@ -48,4 +48,3 @@ export const updateUserName = async (user: User, name: string) => {
     })
     .eq('id', user.id);
 };
-

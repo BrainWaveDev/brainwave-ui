@@ -1,4 +1,4 @@
-import { Prompt } from '../../types/prompt';
+import { Prompt } from '@/types/prompt';
 
 export const updatePrompt = (updatedPrompt: Prompt, allPrompts: Prompt[]) => {
   const updatedPrompts = allPrompts.map((c) => {
@@ -39,7 +39,7 @@ export const qaPrompt = (contextText: string = '') => codeBlock`
         `\n"There is not enough context to provide a definitive answer. I will try my best to answer this question using my knowledge and reasoning."\n` +
         oneLine` and provide a generic response. DO NOT make up information about unknown entities. 
         DO NOT mention the document in the response by saying "According to", 
-        "As discussed in" or similar phrases. Respond as if the information in 
+        "As discussed in" or similar phrases. Assume that the information in 
         the provided context is true and accurate. If your statement is based on the
         source in the provided context, you must indicate key of the source via valid 
         citation marker at the end of sentence, like (1). DO NOT indicate source if 
