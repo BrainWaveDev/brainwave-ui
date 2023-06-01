@@ -5,21 +5,20 @@ import { createConversation, insertMessage, retrieveConversation } from '@/utils
 import { Session } from '@supabase/auth-helpers-react';
 import { addConversation, updateConversation } from './conversationsSlice';
 import { randomPlaceholderConversation } from '@/utils/app/conversation';
+import { create } from 'domain';
 
 interface SelectedConversationState {
   conversation: Conversation | undefined;
   currentMessage: Message | undefined;
   messageIsStreaming: boolean;
   loading: boolean;
-  waitingForResponse: boolean;
 }
 
 const initialState: SelectedConversationState = {
   conversation: undefined,
   currentMessage: undefined,
   messageIsStreaming: false,
-  loading: true,
-  waitingForResponse: false
+  loading: true
 };
 
 const currentConversationSlice = createSlice({
@@ -40,9 +39,6 @@ const currentConversationSlice = createSlice({
       };
       conversation.messages.push(action.payload);
       state.conversation = conversation;
-    },
-    toggleWaitingForResponse: (state) => {
-      state.waitingForResponse = !state.waitingForResponse;
     },
     appendLastAssistantMessage: (state, action: PayloadAction<string>) => {
       const { conversation } = state;
@@ -120,7 +116,6 @@ const thunkUserSent = (message: Message, user_id: string): AppThunk<Conversation
       dispatch(addConversation(dbConversation))
     };
     dispatch(userSent(message));
-    dispatch(currentConversationSlice.actions.toggleWaitingForResponse())
     try {
       if (!conversation) {
         throw new Error('No conversation found, this should never happen');
@@ -159,7 +154,7 @@ export const thunkStreamingResponse =
       );
       return;
     }
-    
+    dispatch(currentConversationSlice.actions.setIsStreaming(true));
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -183,12 +178,10 @@ export const thunkStreamingResponse =
       console.error(`there is no data`);
       return;
     }
-    dispatch(currentConversationSlice.actions.toggleWaitingForResponse())
 
     const reader = data.getReader();
     const decoder = new TextDecoder('utf-8');
 
-    dispatch(currentConversationSlice.actions.setIsStreaming(true));
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;

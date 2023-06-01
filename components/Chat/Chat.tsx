@@ -2,7 +2,7 @@ import { OpenAIModels } from '@/types/openai';
 import { IconArrowDown } from '@tabler/icons-react';
 import { memo, MutableRefObject, useEffect, useRef, useState } from 'react';
 import { ChatInput } from './ChatInput';
-import { ChatMessage, LoadingChatMessage } from './ChatMessage';
+import { ChatMessage } from './ChatMessage';
 import AppLogo from '@/components/icons/AppLogo';
 import classNames from 'classnames';
 import DocumentFilter from '@/components/Chat/DocumentFilter';
@@ -14,16 +14,16 @@ interface Props {
 
 export default memo(function Chat({ stopConversationRef }: Props) {
   // ============== Redux State ==============
-  const { conversation: currentConversation,waitingForResponse } =
+  const { conversation: currentConversation } =
     getCurrentConversationStateFromStore();
 
   // ============== Element References ==============
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true);
 
   // ============== Scrolling ==============
+  const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true);
   const [showScrollDownButton, setShowScrollDownButton] =
     useState<boolean>(false);
   const handleScroll = () => {
@@ -110,11 +110,6 @@ export default memo(function Chat({ stopConversationRef }: Props) {
               messageIndex={index}
             />
           ))}
-          {
-            waitingForResponse && (
-              <LoadingChatMessage />
-            )
-          }
           <div
             className="h-[162px] bg-white dark:bg-[#343541]"
             ref={messagesEndRef}
