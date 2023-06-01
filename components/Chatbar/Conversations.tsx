@@ -3,8 +3,11 @@ import { ConversationComponent } from './Conversation';
 import { useAppSelector } from 'context/redux/store';
 import { useRouter } from 'next/router';
 
-export default memo(function Conversations({ searchTerm }: { searchTerm: string }) {
-
+export default memo(function Conversations({
+  searchTerm
+}: {
+  searchTerm: string;
+}) {
   const conversations = useAppSelector((state) => state.conversations);
   const router = useRouter();
 
@@ -17,12 +20,12 @@ export default memo(function Conversations({ searchTerm }: { searchTerm: string 
     [searchTerm, conversations]
   );
   return (
-    <div className="flex w-full flex-col gap-1"
-      onClick={(e) => {
+    <div
+      className="flex w-full flex-col gap-1"
+      onClick={async (e) => {
         e.stopPropagation();
-        if (router.pathname !== '/chat') router.push('/chat');
-      }
-      }
+        if (router.pathname !== '/chat') await router.push('/chat');
+      }}
     >
       {filteredConversations
         .slice()

@@ -1,5 +1,5 @@
 import { ConversationSummary } from '@/types/chat';
-import { memo, useMemo, useState } from 'react';
+import { memo, useState } from 'react';
 import { IconMessagesOff } from '@tabler/icons-react';
 import { ChatFolders } from '../Folders/Chat/ChatFolders';
 import Search from '../Sidebar/Search';
@@ -29,11 +29,11 @@ export default memo(function Chatbar() {
   // =========================
   // Handlers
   // =========================
-  const handleUpdateConversationFolder = (
+  const handleUpdateConversationFolder = async (
     conversation: ConversationSummary,
     folderId: number | null = null
   ) => {
-    dispatch(
+    await dispatch(
       optimisticConversationsActions.updateConversation({
         ...conversation,
         folderId
@@ -42,17 +42,12 @@ export default memo(function Chatbar() {
   };
 
   // =========================
-  // Local State
-  // =========================
-  
-
-  // =========================
   // Effects
   // =========================
-  const handleDrop = (e: any) => {
+  const handleDrop = async (e: any) => {
     if (e.dataTransfer) {
       const conversation = JSON.parse(e.dataTransfer.getData('conversation'));
-      handleUpdateConversationFolder(conversation);
+      await handleUpdateConversationFolder(conversation);
       e.target.style.background = 'none';
     }
   };
@@ -74,22 +69,21 @@ export default memo(function Chatbar() {
       )}
       animate={sidebarOpen ? 'open' : 'closed'}
     >
-      {/* ========================= */}
-      {/* Conversations Search Bar */}
+      {/* ========== Conversations Search Bar ========== */}
       {conversations.length > 1 && (
         <Search
           searchTerm={searchTerm}
           setSearchTerm={(value) => setSearchTerm(value)}
         />
       )}
-      {/* Chat Folders List */}
+      {/* ========== Chat Folders List ========== */}
       <div className="flex-grow overflow-auto">
         {folders.length > 0 && (
           <div className="flex border-b border-neutral6 pb-2">
             <ChatFolders searchTerm={searchTerm} />
           </div>
         )}
-        {/* List of Conversations Without Folders */}
+        {/* ==========  List of Conversations Without Folders ========== */}
         {conversations.length > 0 ? (
           <div
             className="pt-2 border-b border-neutral6 pb-2"
@@ -98,9 +92,7 @@ export default memo(function Chatbar() {
             onDragEnter={highlightDrop}
             onDragLeave={removeHighlight}
           >
-            <Conversations
-              searchTerm={searchTerm}
-            />
+            <Conversations searchTerm={searchTerm} />
           </div>
         ) : (
           <div
