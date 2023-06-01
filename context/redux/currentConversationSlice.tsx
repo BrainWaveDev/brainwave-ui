@@ -1,11 +1,14 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Conversation, ConversationSummary, Message } from '@/types/chat';
 import { AppThunk, useAppSelector } from './store';
-import { createConversation, insertMessage, retrieveConversation } from '@/utils/app/conversation';
+import {
+  createConversation,
+  insertMessage,
+  retrieveConversation
+} from '@/utils/app/conversation';
 import { Session } from '@supabase/auth-helpers-react';
-import { addConversation, updateConversation } from './conversationsSlice';
+import { addConversation } from './conversationsSlice';
 import { randomPlaceholderConversation } from '@/utils/app/conversation';
-import { create } from 'domain';
 
 interface SelectedConversationState {
   conversation: Conversation | undefined;
@@ -18,7 +21,7 @@ const initialState: SelectedConversationState = {
   conversation: undefined,
   currentMessage: undefined,
   messageIsStreaming: false,
-  loading: true
+  loading: false
 };
 
 const currentConversationSlice = createSlice({
@@ -35,8 +38,8 @@ const currentConversationSlice = createSlice({
       const { conversation } = state;
       if (!conversation) {
         console.error('No conversation found');
-        return
-      };
+        return;
+      }
       conversation.messages.push(action.payload);
       state.conversation = conversation;
     },
@@ -59,6 +62,11 @@ const currentConversationSlice = createSlice({
       } else {
         lastMessage.content += action.payload;
       }
+    },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      // TODO: Remove this line
+      console.log('Loading state updated to ' + action.payload);
+      state.loading = action.payload;
     },
     setIsStreaming: (state, action: PayloadAction<boolean>) => {
       state.messageIsStreaming = action.payload;
@@ -102,25 +110,34 @@ const thunkRetrieveConversationDetails =
     }
   };
 
-
-
-const thunkUserSent = (message: Message, user_id: string): AppThunk<Conversation> =>
+const thunkUserSent =
+  (message: Message, user_id: string): AppThunk<Conversation | undefined> =>
   async (dispatch, getState) => {
     let { conversation } = getState().currentConversation;
+
     if (!conversation) {
       const placeholder = randomPlaceholderConversation();
-      dispatch(selectCurrentConversation(placeholder))
-      const dbConversation = await createConversation(placeholder);
-      dispatch(selectCurrentConversation(dbConversation));
-      conversation = dbConversation;
-      dispatch(addConversation(dbConversation))
-    };
+      dispatch(selectCurrentConversation(placeholder));
+      try {
+        // We don't need to update the UI after this since
+        // the new conversation is already in the UI
+        const dbConversation = await createConversation(placeholder);
+        dispatch(addConversation(dbConversation));
+      } catch (e) {
+        console.error(e);
+        // TODO: ERROR: Failed to create new conversation
+        dispatch(setLoading(false));
+        return;
+      }
+    }
+
     dispatch(userSent(message));
+    dispatch(setLoading(true));
+
     try {
       if (!conversation) {
         throw new Error('No conversation found, this should never happen');
-      };
-
+      }
       const messages = conversation.messages;
       // insert message to db
       await insertMessage(
@@ -129,22 +146,25 @@ const thunkUserSent = (message: Message, user_id: string): AppThunk<Conversation
         conversation.id,
         user_id
       );
-    } catch (e){
-      // TODO: better error handling
+    } catch (e) {
+      // TODO: ERROR: Failed to sync message history with database
       dispatch(clearSelectedConversation());
       throw e;
     }
-    return conversation
+
+    return conversation;
   };
 
 export const thunkStreamingResponse =
   (session: Session, search_space: number[]): AppThunk =>
   async (dispatch, getState) => {
+    if (!getState().loading) dispatch(setLoading(true));
+
     const { conversation } = getState().currentConversation;
     if (!conversation) {
       console.error(`there is no conversation, this should never happen`);
-      return
-    };
+      return;
+    }
     const messages = conversation.messages;
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage || lastMessage.role === 'assistant') {
@@ -154,7 +174,7 @@ export const thunkStreamingResponse =
       );
       return;
     }
-    dispatch(currentConversationSlice.actions.setIsStreaming(true));
+    dispatch(setIsStreaming(true));
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -169,8 +189,15 @@ export const thunkStreamingResponse =
     });
 
     if (!response.ok || !response.body) {
+      dispatch(setLoading(false));
+      dispatch(setIsStreaming(false));
+
+      // TODO: Implement proper error handling
       console.error(`response is not ok or there is no body`);
+      return;
     }
+
+    dispatch(setLoading(false));
 
     const data = response.body;
 
@@ -190,7 +217,8 @@ export const thunkStreamingResponse =
         currentConversationSlice.actions.appendLastAssistantMessage(chunkValue)
       );
     }
-    dispatch(currentConversationSlice.actions.setIsStreaming(false));
+    dispatch(setLoading(false));
+    dispatch(setIsStreaming(false));
     const updatedConversation = getState().currentConversation.conversation!;
     const updatedLastMessage =
       updatedConversation?.messages[updatedConversation?.messages.length - 1];
@@ -217,10 +245,12 @@ export const optimisticCurrentConversationAction = {
 export const {
   clearSelectedConversation,
   userSent,
+  setLoading,
+  setIsStreaming,
   selectCurrentConversation
 } = currentConversationSlice.actions;
 
-export const getCurrentConversationStateFromStore = () =>
+export const getCurrentConversationFromStore = () =>
   useAppSelector((state) => state.currentConversation);
 
 export default currentConversationSlice.reducer;
