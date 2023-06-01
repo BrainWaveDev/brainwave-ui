@@ -1,16 +1,21 @@
-import { PropsWithChildren } from 'react';
+import React, { PropsWithChildren } from 'react';
 import Head from 'next/head';
-import Navbar from '../Navbar';
 import classes from './Layout.module.css';
 import ErrorList from '@/components/ui/ErrorList/ErrorList';
-import { PageMeta } from '../../../types';
+import { PageMeta } from '@/types/index';
 import classNames from 'classnames';
+import Sidebar from '../Sidebar';
+import Header from '@/components/ui/Header';
+import useThemeDetector from '../../../hooks/useThemeDetector';
 
 interface Props extends PropsWithChildren {
   meta?: PageMeta;
 }
 
 export default function Layout({ children, meta: pageMeta }: Props) {
+  // ==============================
+  // Meta Information
+  // ==============================
   const meta = {
     title: 'BrainWave: Intelligent AI Assistance',
     description:
@@ -18,6 +23,22 @@ export default function Layout({ children, meta: pageMeta }: Props) {
     cardImage: '/og.png',
     ...pageMeta
   };
+
+  // ==============================
+  // Theme State
+  // ==============================
+  useThemeDetector();
+
+  // ==============================
+  // Tailwind Classes
+  // ==============================
+  const mainContentClasses = classNames(
+    'min-h-[calc(100%_-_4.5rem)]',
+    'h-[calc(100%_-_4.5rem)]',
+    'max-h-[calc(100%_-_4.5rem)]',
+    'overflow-y-scroll',
+    'scrollbar-hide'
+  );
 
   return (
     <>
@@ -27,18 +48,12 @@ export default function Layout({ children, meta: pageMeta }: Props) {
         <link href="/public/favicon.ico" rel="shortcut icon" />
         <meta content={meta.description} name="description" />
       </Head>
-      <Navbar />
-      <main
-        id="skip"
-        className={classNames(
-          'min-h-[calc(100vh_-_4rem)] bg-gray-100',
-          classes.main
-        )}
-      >
-        {children}
+      <Sidebar />
+      <main id="skip" className={classNames(classes.main,'scrollbar-hide')}>
+        <Header />
+        <div className={mainContentClasses}>{children}</div>
       </main>
       <ErrorList />
-      {/*<Footer />*/}
     </>
   );
 }

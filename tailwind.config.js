@@ -1,5 +1,5 @@
 const plugin = require('tailwindcss/plugin');
-const { fontFamily } = require('tailwindcss/defaultTheme');
+const { screens, fontFamily } = require('tailwindcss/defaultTheme');
 const { blackA, mauve, red, violet } = require('@radix-ui/colors');
 
 const flip = plugin(function ({ addUtilities }) {
@@ -19,6 +19,7 @@ module.exports = {
   content: [
     'app/**/*.{ts,tsx}',
     'components/**/*.{ts,tsx}',
+    'components/ui/**/*.{ts,tsx}',
     'pages/**/*.{ts,tsx}',
     './public/**/*.html',
     './node_modules/flowbite-react/**/*.js',
@@ -34,7 +35,11 @@ module.exports = {
         ...blackA,
         ...mauve,
         ...red,
-        ...violet
+        ...violet,
+        neutral4: 'rgb(108, 114, 117)',
+        neutral5: 'rgba(52, 56, 57)',
+        neutral6: 'rgb(35, 38, 39)',
+        neutral7: 'rgb(20, 23, 24)'
       },
       keyframes: {
         slideUpAndFade: {
@@ -83,11 +88,35 @@ module.exports = {
         'main-gradient':
           'linear-gradient(90deg, #5B76FF -50.29%, #00E96B 119.88%)'
       }
+    },
+
+    screens: {
+      xs: '400px',
+      // Change how the list of files is displayed on small screens
+      'table-layout': '700px',
+      ...screens,
+      touch: { raw: '(hover: none)' }
     }
   },
   plugins: [
     require('flowbite/plugin'),
     require('@tailwindcss/typography'),
+    function ({ addVariant }) {
+      addVariant('children', '&>*');
+      addVariant('children-odd', '&>*:nth-child(odd)');
+      addVariant('children-even', '&>*:nth-child(even)');
+    },
+    plugin(function ({ addUtilities }) {
+      addUtilities({
+        '.scrollbar-hide': {
+          '-ms-overflow-style': 'none',
+          'scrollbar-width': 'none',
+          '&::-webkit-scrollbar': {
+            display: 'none'
+          }
+        }
+      });
+    }),
     flip
   ]
 };

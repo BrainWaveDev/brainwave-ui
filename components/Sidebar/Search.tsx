@@ -1,41 +1,79 @@
-import { IconX } from '@tabler/icons-react';
-import { useTranslation } from 'next-i18next';
-import { FC } from 'react';
+import { ChangeEvent, createRef, memo } from 'react';
+import classNames from 'classnames';
+import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+  getSidebarStateFromStorage,
+  setSidebar
+} from '../../context/redux/sidebarSlice';
+import { useAppDispatch } from '../../context/redux/store';
 
-interface Props {
-  placeholder: string;
+export default memo(function Search({
+  searchTerm,
+  setSearchTerm
+}: {
   searchTerm: string;
-  onSearch: (searchTerm: string) => void;
-}
+  setSearchTerm: (searchTerm: string) => void;
+}) {
+  // =========================
+  // Redux State
+  // =========================
+  const dispatch = useAppDispatch();
+  const sidebarOpen = getSidebarStateFromStorage();
+  const openSidebar = () => dispatch(setSidebar(true));
 
-export const Search: FC<Props> = ({ placeholder, searchTerm, onSearch }) => {
-  const { t } = useTranslation('sidebar');
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onSearch(e.target.value);
+  // =========================
+  // Local State
+  // =========================
+  const searchRef = createRef<HTMLInputElement>();
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
   };
-
   const clearSearch = () => {
-    onSearch('');
+    setSearchTerm('');
   };
 
   return (
-    <div className="relative flex items-center">
+    <div
+      className={`relative flex items-center w-[calc(100%_-_0.375rem)] group ${
+        sidebarOpen ? 'ml-1.5' : 'ml-0.5 cursor-pointer'
+      }`}
+      onClick={() => {
+        if (!sidebarOpen) openSidebar();
+        searchRef.current?.focus();
+      }}
+    >
       <input
-        className="w-full flex-1 rounded-md border border-neutral-600 bg-[#202123] px-4 py-3 pr-10 text-[14px] leading-3 text-white"
+        className={classNames(
+          'w-full flex-1 rounded-lg border border-neutral-600',
+          'bg-neutral6 px-4 py-3 pr-0 text-sm leading-3 text-white',
+          'focus:ring-0 focus:border-neutral-400 placeholder:text-zinc-500',
+          !sidebarOpen && 'cursor-pointer text-opacity-0'
+        )}
         type="text"
-        placeholder={t(placeholder) || ''}
+        placeholder={sidebarOpen ? 'Search conversations...' : ''}
         value={searchTerm}
         onChange={handleSearchChange}
+        ref={searchRef}
+        readOnly={!sidebarOpen}
       />
-
-      {searchTerm && (
-        <IconX
-          className="absolute right-4 cursor-pointer text-neutral-300 hover:text-neutral-400"
-          size={18}
+      {sidebarOpen && searchTerm && (
+        <XMarkIcon
+          className={classNames(
+            'absolute right-3 w-[18px] text-neutral-400',
+            'hover:text-neutral-100 cursor-pointer'
+          )}
           onClick={clearSearch}
+        />
+      )}
+      {!sidebarOpen && (
+        <MagnifyingGlassIcon
+          className={classNames(
+            'absolute top-3 left-3 h-5 stroke-neutral-400 group-hover:stroke-white ',
+            'transition duration-150'
+          )}
+          strokeWidth={1}
         />
       )}
     </div>
   );
-};
+});

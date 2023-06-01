@@ -1,44 +1,38 @@
-import { Conversation, ConversationIdentifiable, ConversationSummary } from '../../types/chat';
-import { KeyValuePair } from '../../types/data';
-import { FC } from 'react';
+import { memo, useMemo } from 'react';
 import { ConversationComponent } from './Conversation';
+import { useAppSelector } from 'context/redux/store';
+import { useRouter } from 'next/router';
 
-interface Props {
-  loading: boolean;
-  conversations: ConversationSummary[];
-  selectedConversation: Conversation | undefined;
-  onSelectConversation: (conversation: ConversationIdentifiable) => void;
-  onDeleteConversation: (conversation: ConversationIdentifiable) => void;
-  onUpdateConversation: (
-    conversation: ConversationIdentifiable,
-    data: KeyValuePair
-  ) => void;
-}
+export default memo(function Conversations({ searchTerm }: { searchTerm: string }) {
 
-export const Conversations: FC<Props> = ({
-  loading,
-  conversations,
-  selectedConversation,
-  onSelectConversation,
-  onDeleteConversation,
-  onUpdateConversation
-}) => {
+  const conversations = useAppSelector((state) => state.conversations);
+  const router = useRouter();
+
+  const filteredConversations = useMemo(
+    () =>
+      conversations.filter((conversation) => {
+        const searchable = conversation.name.toLocaleLowerCase();
+        return searchable.toLowerCase().includes(searchTerm.toLowerCase());
+      }),
+    [searchTerm, conversations]
+  );
   return (
-    <div className="flex w-full flex-col gap-1">
-      {conversations
+    <div className="flex w-full flex-col gap-1"
+      onClick={(e) => {
+        e.stopPropagation();
+        if (router.pathname !== '/chat') router.push('/chat');
+      }
+      }
+    >
+      {filteredConversations
         .slice()
         .reverse()
-        .map((conversation, index) => (
+        .map((conversation) => (
           <ConversationComponent
             key={conversation.id}
             conversation={conversation}
-            isSelected={selectedConversation?.id === conversation.id}
-            loading={loading}
-            onSelectConversation={() => onSelectConversation(conversation)}
-            onDeleteConversation={() => onDeleteConversation(conversation)}
-            onUpdateConversation={(data:KeyValuePair) => onUpdateConversation(conversation, data)}
           />
         ))}
     </div>
   );
-};
+});

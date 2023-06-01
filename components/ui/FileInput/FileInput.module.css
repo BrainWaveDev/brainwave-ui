@@ -1,4 +1,12 @@
+.fileUploadContainer {
+    @apply w-full bg-gradient-to-r from-gray-100/50 to-gray-100/90 dark:from-zinc-900 dark:to-zinc-900;
+    @apply rounded-xl h-56 sm:h-64 flex items-center place-content-center border border-gray-100 dark:border-zinc-700;
+    @apply shadow-sm p-2 relative overflow-hidden;
+}
+
 .filePreviewGrid {
-    grid-template-columns: repeat(auto-fill, minmax(20rem, 30%));
-    @apply w-full justify-center justify-items-start;
+    @apply w-full grid mt-1 justify-center;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 30%));
+    /* Responsiveness */
+    @apply gap-3;
 }

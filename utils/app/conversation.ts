@@ -1,15 +1,27 @@
-import { User } from '@supabase/auth-helpers-react';
 import {
   Conversation,
   ConversationIdentifiable,
   ConversationSummary,
   Message
-} from '../../types/chat';
+} from '@/types/chat';
 import { supabase } from '../supabase-client';
-import { isGeneratedId } from './createDBOperation';
+import { isGeneratedId, randomNumberId } from './createDBOperation';
 import { OpenAIModels } from 'types/openai';
 import { DEFAULT_SYSTEM_PROMPT } from './prompts';
-import { clear, get, remove, set } from './localcache';
+import { get, remove, removeAll, set } from './localcache';
+import { SupabaseClient } from '@supabase/supabase-js';
+
+export const randomPlaceholderConversation = () => {
+  return {
+    id: randomNumberId(),
+    name: 'new conversation',
+    model: OpenAIModels['gpt-3.5-turbo'],
+    prompt: DEFAULT_SYSTEM_PROMPT,
+    messages: [],
+    isPlaceholder: true,
+    folderId: null
+  } as Conversation;
+};
 
 export const updateConversation = async (
   updatedConversation: ConversationIdentifiable
@@ -65,14 +77,12 @@ export const updateConversationFolder = async (
 };
 
 export const createConversation = async (
-  conversation: ConversationIdentifiable,
-  user: User
+  conversation: ConversationIdentifiable
 ) => {
   const { data } = await supabase
     .from('conversation')
     .insert({
-      name: conversation.name,
-      user_id: user.id
+      name: conversation.name
     })
     .select()
     .throwOnError()
@@ -91,7 +101,7 @@ export const createConversation = async (
   return res;
 };
 
-export const retriveConversation = async (conversationId: number) => {
+export const retrieveConversation = async (conversationId: number) => {
   const { exist, resource } = get('conversation', conversationId.toString());
   if (exist) {
     return resource!;
@@ -126,11 +136,12 @@ export const retriveConversation = async (conversationId: number) => {
   return res;
 };
 
-export const retriveConversations = async (userId: string) => {
-  const { data, error } = await supabase
+export const fetchAllConversations = async (
+  supabaseClient?: SupabaseClient
+) => {
+  const { data, error } = await (supabaseClient ?? supabase)
     .from('conversation')
     .select('*')
-    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -161,11 +172,9 @@ export const saveConversation = async (
   conversation: Conversation,
   user_id: string
 ) => {
-  var to_upsert = {
+  let to_upsert = {
     name: conversation.name,
-    user_id: user_id,
-    model: conversation.model.name,
-    folder_id: conversation.folderId
+    user_id: user_id
   } as any;
 
   if (!isGeneratedId(conversation.id)) {
@@ -183,7 +192,7 @@ export const saveConversation = async (
 
   const messages = conversation.messages
     .map((m, idx) => {
-      var res = {
+      let res = {
         conversation_id: data!.id,
         content: m.content,
         role: m.role,
@@ -221,21 +230,18 @@ export const saveConversation = async (
   return res;
 };
 
-export const clearAllConversations = async (user_id: string) => {
-  clear();
-  await supabase
-    .from('conversation')
-    .delete()
-    .eq('user_id', user_id)
-    .throwOnError();
+export const clearAllConversations = async () => {
+  removeAll('conversation');
+  await supabase.from('conversation').delete().throwOnError();
 };
 
-export const inseartMessage = async (
+export const insertMessage = async (
   message: Message,
   index: number,
   conversation_id: number,
   user_id: string
 ) => {
+  console.debug('inserting message, conversation id = ', conversation_id );
   const { data } = await supabase
     .from('messages')
     .insert({

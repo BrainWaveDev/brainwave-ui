@@ -1,0 +1,43 @@
+.wrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity: 1;
+    pointer-events: none;
+    @apply bg-gray-200/50 dark:bg-zinc-900;
+    overflow: hidden;
+    border: inherit;
+    border-radius: inherit;
+    box-shadow: inherit;
+}
+
+.wrapper:after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: translateX(-100%);
+    animation-duration: 2s;
+    animation-timing-function: ease;
+    animation-delay: 0s;
+    animation-iteration-count: infinite;
+    animation-direction: normal;
+    animation-fill-mode: none;
+    animation-play-state: running;
+    animation-name: wrapper-animation;
+    @apply bg-gradient-to-r;
+    @apply from-transparent via-white to-transparent;
+    @apply dark:from-transparent dark:via-neutral6 dark:to-transparent;
+}
+
+@keyframes wrapper-animation {
+    to {
+        transform: translateX(100%)
+    }
+}

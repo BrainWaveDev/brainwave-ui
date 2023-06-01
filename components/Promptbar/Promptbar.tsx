@@ -1,10 +1,9 @@
-import { Folder } from '../../types/folder';
-import { Prompt } from '../../types/prompt';
+import { Folder } from '@/types/folder';
+import { Prompt } from '@/types/prompt';
 import { IconFolderPlus, IconMistOff, IconPlus } from '@tabler/icons-react';
 import { FC, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PromptFolders } from '../Folders/Prompt/PromptFolders';
-import { Search } from '../Sidebar/Search';
 import { PromptbarSettings } from './PromptbarSettings';
 import { Prompts } from './Prompts';
 
@@ -19,6 +18,7 @@ interface Props {
   onDeletePrompt: (prompt: Prompt) => void;
 }
 
+// TODO: Decide if we want to keep this component or not
 export const PromptBar: FC<Props> = ({
   folders,
   prompts,
@@ -112,13 +112,17 @@ export const PromptBar: FC<Props> = ({
         </button>
       </div>
 
-      {prompts.length > 1 && (
+      {/* prompts.length > 1 && (
         <Search
-          placeholder={t('Search prompts...') || ''}
+          // Placeholder needs to be flexible
           searchTerm={searchTerm}
           onSearch={setSearchTerm}
+          sidebarOpen={true}
+          openSidebar={function (): void {
+            console.error('Function not implemented.');
+          }}
         />
-      )}
+      )*/}
 
       <div className="flex-grow overflow-auto">
         {folders.length > 0 && (

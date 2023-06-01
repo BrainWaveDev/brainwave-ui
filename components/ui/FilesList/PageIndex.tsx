@@ -13,9 +13,10 @@ export default function PageIndex({ totalPages, setPage, currPage }: Props) {
       <button
         key={`page-${pageNumber}`}
         className={classNames(
-          'px-2 py-1 text-sm text-teal-500 rounded-md dark:bg-gray-800',
-          'cursor-pointer transition duration-100',
-          selected && 'bg-teal-200/50'
+          'px-2.5 py-1 text-base text-teal-400 dark:text-gray-400 rounded-md',
+          'cursor-pointer hover:text-teal-600 dark:hover:text-white',
+          selected &&
+            'bg-teal-200/75 text-teal-500 dark:bg-neutral5 dark:text-white'
         )}
         onClick={(e) => {
           e.preventDefault();

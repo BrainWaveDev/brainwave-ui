@@ -1,6 +1,3 @@
-import { supabase } from "@supabase/auth-ui-shared";
-
-
 export interface Folder {
   id: number;
   user_id?: string;
@@ -8,4 +5,3 @@ export interface Folder {
   updated_at?: string;
   name: string;
 }
-

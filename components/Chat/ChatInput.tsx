@@ -1,51 +1,53 @@
-import { Message } from '../../types/chat';
-import { OpenAIModel } from '../../types/openai';
-import { Prompt } from '../../types/prompt';
+import { useAppDispatch } from 'context/redux/store';
+import { OpenAIModel } from '@/types/openai';
 import { IconPlayerStop, IconRepeat, IconSend } from '@tabler/icons-react';
-import { useTranslation } from 'next-i18next';
 import {
+  ChangeEvent,
   FC,
   KeyboardEvent,
   MutableRefObject,
   useEffect,
   useState
 } from 'react';
+import {
+  getCurrentConversationStateFromStore,
+  optimisticCurrentConversationAction
+} from 'context/redux/currentConversationSlice';
+import { useSessionContext } from '@supabase/auth-helpers-react';
+import { getSearchSpaceFromStore } from '../../context/redux/searchSpaceSlice';
 
 interface Props {
-  messageIsStreaming: boolean;
   model: OpenAIModel;
-  conversationIsEmpty: boolean;
-  prompts: Prompt[];
-  onSend: (message: Message) => void;
-  onRegenerate: () => void;
   stopConversationRef: MutableRefObject<boolean>;
   textareaRef: MutableRefObject<HTMLTextAreaElement | null>;
 }
 
 export const ChatInput: FC<Props> = ({
-  messageIsStreaming,
   model,
-  conversationIsEmpty,
-  onSend,
-  onRegenerate,
   stopConversationRef,
   textareaRef
 }) => {
-  const { t } = useTranslation('chat');
+  // ============== Redux State ==============
+  const { conversation: currentConversation, messageIsStreaming } =
+    getCurrentConversationStateFromStore();
+  const searchSpace = getSearchSpaceFromStore();
+  const dispatch = useAppDispatch();
 
+  // ============== Local State ==============
   const [content, setContent] = useState<string>();
   const [isTyping, setIsTyping] = useState<boolean>(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  // ============== Session Context ==============
+  const { session } = useSessionContext();
+
+  // ============== Handlers =====================
+  const handleChange =   (e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     const maxLength = model.maxLength;
 
     if (value.length > maxLength) {
       alert(
-        t(
-          `Message limit is {{maxLength}} characters. You have entered {{valueLength}} characters.`,
-          { maxLength, valueLength: value.length }
-        )
+        `Message limit is ${maxLength} characters. You have entered ${value.length} characters.`
       );
       return;
     }
@@ -53,19 +55,32 @@ export const ChatInput: FC<Props> = ({
     setContent(value);
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (messageIsStreaming) {
       return;
     }
 
     if (!content) {
-      alert(t('Please enter a message'));
+      alert('Please enter a message');
       return;
     }
 
-    onSend({ role: 'user', content });
-    setContent('');
+    // 1. Update the current conversation messages
+    await dispatch(
+      optimisticCurrentConversationAction.userSent(
+        {
+          content,
+          role: 'user'
+        },
+        session?.user?.id!
+      )
+    );
+    content && setContent('');
 
+    // 2. fetch the response from the api
+    dispatch(
+      optimisticCurrentConversationAction.startStreaming(session!, searchSpace)
+    );
     if (window.innerWidth < 640 && textareaRef && textareaRef.current) {
       textareaRef.current.blur();
     }
@@ -93,6 +108,7 @@ export const ChatInput: FC<Props> = ({
     }
   };
 
+  // ============== Adjust styling on page load =====================
   useEffect(() => {
     if (textareaRef && textareaRef.current) {
       textareaRef.current.style.height = 'inherit';
@@ -104,27 +120,30 @@ export const ChatInput: FC<Props> = ({
   }, [content]);
 
   return (
-    <div className="sm:absolute sm:bottom-0 left-0 w-full border-transparent 
+    <div
+      className="sm:absolute sm:bottom-0 left-0 w-full border-transparent 
     bg-gradient-to-b from-transparent via-white to-white pt-6 
     dark:border-white/20 dark:via-[#343541] dark:to-[#343541] md:pt-2
       sticky z-10 bottom-2
-    ">
+    "
+    >
       <div className="stretch mx-2 mt-4 flex flex-row gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl">
         {messageIsStreaming && (
           <button
             className="absolute top-0 left-0 right-0 mb-3 md:mb-0 md:mt-2 mx-auto flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white py-2 px-4 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white"
             onClick={handleStopConversation}
           >
-            <IconPlayerStop size={16} /> {t('Stop Generating')}
+            <IconPlayerStop size={16} /> {'Stop Generating'}
           </button>
         )}
 
-        {!messageIsStreaming && !conversationIsEmpty && (
+        {!messageIsStreaming && (
           <button
             className="absolute top-0 left-0 right-0 mb-3 md:mb-0 md:mt-2 mx-auto flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white py-2 px-4 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white"
-            onClick={onRegenerate}
+            // onClick={onRegenerate}
+            // TODO: Regenerate response
           >
-            <IconRepeat size={16} /> {t('Regenerate response')}
+            <IconRepeat size={16} /> {'Regenerate response'}
           </button>
         )}
 
@@ -142,7 +161,7 @@ export const ChatInput: FC<Props> = ({
                   : 'hidden'
               }`
             }}
-            placeholder={t('Type a message...') || ''}
+            placeholder={'Type a message...'}
             value={content}
             rows={1}
             onCompositionStart={() => setIsTyping(true)}
