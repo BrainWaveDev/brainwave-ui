@@ -46,12 +46,14 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
   // =======================
   // Handlers
   // =======================
-  const handleSelectConversation = () =>
-    dispatch(
+  const handleSelectConversation = async () => {
+    // Navigate to chat page
+    await dispatch(
       optimisticCurrentConversationAction.retrieveAndSelectConversation(
         conversation
       )
     );
+  };
   const handleDeleteConversation = async () => {
     await dispatch(
       optimisticConversationsActions.deleteConversation(conversation)
@@ -183,7 +185,7 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
           </button>
           <button
             className="min-w-[20px] p-0 text-neutral-400 hover:text-neutral-100"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
               setIsDeleting(true);
             }}
