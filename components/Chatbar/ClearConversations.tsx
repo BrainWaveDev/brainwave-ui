@@ -19,8 +19,8 @@ export const ClearConversations: FC = () => {
   // ==============================
   // Handles
   // ==============================
-  const handleClearConversations = () => {
-    dispatch(optimisticConversationsActions.clearConversations());
+  const handleClearConversations = async () => {
+    await dispatch(optimisticConversationsActions.clearConversations());
     setIsConfirming(false);
   };
 
@@ -39,9 +39,9 @@ export const ClearConversations: FC = () => {
       <div className="flex w-[40px] gap-x-1 mr-0.5">
         <CheckIcon
           className={IconClasses}
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
-            handleClearConversations();
+            await handleClearConversations();
           }}
         />
         <XMarkIcon
