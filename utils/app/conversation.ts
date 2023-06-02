@@ -269,3 +269,35 @@ export const insertMessage = async (
 
   return newMessage;
 };
+
+export const replaceLastMessage = async (
+  message: Message,
+  conversation_id: number,
+  index: number,
+) => {
+  const { data } = await supabase
+    .from('messages')
+    .update({
+      content: message.content,
+      role: message.role,
+      index: index
+    })
+    .eq('conversation_id', conversation_id)
+    .eq('index', index)
+    .limit(1)
+    .order('index', { ascending: false })
+    .select()
+    .throwOnError();
+
+  const { exist, resource } = get('conversation', conversation_id.toString());
+  if (exist && data && data[0]) {
+    resource!.messages[resource!.messages.length - 1] = {
+      id: data[0].id,
+      role: data[0].role,
+      content: data[0].content
+    } as Message;
+    set('conversation', conversation_id.toString(), resource!);
+  }
+
+  return data;
+}

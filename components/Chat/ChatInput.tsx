@@ -29,7 +29,7 @@ export const ChatInput: FC<Props> = ({
   textareaRef
 }) => {
   // ============== Redux State ==============
-  const { messageIsStreaming } = getCurrentConversationFromStore();
+  const { messageIsStreaming, conversation } = getCurrentConversationFromStore();
   const searchSpace = getSearchSpaceFromStore();
   const dispatch = useAppDispatch();
 
@@ -114,9 +114,8 @@ export const ChatInput: FC<Props> = ({
     if (textareaRef && textareaRef.current) {
       textareaRef.current.style.height = 'inherit';
       textareaRef.current.style.height = `${textareaRef.current?.scrollHeight}px`;
-      textareaRef.current.style.overflow = `${
-        textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
-      }`;
+      textareaRef.current.style.overflow = `${textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
+        }`;
     }
   }, [content]);
 
@@ -138,11 +137,19 @@ export const ChatInput: FC<Props> = ({
           </button>
         )}
 
-        {!messageIsStreaming && (
+        {!messageIsStreaming && (conversation?.messages.length && conversation?.messages.length > 1) && (
           <button
             className="absolute top-0 left-0 right-0 mb-3 md:mb-0 md:mt-2 mx-auto flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white py-2 px-4 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-[#343541] dark:text-white"
-            // onClick={onRegenerate}
-            // TODO: Regenerate response
+            onClick={async () => {
+              console.log('regenerating response');
+              await dispatch(
+                optimisticCurrentConversationAction.regenerateResponse(
+                  session!,
+                  searchSpace
+                )
+              )
+            }
+            }
           >
             <IconRepeat size={16} /> {'Regenerate response'}
           </button>
@@ -156,11 +163,10 @@ export const ChatInput: FC<Props> = ({
               resize: 'none',
               bottom: `${textareaRef?.current?.scrollHeight}px`,
               maxHeight: '400px',
-              overflow: `${
-                textareaRef.current && textareaRef.current.scrollHeight > 400
+              overflow: `${textareaRef.current && textareaRef.current.scrollHeight > 400
                   ? 'auto'
                   : 'hidden'
-              }`
+                }`
             }}
             placeholder={'Type a message...'}
             value={content}
