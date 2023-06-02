@@ -7,7 +7,7 @@ import conversationsSlice, {
 } from './conversationsSlice';
 import thunkMiddleware, { ThunkAction } from 'redux-thunk';
 import documentSlice, { optimisticDocumentActions } from './documentSlice';
-import currentConversationSlice, { selectCurrentConversation } from './currentConversationSlice';
+import currentConversationSlice from './currentConversationSlice';
 import searchSpaceSlice, { selectAllSearchSpace } from './searchSpaceSlice';
 import sidebarSlice from './sidebarSlice';
 import { createWrapper, HYDRATE } from 'next-redux-wrapper';
@@ -15,6 +15,7 @@ import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
 import { Database } from '@/types/supabase';
 import themeSlice from './themeSlice';
 import loadingSlice from './loadingSlice';
+import errorSlice from './errorSlice';
 
 const { serialize, deserialize } = require('json-immutable');
 
@@ -26,7 +27,8 @@ const combinedReducer = combineReducers({
   currentConversation: currentConversationSlice,
   searchSpace: searchSpaceSlice,
   sidebar: sidebarSlice,
-  loading: loadingSlice
+  loading: loadingSlice,
+  error :  errorSlice
 });
 
 type CombinedReducerState = ReturnType<typeof combinedReducer>;
