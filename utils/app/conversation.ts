@@ -14,7 +14,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 export const randomPlaceholderConversation = () => {
   return {
     id: randomNumberId(),
-    name: 'new conversation',
+    name: 'New conversation',
     model: OpenAIModels['gpt-3.5-turbo'],
     prompt: DEFAULT_SYSTEM_PROMPT,
     messages: [],
@@ -232,7 +232,8 @@ export const saveConversation = async (
 
 export const clearAllConversations = async () => {
   removeAll('conversation');
-  await supabase.from('conversation').delete().throwOnError();
+  // Delete cannot be used without WHERE clause
+  await supabase.from('conversation').delete().neq('id', -1).throwOnError();
 };
 
 export const insertMessage = async (
@@ -241,7 +242,7 @@ export const insertMessage = async (
   conversation_id: number,
   user_id: string
 ) => {
-  console.debug('inserting message, conversation id = ', conversation_id );
+  console.debug('inserting message, conversation id = ', conversation_id);
   const { data } = await supabase
     .from('messages')
     .insert({
