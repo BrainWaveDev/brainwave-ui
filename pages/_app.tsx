@@ -10,7 +10,7 @@ import type { Database } from 'types/supabase';
 import { wrapper } from 'context/redux/store';
 import 'styles/main.css';
 import 'styles/chrome-bug.css';
-import NextTopLoader from 'nextjs-toploader';
+import TopLoader from '@/components/ui/TopLoader';
 
 export default function MyApp({ Component, ...rest }: AppProps) {
   const { store, props } = wrapper.useWrappedStore(rest);
@@ -27,7 +27,7 @@ export default function MyApp({ Component, ...rest }: AppProps) {
         <MyUserContextProvider>
           <Provider store={store}>
             <ErrorProvider>
-              <NextTopLoader
+              <TopLoader
                 showSpinner={false}
                 color={'#5eead4'}
                 shadow={'0 0 10px #5eead4,0 0 5px #5eead4'}
