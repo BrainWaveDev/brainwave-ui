@@ -87,12 +87,14 @@ export default function Sidebar() {
 
   // ========= Handlers =========
   const handleCreateFolder = async () => {
+    if (!sidebarOpen) onToggleSidebar();
     await dispatch(optimisticFoldersAction.createNewFolder(session!.user.id));
     if (!isChatlistOpen()) {
       chatListButtonRef.current?.click();
     }
   };
   const handleCreateConversation = async () => {
+    if (!sidebarOpen) onToggleSidebar();
     // Switch to chat page
     if (router.pathname !== '/chat') router.push('/chat');
     // Create a new conversation
@@ -169,7 +171,11 @@ export default function Sidebar() {
           'flex flex-col grow justify-between flex-1 mt-3 w-full'
         )}
       >
-        <nav className={'flex flex-col grow items-start'}>
+        <nav
+          className={
+            'flex flex-col grow items-start max-h-[calc(100vh_-_14rem)] overflow-y-scroll scrollbar-hide'
+          }
+        >
           {/* ============== Navigation links ============== */}
           <div
             className={
@@ -187,7 +193,7 @@ export default function Sidebar() {
               <>
                 <Disclosure.Button
                   className={classNames(
-                    'group flex items-center w-full h-7 px-2 py-6',
+                    'group flex items-center w-full h-7 pl-2.5 pr-2 py-6',
                     'gap-x-4 text-left text-md text-white/50 focus:ring-0'
                   )}
                   ref={chatListButtonRef}
@@ -224,7 +230,13 @@ export default function Sidebar() {
             )}
           </Disclosure>
           {/* ============== New chat and folder buttons ============== */}
-          <div className="flex items-center justify-center w-full rounded-lg border bg-neutral6 border-neutral-600 py-2.5">
+          <div
+            className={classNames(
+              'flex items-center justify-center w-full rounded-lg border',
+              'bg-neutral6 border-neutral-600 py-2.5',
+              sidebarOpen ? 'flex-row' : 'flex-col gap-y-1'
+            )}
+          >
             <button
               className={classNames(
                 'group flex text-sm grow flex-shrink-0 font-semibold cursor-pointer select-none items-center',
@@ -238,14 +250,17 @@ export default function Sidebar() {
                   'w-[22px] h-[22px] fill-white/50 group-hover:fill-white transition-all duration-200'
                 }
               />
-              New chat
+              {sidebarOpen && 'New chat'}
             </button>
             <Separator.Root
               className={classNames(
-                'bg-neutral-600 data-[orientation=vertical]:h-[80%] data-[orientation=vertical]:w-[2px]'
+                'bg-neutral-600',
+                'data-[orientation=vertical]:h-[80%] data-[orientation=vertical]:w-[2px]',
+                'data-[orientation=horizontal]:w-[60%] data-[orientation=horizontal]:h-[1px]',
+                'data-[orientation=horizontal]:my-1.5'
               )}
               decorative
-              orientation="vertical"
+              orientation={sidebarOpen ? 'vertical' : 'horizontal'}
             />
             <button
               className="group mx-3 flex flex-shrink-0 cursor-pointer items-center transition-all duration-200"
@@ -264,6 +279,7 @@ export default function Sidebar() {
           className={classNames(
             'relative flex w-full p-1 bg-neutral-800 rounded-xl before:absolute before:left-1 before:top-1 ml-0 mb-1.5',
             'before:bottom-1 before:w-[calc(50%-0.25rem)] before:bg-zinc-900 before:rounded-[0.625rem] before:transition-all',
+
             isDarkTheme && 'before:translate-x-full',
             !sidebarOpen && 'before:hidden place-content-center'
           )}
