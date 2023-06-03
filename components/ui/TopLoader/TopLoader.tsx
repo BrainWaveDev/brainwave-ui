@@ -148,7 +148,6 @@ const NextTopLoader = ({
     }
 
     function handleClick(event: MouseEvent) {
-      console.log(event);
       try {
         const target = event.target as HTMLElement;
         const anchor = findClosestElement(target);
