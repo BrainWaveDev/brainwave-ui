@@ -116,22 +116,25 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
         </div>
       ) : (
         <button
-          className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm transition-colors duration-200 hover:bg-[#343541]/90
+          className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm transition-colors duration-200 hover:bg-[#343541]/90 group
             ${isSelected ? 'bg-[#343541]/90' : ''}`}
           onClick={handleSelectConversation}
           draggable="true"
           onDragStart={(e) => handleDragStart(e, conversation)}
         >
           <ChatBubbleLeftEllipsisIcon
-            className={'w-[18px] h-[18px] transition-colors duration-100'}
+            className={classNames(
+              'w-[18px] h-[18px] transition-colors duration-100 group-hover:text-neutral-100',
+              isSelected ? 'text-neutral-100' : 'text-neutral-400'
+            )}
             strokeWidth={2}
           />
           <div
             className={classNames(
-              'relative max-h-5 flex-1',
+              'relative max-h-5 flex-1 group-hover:text-neutral-100',
               'overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-sm leading-4',
               'transition-colors duration-100',
-              isSelected ? 'pr-12' : 'pr-1'
+              isSelected ? 'pr-12 text-neutral-100' : 'pr-1 text-neutral-400'
             )}
           >
             {conversation.name}
