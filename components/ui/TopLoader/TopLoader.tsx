@@ -195,8 +195,6 @@ const NextTopLoader = ({
           }
         }
       } catch (err) {
-        // TODO: Allow this only in development
-        console.log('NextTopLoader error: ', err);
         NProgress.start();
         NProgress.done();
       }
