@@ -14,6 +14,11 @@ import {
   optimisticCurrentConversationAction
 } from '../../context/redux/currentConversationSlice';
 import { optimisticConversationsActions } from '../../context/redux/conversationsSlice';
+import {
+  getSidebarStateFromStorage,
+  toggleSidebar
+} from '../../context/redux/sidebarSlice';
+import { useRouter } from 'next/router';
 
 interface Props {
   conversation: ConversationSummary;
@@ -26,8 +31,15 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
   const dispatch = useAppDispatch();
   const { conversation: currentConversation } =
     getCurrentConversationFromStore();
+  const sidebarIsOpen = getSidebarStateFromStorage();
+  const openSidebar = () => dispatch(toggleSidebar());
+
+  // ===== Conversation Highlighting =====
+  const router = useRouter();
   const isSelected =
-    currentConversation && currentConversation.id === conversation.id;
+    currentConversation &&
+    currentConversation.id === conversation.id &&
+    router.pathname === '/chat';
 
   // =======================
   // Local state
@@ -47,7 +59,8 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
   // Handlers
   // =======================
   const handleSelectConversation = async () => {
-    // Navigate to chat page
+    if (router.pathname !== '/chat') await router.push('/chat');
+    if (!sidebarIsOpen) openSidebar();
     await dispatch(
       optimisticCurrentConversationAction.retrieveAndSelectConversation(
         conversation
@@ -90,12 +103,9 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
     }
   };
 
-  // =================================================================
-  // Tailwind Classes
-  // =================================================================
   return (
     <div className="relative flex items-center my-0.5">
-      {isRenaming ? (
+      {isRenaming && sidebarIsOpen ? (
         <div
           className={classNames(
             'flex w-full items-center gap-3 px-2.5 py-1.5 rounded-lg shadow bg-blackA10'
@@ -117,10 +127,13 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
       ) : (
         <button
           className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm transition-colors duration-200 hover:bg-[#343541]/90 group
-            ${isSelected ? 'bg-[#343541]/90' : ''}`}
+            ${isSelected ? 'bg-[#343541]/90' : ''} ${
+            !sidebarIsOpen && 'justify-center'
+          }`}
           onClick={handleSelectConversation}
           draggable="true"
           onDragStart={(e) => handleDragStart(e, conversation)}
+          id={`select-conversation-${conversation.id}`}
         >
           <ChatBubbleLeftEllipsisIcon
             className={classNames(
@@ -129,19 +142,21 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
             )}
             strokeWidth={2}
           />
-          <div
-            className={classNames(
-              'relative max-h-5 flex-1 group-hover:text-neutral-100',
-              'overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-sm leading-4',
-              'transition-colors duration-100',
-              isSelected ? 'pr-12 text-neutral-100' : 'pr-1 text-neutral-400'
-            )}
-          >
-            {conversation.name}
-          </div>
+          {sidebarIsOpen && (
+            <div
+              className={classNames(
+                'relative max-h-5 flex-1 group-hover:text-neutral-100',
+                'overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-sm leading-4',
+                'transition-colors duration-100',
+                isSelected ? 'pr-12 text-neutral-100' : 'pr-1 text-neutral-400'
+              )}
+            >
+              {conversation.name}
+            </div>
+          )}
         </button>
       )}
-      {(isDeleting || isRenaming) && (
+      {(isDeleting || isRenaming) && sidebarIsOpen && (
         <div className="absolute right-1 z-10 flex text-gray-300">
           <button
             className="min-w-[20px] p-1 text-neutral-400 hover:text-neutral-100"
@@ -174,7 +189,7 @@ export const ConversationComponent: FC<Props> = memo(({ conversation }) => {
           </button>
         </div>
       )}
-      {isSelected && !isDeleting && !isRenaming && (
+      {isSelected && sidebarIsOpen && !isDeleting && !isRenaming && (
         <div className="absolute right-1 z-10 flex flex-row items-center justify-center gap-x-1 mr-1 text-gray-300">
           <button
             className="min-w-[20px] p-0 text-neutral-400 hover:text-neutral-100"
