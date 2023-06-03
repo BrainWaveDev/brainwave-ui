@@ -134,9 +134,8 @@ export default function Sidebar() {
     'group-hover:fill-white'
   );
   const separatorStyle = classNames(
-    'bg-neutral6 data-[orientation=horizontal]:h-px',
-    'data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full',
-    'data-[orientation=vertical]:w-px'
+    'bg-neutral6 data-[orientation=horizontal]:h-[1px] data-[orientation=horizontal]:w-full',
+    'data-[orientation=horizontal]:min-h-[1px]'
   );
 
   return (
@@ -168,27 +167,30 @@ export default function Sidebar() {
       </div>
       <div
         className={classNames(
-          'flex flex-col grow justify-between flex-1 mt-3 w-full'
+          'flex flex-col grow justify-between flex-1 mt-3 w-full '
         )}
       >
         <nav
           className={
-            'flex flex-col grow items-start max-h-[calc(100vh_-_14rem)] overflow-y-scroll scrollbar-hide'
+            'flex flex-col grow items-start scrollbar-hide max-h-[calc(100vh_-_14.5rem)] overflow-y-scroll'
           }
         >
           {/* ============== Navigation links ============== */}
           <div
             className={
-              'w-full flex flex-col items-center justify-center gap-y-1 mb-3'
+              'w-full flex flex-col items-center justify-center gap-y-1 mb-2'
             }
           >
             {NavLinks.map((link) => (
               <LinkComponent key={link.name} link={link} sidebarOpen={sidebarOpen} />
             ))}
           </div>
-          <Separator.Root className={separatorStyle} />
+          <Separator.Root
+            className={classNames(separatorStyle, 'mt-4')}
+            orientation={'horizontal'}
+          />
           {/* ============== Chat list ============== */}
-          <Disclosure as={'div'} className={'w-full mt-3 mb-2'}>
+          <Disclosure as={'div'} className={'w-full mt-2 mb-2'}>
             {({ open: chatListOpen }) => (
               <>
                 <Disclosure.Button
