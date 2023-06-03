@@ -1,18 +1,23 @@
-import { Dispatch, SetStateAction, useState } from 'react'
+import { Dispatch, SetStateAction, use, useState } from 'react'
 import { Dialog } from '@headlessui/react'
 import { UserCircleIcon } from '@heroicons/react/24/solid'
 import { LockClosedIcon, UserIcon } from '@heroicons/react/24/outline'
+import { useAppDispatch, useAppSelector } from 'context/redux/store'
+import { toggleSettingDialog } from 'context/redux/sidebarSlice'
 
 
 type Tabs = 'profile' | 'password'
 
 export default function SettingsDialog() {
-  let [isOpen, setIsOpen] = useState(true)
   const [currentTab, setCurrentTab] = useState<Tabs>('profile')
-
+  const {settingDialogOpen} = useAppSelector((state) => state.sidebar)
+  console.debug('settingDialogOpen', settingDialogOpen)
+  const dispatch = useAppDispatch()
 
   return (
-    <Dialog open={isOpen} onClose={() => setIsOpen(false)}
+    <Dialog open={settingDialogOpen} onClose={() => {
+      dispatch(toggleSettingDialog())
+    }}
       className="fixed z-20 inset-0 overflow-y-auto "
     >
       <div className="flex items-center justify-center min-h-screen text-black">
@@ -23,10 +28,10 @@ export default function SettingsDialog() {
               {SideOptions(setCurrentTab)}
               <div className="col-span-2 ">
                 {
-                  (currentTab === 'profile') && (Profile())
+                  (currentTab === 'profile') && <Profile/>
                 }
                 {
-                  (currentTab === 'password') && (Password())
+                  (currentTab === 'password') && <Password/>
                 }
               </div>
             </div>
@@ -45,8 +50,6 @@ function Profile() {
         <div className='font-medium mb-2 text-lg'>
           Name
         </div>
-
-
         <div className='border-2 border-n-2 rounded-xl relative '>
           <input
             type="text"

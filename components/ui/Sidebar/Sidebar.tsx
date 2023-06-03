@@ -27,6 +27,7 @@ import { useAppDispatch } from '../../../context/redux/store';
 import {
   getSidebarStateFromStorage,
   initSidebar,
+  toggleSettingDialog,
   toggleSidebar
 } from '../../../context/redux/sidebarSlice';
 import { optimisticConversationsActions } from 'context/redux/conversationsSlice';
@@ -48,8 +49,8 @@ const NavLinks = [
   {
     name: 'Settings',
     icon: Cog8ToothIcon,
-    onClick: () => {
-      console.log('settings');
+    onClick: (dispatch:ReturnType<typeof useAppDispatch>) => {
+      dispatch(toggleSettingDialog());
     }
   }
 ];
@@ -61,7 +62,7 @@ type LinkType = ({
 } | {
   name: string;
   icon: any;
-  onClick: () => void;
+  onClick: (dispatch:ReturnType<typeof useAppDispatch>) => void;
 })
 
 
@@ -323,6 +324,7 @@ function LinkComponent(
       sidebarOpen: boolean
     }) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const hasHerf = ('href' in link) && link.href !== undefined;
   if (hasHerf) {
@@ -358,7 +360,7 @@ function LinkComponent(
           'focus:ring-0 group cursor-pointer w-full place-content-start',
         )}
         key={'sidebar-link-' + link.name}
-        onClick={() => link.onClick()}
+        onClick={() => link.onClick(dispatch)}
       >
         <link.icon
           className={'w-5 h-5 fill-white/80 group-hover:fill-white mx-3.5'} />
