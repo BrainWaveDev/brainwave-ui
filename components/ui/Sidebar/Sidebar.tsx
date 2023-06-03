@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import classNames from 'classnames';
 import classes from './Sidebar.module.css';
 import SidebarOpen from '@/components/icons/SidebarOpen';
@@ -81,16 +81,41 @@ export default function Sidebar() {
   const isDarkTheme = theme === 'dark';
 
   // ===================================================
+  // Link Highlighting
+  // ===================================================
+  const router = useRouter();
+
+  // ========= Handlers =========
+  const handleCreateFolder = async () => {
+    await dispatch(optimisticFoldersAction.createNewFolder(session!.user.id));
+    if (!isChatlistOpen()) {
+      chatListButtonRef.current?.click();
+    }
+  };
+  const handleCreateConversation = async () => {
+    // Switch to chat page
+    if (router.pathname !== '/chat') router.push('/chat');
+    // Create a new conversation
+    dispatch(optimisticConversationsActions.createConversation());
+    // Open the chat list
+    if (!isChatlistOpen()) {
+      chatListButtonRef.current?.click();
+    }
+  };
+
+  // ===================================================
   // sessions
   // ===================================================
   const { session } = useSessionContext();
   // ===================================================
   // Refs
   // ===================================================
-
   const chatListButtonRef = useRef<HTMLButtonElement>(null);
   const isChatlistOpen = () => {
-    return chatListButtonRef.current?.getAttribute('data-headlessui-state') === 'open';
+    return (
+      chatListButtonRef.current?.getAttribute('data-headlessui-state') ===
+      'open'
+    );
   };
 
 
@@ -98,204 +123,199 @@ export default function Sidebar() {
   ? 'z-15 sm:z-10 sm:w-[20rem] sm:min-w-[20rem]'
   : '-z-15 sm:z-10 sm:w-24 sm:min-w-24';
 
+  const linkHighlightStyle = classNames(
+    'bg-gradient-to-l from-[#323337] to-[rgba(70,79,111,0.3)]',
+    'shadow-[inset_0px_0.0625rem_0_rgba(255,255,255,0.05),0_0.25rem_0.5rem_0_rgba(0,0,0,0.1)]'
+  );
+  const sideBarToggleSVGStyle = classNames(
+    'inline-block w-6 h-7 transition-colors duration-75 fill-zinc-500',
+    'group-hover:fill-white'
+  );
+  const separatorStyle = classNames(
+    'bg-neutral6 data-[orientation=horizontal]:h-px',
+    'data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full',
+    'data-[orientation=vertical]:w-px'
+  );
 
   return (
     // TODO: Add animation for sidebar sidebarOpen and close
     <div>
-      <SettingsDialog />
-      <aside className={classNames(classes.sidebar, sidebarDisplay)}>
-
-
-        <div
-          className={classNames(
-            'flex flex-row w-full items-center h-12 mb-6 place-content-between'
-          )}
-        >
-          {sidebarOpen && (
-            <div className={classNames('flex flex-row items-center gap-x-3')}>
-              <Logo className={'h-16 w-16'} />
-              <h3 className={'text-2xl font-bold'}>BrainWave</h3>
-            </div>
-          )}
-          <button
-            className="hidden sm:block group focus:ring-0 h-fit mt-0.5 ml-3 cursor-pointer"
-            onClick={onToggleSidebar}
-          >
-            {sidebarOpen ? (
-              <SidebarClose className={sideBarToggleSVGStyle} />
-            ) : (
-              <SidebarOpen className={sideBarToggleSVGStyle} />
-            )}
-          </button>
-        </div>
-
-
-        <div
-          className={classNames(
-            'flex flex-col grow justify-between flex-1 mt-3 w-full'
-          )}
-        >
-          <nav className={'flex flex-col grow items-start gap-y-3'}>
-            {/* ============== Navigation links ============== */}
-            <div
-              className={
-                'w-full flex flex-col items-center justify-center gap-y-1'
-              }
-            >
-              {NavLinks.map((link) => (
-                <LinkComponent key={link.name} link={link} sidebarOpen={sidebarOpen} />
-              ))}
-            </div>
-            <Separator.Root className="bg-neutral6 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px" />
-
-            {/* ============== Chat list ============== */}
-            <Disclosure as={'div'} className={'w-full'}>
-              {({ open: chatListOpen }) => (
-                <>
-                  <Disclosure.Button
-                    className={classNames(
-                      'group flex items-center w-full h-7 px-2 py-6',
-                      'gap-x-4 text-left text-md text-white/50 focus:ring-0'
-                    )}
-                    ref={chatListButtonRef}
-                  >
-                    <ChevronDownIcon
-                      className={classNames(
-                        'h-7 w-7 text-white/50 group-hover:fill-white active:fill-white transition-transform duration-150 transform-gpu',
-                        chatListOpen && 'rotate-180 transform'
-                      )}
-                    />
-                    {sidebarOpen && (
-                      <span
-                        className={
-                          'font-semibold text-sm text-white/50 group-hover:text-white transition-all grow'
-                        }
-                      >
-                        Chat list
-                      </span>
-                    )}
-                  </Disclosure.Button>
-                  <Transition
-                    enter="transition duration-100 ease-out"
-                    enterFrom="transform scale-95 opacity-0"
-                    enterTo="transform scale-100 opacity-100"
-                    leave="transition duration-75 ease-out"
-                    leaveFrom="transform scale-100 opacity-100"
-                    leaveTo="transform scale-95 opacity-0"
-                  >
-                    <Disclosure.Panel>
-                      <Chatbar />
-                    </Disclosure.Panel>
-                  </Transition>
-                </>
-              )}
-            </Disclosure>
-
-            {/* ============== New chat and folder buttons ============== */}
-            <div className="flex items-center justify-center w-full rounded-lg border bg-neutral6 border-neutral-600 py-2.5">
-              <button
-                className={classNames(
-                  'group flex text-sm grow flex-shrink-0 font-semibold cursor-pointer select-none items-center',
-                  'gap-x-4 px-3 leading-normal text-white/50 hover:text-white transition-all duration-100'
-                )}
-                onClick={() => {
-                  dispatch(
-                    optimisticConversationsActions.createConversation()
-                  )
-                  if (!isChatlistOpen()) {
-                    chatListButtonRef.current?.click()
-                  }
-                }}
-              >
-                <PlusCircleIcon
-                  className={
-                    'w-[22px] h-[22px] fill-white/50 group-hover:fill-white transition-all duration-200'
-                  }
-                />
-                New chat
-              </button>
-              <Separator.Root
-                className={classNames(
-                  'bg-neutral-600 data-[orientation=vertical]:h-[80%] data-[orientation=vertical]:w-[2px]'
-                )}
-                decorative
-                orientation="vertical"
-              />
-              <button
-                className="group mx-3 flex flex-shrink-0 cursor-pointer items-center transition-all duration-200"
-                onClick={() => {
-                  dispatch(
-                    optimisticFoldersAction.createNewFolder(session!.user.id)
-                  )
-                  if (!isChatlistOpen()) {
-                    chatListButtonRef.current?.click()
-                  }
-                }}
-              >
-                <FolderPlusIcon
-                  className={
-                    'w-[22px] h-[22px] fill-white/50 group-hover:fill-white transition-all duration-100'
-                  }
-                />
-              </button>
-            </div>
-          </nav>
-          {/* ============== Theme Switcher Buttons ============== */}
-          <div
-            className={classNames(
-              'relative flex w-full p-1 bg-neutral-800 rounded-xl before:absolute before:left-1 before:top-1 ml-0 mb-1.5',
-              'before:bottom-1 before:w-[calc(50%-0.25rem)] before:bg-zinc-900 before:rounded-[0.625rem] before:transition-all',
-              isDarkTheme && 'before:translate-x-full',
-              !sidebarOpen && 'before:hidden place-content-center'
-            )}
-          >
-            {(sidebarOpen || isDarkTheme) && (
-              <button
-                className={classNames(
-                  'relative z-1 text-sm group flex justify-center items-center h-10',
-                  'font-semibold transition-colors hover:text-white focus:ring-0 cursor-pointer',
-                  isDarkTheme ? 'text-white/50' : 'text-white',
-                  sidebarOpen ? 'basis-1/2' : 'basis-1'
-                )}
-                onClick={() => dispatch(setTheme('light'))}
-              >
-                <Sun
-                  className={classNames(
-                    'inline-block w-6 h-6',
-                    'transition-colors group-hover:fill-white',
-                    !isDarkTheme ? 'fill-white' : 'fill-white/50',
-                    sidebarOpen ? 'mr-3' : 'mr-0'
-                  )}
-                />
-                {sidebarOpen && 'Light'}
-              </button>
-            )}
-            {(sidebarOpen || !isDarkTheme) && (
-              <button
-                className={classNames(
-                  'relative z-1 text-sm group flex justify-center items-center h-10 basis-1/2 base2',
-                  'font-semibold transition-colors hover:text-white focus:ring-0 cursor-pointer',
-                  isDarkTheme ? 'text-white' : 'text-white/50'
-                )}
-                onClick={() => dispatch(setTheme('dark'))}
-              >
-                <HalfMoon
-                  className={classNames(
-                    'inline-block w-6 h-6',
-                    'transition-colors group-hover:fill-white',
-                    isDarkTheme ? 'fill-white' : 'fill-white/50',
-                    sidebarOpen ? 'mr-3' : 'mr-0'
-                  )}
-                />
-                {sidebarOpen && 'Dark'}
-              </button>
-            )}
+    <SettingsDialog />
+    <aside className={classNames(classes.sidebar, sidebarDisplay)}>
+      <div
+        className={classNames(
+          'flex flex-row w-full items-center h-12 mb-6 place-content-between'
+        )}
+      >
+        {sidebarOpen && (
+          <div className={classNames('flex flex-row items-center gap-x-3')}>
+            <Logo className={'h-16 w-16'} />
+            <h3 className={'text-2xl font-bold'}>BrainWave</h3>
           </div>
+        )}
+        <button
+          className="hidden sm:block group focus:ring-0 h-fit mt-0.5 ml-3 cursor-pointer"
+          onClick={onToggleSidebar}
+        >
+          {sidebarOpen ? (
+            <SidebarClose className={sideBarToggleSVGStyle} />
+          ) : (
+            <SidebarOpen className={sideBarToggleSVGStyle} />
+          )}
+        </button>
+      </div>
+      <div
+        className={classNames(
+          'flex flex-col grow justify-between flex-1 mt-3 w-full'
+        )}
+      >
+        <nav className={'flex flex-col grow items-start'}>
+          {/* ============== Navigation links ============== */}
+          <div
+            className={
+              'w-full flex flex-col items-center justify-center gap-y-1 mb-3'
+            }
+          >
+            {NavLinks.map((link) => (
+              <LinkComponent key={link.name} link={link} sidebarOpen={sidebarOpen} />
+            ))}
+          </div>
+          <Separator.Root className={separatorStyle} />
+          {/* ============== Chat list ============== */}
+          <Disclosure as={'div'} className={'w-full mt-3 mb-2'}>
+            {({ open: chatListOpen }) => (
+              <>
+                <Disclosure.Button
+                  className={classNames(
+                    'group flex items-center w-full h-7 px-2 py-6',
+                    'gap-x-4 text-left text-md text-white/50 focus:ring-0'
+                  )}
+                  ref={chatListButtonRef}
+                >
+                  <ChevronDownIcon
+                    className={classNames(
+                      'h-7 w-7 text-white/50 group-hover:fill-white active:fill-white transition-transform duration-150 transform-gpu',
+                      chatListOpen && 'rotate-180 transform'
+                    )}
+                  />
+                  {sidebarOpen && (
+                    <span
+                      className={
+                        'font-semibold text-sm text-white/50 group-hover:text-white transition-all grow'
+                      }
+                    >
+                      Chat list
+                    </span>
+                  )}
+                </Disclosure.Button>
+                <Transition
+                  enter="transition duration-100 ease-out"
+                  enterFrom="transform scale-95 opacity-0"
+                  enterTo="transform scale-100 opacity-100"
+                  leave="transition duration-75 ease-out"
+                  leaveFrom="transform scale-100 opacity-100"
+                  leaveTo="transform scale-95 opacity-0"
+                >
+                  <Disclosure.Panel>
+                    <Chatbar />
+                  </Disclosure.Panel>
+                </Transition>
+              </>
+            )}
+          </Disclosure>
+          {/* ============== New chat and folder buttons ============== */}
+          <div className="flex items-center justify-center w-full rounded-lg border bg-neutral6 border-neutral-600 py-2.5">
+            <button
+              className={classNames(
+                'group flex text-sm grow flex-shrink-0 font-semibold cursor-pointer select-none items-center',
+                'gap-x-4 px-3 leading-normal text-white/50 hover:text-white transition-all duration-100'
+              )}
+              onClick={handleCreateConversation}
+              id={'new-chat-button'}
+            >
+              <PlusCircleIcon
+                className={
+                  'w-[22px] h-[22px] fill-white/50 group-hover:fill-white transition-all duration-200'
+                }
+              />
+              New chat
+            </button>
+            <Separator.Root
+              className={classNames(
+                'bg-neutral-600 data-[orientation=vertical]:h-[80%] data-[orientation=vertical]:w-[2px]'
+              )}
+              decorative
+              orientation="vertical"
+            />
+            <button
+              className="group mx-3 flex flex-shrink-0 cursor-pointer items-center transition-all duration-200"
+              onClick={handleCreateFolder}
+            >
+              <FolderPlusIcon
+                className={
+                  'w-[22px] h-[22px] fill-white/50 group-hover:fill-white transition-all duration-100'
+                }
+              />
+            </button>
+          </div>
+        </nav>
+        {/* ============== Theme Switcher Buttons ============== */}
+        <div
+          className={classNames(
+            'relative flex w-full p-1 bg-neutral-800 rounded-xl before:absolute before:left-1 before:top-1 ml-0 mb-1.5',
+            'before:bottom-1 before:w-[calc(50%-0.25rem)] before:bg-zinc-900 before:rounded-[0.625rem] before:transition-all',
+            isDarkTheme && 'before:translate-x-full',
+            !sidebarOpen && 'before:hidden place-content-center'
+          )}
+        >
+          {(sidebarOpen || isDarkTheme) && (
+            <button
+              className={classNames(
+                'relative z-1 text-sm group flex justify-center items-center h-10',
+                'font-semibold transition-colors hover:text-white focus:ring-0 cursor-pointer',
+                isDarkTheme ? 'text-white/50' : 'text-white',
+                sidebarOpen ? 'basis-1/2' : 'basis-1'
+              )}
+              onClick={() => dispatch(setTheme('light'))}
+            >
+              <Sun
+                className={classNames(
+                  'inline-block w-6 h-6',
+                  'transition-colors group-hover:fill-white',
+                  !isDarkTheme ? 'fill-white' : 'fill-white/50',
+                  sidebarOpen ? 'mr-3' : 'mr-0'
+                )}
+              />
+              {sidebarOpen && 'Light'}
+            </button>
+          )}
+          {(sidebarOpen || !isDarkTheme) && (
+            <button
+              className={classNames(
+                'relative z-1 text-sm group flex justify-center items-center h-10 basis-1/2 base2',
+                'font-semibold transition-colors hover:text-white focus:ring-0 cursor-pointer',
+                isDarkTheme ? 'text-white' : 'text-white/50'
+              )}
+              onClick={() => dispatch(setTheme('dark'))}
+            >
+              <HalfMoon
+                className={classNames(
+                  'inline-block w-6 h-6',
+                  'transition-colors group-hover:fill-white',
+                  isDarkTheme ? 'fill-white' : 'fill-white/50',
+                  sidebarOpen ? 'mr-3' : 'mr-0'
+                )}
+              />
+              {sidebarOpen && 'Dark'}
+            </button>
+          )}
         </div>
-      </aside>
+      </div>
+    </aside>
     </div>
-  );
-}
+  )
+    }
+
 
 // ============================================================
 // Tailwind Classes
@@ -377,4 +397,3 @@ function LinkComponent(
 
   return null;
 }
-
