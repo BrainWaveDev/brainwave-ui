@@ -7,6 +7,8 @@ import classNames from 'classnames';
 import Sidebar from '../Sidebar';
 import Header from '@/components/ui/Header';
 import useThemeDetector from '../../../hooks/useThemeDetector';
+import { RotatingLines } from 'react-loader-spinner';
+import useRouteChange from '../../../hooks/useRouteChange';
 
 interface Props extends PropsWithChildren {
   meta?: PageMeta;
@@ -29,6 +31,9 @@ export default function Layout({ children, meta: pageMeta }: Props) {
   // ==============================
   useThemeDetector();
 
+  // ======= Page Transition Animation =======
+  const [pageLoading] = useRouteChange();
+
   // ==============================
   // Tailwind Classes
   // ==============================
@@ -49,9 +54,23 @@ export default function Layout({ children, meta: pageMeta }: Props) {
         <meta content={meta.description} name="description" />
       </Head>
       <Sidebar />
-      <main id="skip" className={classNames(classes.main,'scrollbar-hide')}>
-        <Header />
-        <div className={mainContentClasses}>{children}</div>
+      <main id="skip" className={classNames(classes.main, 'scrollbar-hide')}>
+        {pageLoading ? (
+          <div className={'w-full h-full flex items-center justify-center'}>
+            <RotatingLines
+              strokeColor="#9ca3af"
+              strokeWidth="2"
+              animationDuration="1"
+              width="3.25rem"
+              visible={true}
+            />
+          </div>
+        ) : (
+          <>
+            <Header />
+            <div className={mainContentClasses}>{children}</div>
+          </>
+        )}
       </main>
       <ErrorList />
     </>
