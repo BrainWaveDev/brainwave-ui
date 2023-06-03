@@ -65,40 +65,40 @@ export const ChatFolder: FC<Props> = ({ searchTerm, currentFolder }) => {
   // =======================
   // Handlers
   // =======================
-  const onUpdateConversationFolder = (
+  const onUpdateConversationFolder = async (
     conversation: ConversationSummary,
     folderId: number
   ) => {
-    dispatch(
+    await dispatch(
       optimisticConversationsActions.updateConversation({
         ...conversation,
         folderId
       })
     );
   };
-  const handleRename = () => {
-    dispatch(
+  const handleRename = async () => {
+    await dispatch(
       optimisticFoldersAction.updateFolderName(currentFolder.id, renameValue)
     );
     setIsRenaming(false);
   };
-  const handleDeleteFolder = () => {
-    dispatch(optimisticFoldersAction.deleteFolder(currentFolder.id));
+  const handleDeleteFolder = async () => {
+    await dispatch(optimisticFoldersAction.deleteFolder(currentFolder.id));
     setIsDeleting(false);
   };
-  const handleEnterDown = (e: KeyboardEvent<HTMLDivElement>) => {
+  const handleEnterDown = async (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleRename();
+      await handleRename();
     } else if (e.key === 'Escape') {
       setIsRenaming(false);
     }
   };
-  const handleDrop = (e: any, folder: Folder) => {
+  const handleDrop = async (e: any, folder: Folder) => {
     if (e.dataTransfer) {
       setIsOpen(true);
       const conversation = JSON.parse(e.dataTransfer.getData('conversation'));
-      onUpdateConversationFolder(conversation, folder.id);
+      await onUpdateConversationFolder(conversation, folder.id);
       e.target.style.background = 'none';
     }
   };
@@ -155,9 +155,11 @@ export const ChatFolder: FC<Props> = ({ searchTerm, currentFolder }) => {
             )}
             <div
               className={classNames(
-                'text-neutral-400 group-hover:text-neutral-100 relative flex-1',
+                'text-neutral-400 group-hover:text-neutral-100 hover:text-neutral-100 relative flex-1',
                 'overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-sm leading-3'
               )}
+              onDragEnter={(e) => e.stopPropagation()}
+              onDragLeave={(e) => e.stopPropagation()}
             >
               {currentFolder.name}
             </div>
@@ -167,10 +169,10 @@ export const ChatFolder: FC<Props> = ({ searchTerm, currentFolder }) => {
           <div className="absolute right-1 z-10 flex text-gray-300">
             <button
               className="min-w-[20px] p-1 text-neutral-400 hover:text-neutral-100"
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                if (isDeleting) handleDeleteFolder();
-                else if (isRenaming) handleRename();
+                if (isDeleting) await handleDeleteFolder();
+                else if (isRenaming) await handleRename();
               }}
             >
               <CheckIcon
