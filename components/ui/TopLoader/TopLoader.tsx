@@ -154,7 +154,7 @@ const NextTopLoader = ({
 
         if (anchor) {
           const isNewChatButton = anchor.id === 'new-chat-button';
-          const selectConversationButton = anchor.id.includes(
+          const isSelectConversationButton = anchor.id.includes(
             'select-conversation'
           );
 
@@ -162,7 +162,7 @@ const NextTopLoader = ({
           const newUrl =
             (anchor as HTMLAnchorElement).href ??
             // Find new location based on the specific button
-            (isNewChatButton || selectConversationButton
+            (isNewChatButton || isSelectConversationButton
               ? `${window.location.origin}/chat`
               : '');
           const isExternalLink =
@@ -170,7 +170,11 @@ const NextTopLoader = ({
           const isAnchor = isAnchorOfCurrentUrl(currentUrl, newUrl);
 
           // Don't show animation if the user creates new conversation on the same page
-          if (newUrl === currentUrl && isNewChatButton) return;
+          if (
+            newUrl === currentUrl &&
+            (isNewChatButton || isSelectConversationButton)
+          )
+            return;
 
           if (newUrl === currentUrl || isAnchor || isExternalLink) {
             NProgress.start();
