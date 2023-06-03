@@ -31,7 +31,7 @@ export const ClearConversations: FC = () => {
     'ml-auto h-[18px] w-[18px] min-w-[20px] text-neutral-400 hover:text-neutral-100';
 
   return isConfirming ? (
-    <div className="flex w-full cursor-pointer items-center rounded-lg py-2.5 px-2 hover:bg-gray-500/10">
+    <div className="flex w-full cursor-pointer items-center rounded-lg py-2.5 px-2 hover:bg-gray-500/10 mt-1">
       <TrashIcon className={'w-[18px] h-[18px]'} strokeWidth={2} />
       <div className="ml-3 flex-1 text-left text-sm leading-3 text-white">
         Are you sure?
@@ -55,6 +55,7 @@ export const ClearConversations: FC = () => {
     </div>
   ) : (
     <SidebarButton
+      className={'mt-1'}
       text={'Clear conversations'}
       icon={<TrashIcon className={'w-[18px] h-[18px]'} strokeWidth={2} />}
       onClick={() => setIsConfirming(true)}
