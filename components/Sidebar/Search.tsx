@@ -35,7 +35,7 @@ export default memo(function Search({
   return (
     <div
       className={`relative flex items-center w-[calc(100%_-_0.375rem)] group ${
-        sidebarOpen ? 'ml-1.5' : 'ml-0.5 cursor-pointer'
+        sidebarOpen ? 'ml-1' : 'ml-0.5 cursor-pointer'
       }`}
       onClick={() => {
         if (!sidebarOpen) openSidebar();
