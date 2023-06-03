@@ -98,7 +98,7 @@ export default memo(function Chatbar() {
     <motion.div
       className={classNames(
         'flex flex-col w-full mt-2 mb-1 relative',
-        'transition-all duration-150 transform-gpu'
+        'transition-all duration-150 transform-gpu max-h-full'
       )}
       animate={sidebarOpen ? 'open' : 'closed'}
     >
@@ -129,42 +129,47 @@ export default memo(function Chatbar() {
           <Separator.Root className={classNames(separatorStyle, 'mt-3')} />
         </>
       )}
-      {/* ========== Chat Folders List ========== */}
-      {folders.length > 0 && (
-        <>
-          <ChatFolders searchTerm={searchTerm} />
-          <Separator.Root className={separatorStyle} />
-        </>
-      )}
-      {/* ==========  List of Conversations Without Folders ========== */}
-      {conversations.length > 0 ? (
-        filteredConversations.length > 0 ? (
-          <>
-            <div
-              className={'flex justify-center items-center my-2'}
-              onDrop={(e) => handleDrop(e)}
-              onDragOver={allowDrop}
-              onDragEnter={highlightDrop}
-              onDragLeave={removeHighlight}
-            >
-              <Conversations conversations={filteredConversations} />
-            </div>
-            <Separator.Root className={separatorStyle} />
-          </>
-        ) : null
-      ) : (
-        <>
-          <div
-            className={classNames(
-              'flex flex-col items-center py-8',
-              'text-sm leading-normal text-white opacity-50'
-            )}
-          >
-            <IconMessagesOff />
-            No conversations.
-          </div>
-          <Separator.Root className={classNames(separatorStyle)} />
-        </>
+      {
+        <div className={'max-h-[32.5vh] overflow-y-scroll'}>
+          {/* ========== Chat Folders List ========== */}
+          {folders.length > 0 && (
+            <>
+              <ChatFolders searchTerm={searchTerm} />
+              <Separator.Root className={separatorStyle} />
+            </>
+          )}
+          {/* ==========  List of Conversations Without Folders ========== */}
+          {conversations.length > 0 ? (
+            filteredConversations.length > 0 && (
+              <>
+                <div
+                  className={'flex justify-center items-center my-2'}
+                  onDrop={(e) => handleDrop(e)}
+                  onDragOver={allowDrop}
+                  onDragEnter={highlightDrop}
+                  onDragLeave={removeHighlight}
+                >
+                  <Conversations conversations={filteredConversations} />
+                </div>
+              </>
+            )
+          ) : (
+            <>
+              <div
+                className={classNames(
+                  'flex flex-col items-center py-8',
+                  'text-sm leading-normal text-white opacity-50'
+                )}
+              >
+                <IconMessagesOff />
+                No conversations.
+              </div>
+            </>
+          )}
+        </div>
+      }
+      {!(conversations.length > 0 && filteredConversations.length === 0) && (
+        <Separator.Root className={separatorStyle} />
       )}
       <ChatbarSettings />
     </motion.div>
