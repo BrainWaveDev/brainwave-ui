@@ -24,13 +24,14 @@ export const randomPlaceholderConversation = () => {
 };
 
 export const updateConversation = async (
-  updatedConversation: ConversationIdentifiable
+  updatedConversation: ConversationSummary
 ) => {
   try {
     const { data, error } = await supabase
       .from('conversation')
       .update({
-        name: updatedConversation.name
+        name: updatedConversation.name,
+        folder_id: updatedConversation.folderId
       })
       .eq('id', updatedConversation.id)
       .select();
