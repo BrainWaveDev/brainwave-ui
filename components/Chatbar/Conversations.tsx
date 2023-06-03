@@ -1,33 +1,15 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import { ConversationComponent } from './Conversation';
-import { useAppSelector } from 'context/redux/store';
-import { useRouter } from 'next/router';
+import { ConversationSummary } from '@/types/chat';
 
 export default memo(function Conversations({
-  searchTerm
+  conversations
 }: {
-  searchTerm: string;
+  conversations: ConversationSummary[];
 }) {
-  const conversations = useAppSelector((state) => state.conversations);
-  const router = useRouter();
-
-  const filteredConversations = useMemo(
-    () =>
-      conversations.filter((conversation) => {
-        const searchable = conversation.name.toLocaleLowerCase();
-        return searchable.toLowerCase().includes(searchTerm.toLowerCase());
-      }),
-    [searchTerm, conversations]
-  );
   return (
-    <div
-      className="flex w-full flex-col gap-1"
-      onClick={async (e) => {
-        e.stopPropagation();
-        if (router.pathname !== '/chat') await router.push('/chat');
-      }}
-    >
-      {filteredConversations
+    <div className="flex w-full flex-col gap-1">
+      {conversations
         .slice()
         .reverse()
         .map((conversation) => (
