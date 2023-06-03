@@ -11,7 +11,7 @@ export const ChatFolders = ({ searchTerm }: Props) => {
   // =======================
   const folders = getFoldersFromStorage();
   return (
-    <div className="flex w-full flex-col">
+    <div className="flex w-full flex-col my-2">
       {folders.map((folder, index) => (
         <ChatFolder
           key={index}
