@@ -186,7 +186,7 @@ export default function Sidebar() {
             ))}
           </div>
           <Separator.Root
-            className={classNames(separatorStyle, 'mt-4')}
+            className={classNames(separatorStyle)}
             orientation={'horizontal'}
           />
           {/* ============== Chat list ============== */}
