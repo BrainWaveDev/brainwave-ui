@@ -155,6 +155,7 @@ const thunkClearConversations = (): AppThunk => async (dispatch) => {
     dispatch(startLoading(LoadingTrigger.DeletingConversations));
     await clearAllConversations();
     dispatch(clearConversations());
+    dispatch(clearSelectedConversation());
   } catch (e: any) {
     // TODO: Show errors to user
     console.error(e.message);
