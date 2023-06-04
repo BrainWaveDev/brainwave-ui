@@ -8,7 +8,7 @@ import {
   retrieveConversation
 } from '@/utils/app/conversation';
 import { Session } from '@supabase/auth-helpers-react';
-import { addConversation } from './conversationsSlice';
+import { addConversation, deleteConversation } from './conversationsSlice';
 import { randomPlaceholderConversation } from '@/utils/app/conversation';
 
 interface SelectedConversationState {
@@ -34,6 +34,9 @@ const currentConversationSlice = createSlice({
     },
     clearSelectedConversation: (state) => {
       state.conversation = undefined;
+    },
+    clearMessagesInCurrentConversations: (state) => {
+      if (state.conversation) state.conversation.messages = [];
     },
     userSent(state, action: PayloadAction<Message>) {
       const { conversation } = state;
@@ -127,49 +130,48 @@ const thunkRetrieveConversationDetails =
 
 const thunkUserSent =
   (message: Message, user_id: string): AppThunk<Conversation | undefined> =>
-    async (dispatch, getState) => {
-      let { conversation } = getState().currentConversation;
+  async (dispatch, getState) => {
+    let { conversation } = getState().currentConversation;
 
-      if (!conversation) {
-        const placeholder = randomPlaceholderConversation();
-        dispatch(selectCurrentConversation(placeholder));
-        try {
-          // We don't need to update the UI after this since
-          // the new conversation is already in the UI
-          const dbConversation = await createConversation(placeholder);
-          conversation = dbConversation;
-          dispatch(addConversation(dbConversation));
-        } catch (e) {
-          console.error(e);
-          // TODO: ERROR: Failed to create new conversation
-          dispatch(setLoading(false));
-          return;
-        }
-      }
-
+    if (!conversation) {
+      conversation = randomPlaceholderConversation();
+      dispatch(addConversation(conversation));
+      dispatch(selectCurrentConversation(conversation));
       dispatch(userSent(message));
       dispatch(setLoading(true));
 
       try {
-        if (!conversation) {
-          throw new Error('No conversation found, this should never happen');
-        }
-        const messages = conversation.messages;
-        // insert message to db
-        await insertMessage(
-          message,
-          messages.length - 1,
-          conversation.id,
-          user_id
-        );
+        // Create conversation in db
+        await createConversation(conversation);
       } catch (e) {
-        // TODO: ERROR: Failed to sync message history with database
+        // Delete conversation which failed to upload
+        dispatch(setLoading(false));
         dispatch(clearSelectedConversation());
-        throw e;
+        dispatch(deleteConversation(conversation));
+        console.error('Failed to create conversation in database');
       }
+    }
 
-      return conversation;
-    };
+    if (!conversation)
+      throw new Error('No conversation found, this should never happen');
+
+    const messages = conversation.messages;
+    try {
+      // insert message to db
+      await insertMessage(
+        message,
+        messages.length - 1,
+        conversation.id,
+        user_id
+      );
+    } catch (e: any) {
+      // Clear conversation messages from Redux store
+      dispatch(setLoading(false));
+      dispatch(clearMessagesInCurrentConversations());
+      // TODO: ERROR: Failed to sync message history with database
+      console.error('Failed to sync message history with database');
+    }
+  };
 
 export const thunkStreamingResponse =
   (session: Session, search_space: number[]): AppThunk =>
@@ -348,7 +350,8 @@ export const {
   userSent,
   setLoading,
   setIsStreaming,
-  selectCurrentConversation
+  selectCurrentConversation,
+  clearMessagesInCurrentConversations
 } = currentConversationSlice.actions;
 
 export const getCurrentConversationFromStore = () =>

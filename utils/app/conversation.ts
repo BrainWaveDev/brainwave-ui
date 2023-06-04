@@ -1,9 +1,4 @@
-import {
-  Conversation,
-  ConversationIdentifiable,
-  ConversationSummary,
-  Message
-} from '@/types/chat';
+import { Conversation, ConversationSummary, Message } from '@/types/chat';
 import { supabase } from '../supabase-client';
 import { isGeneratedId, randomNumberId } from './createDBOperation';
 import { OpenAIModels } from 'types/openai';
@@ -18,7 +13,6 @@ export const randomPlaceholderConversation = () => {
     model: OpenAIModels['gpt-3.5-turbo'],
     prompt: DEFAULT_SYSTEM_PROMPT,
     messages: [],
-    isPlaceholder: true,
     folderId: null
   } as Conversation;
 };
@@ -77,29 +71,30 @@ export const updateConversationFolder = async (
   return false;
 };
 
-export const createConversation = async (
-  conversation: ConversationIdentifiable
-) => {
-  const { data } = await supabase
-    .from('conversation')
-    .insert({
-      name: conversation.name
-    })
-    .select()
-    .throwOnError()
-    .single();
+export const createConversation = async (conversation: Conversation) => {
+  // Save conversation to the local storage
+  set('conversation', conversation.id.toString(), conversation);
 
-  const res = {
-    id: data?.id,
-    name: data?.name,
-    model: OpenAIModels['gpt-3.5-turbo'],
-    prompt: DEFAULT_SYSTEM_PROMPT,
-    messages: [],
-    folderId: data?.folder_id
-  } as Conversation;
+  try {
+    await supabase
+      .from('conversation')
+      .insert({
+        id: conversation.id,
+        name: conversation.name,
+        model: OpenAIModels['gpt-3.5-turbo'].name
+      })
+      .select()
+      .throwOnError();
 
-  set('conversation', res.id.toString(), res);
-  return res;
+    return conversation;
+  } catch (err) {
+    // Clear conversation from local storage
+    remove('conversation', conversation.id.toString());
+
+    // TODO: Better error handling
+    console.error('Error creating conversation:', err);
+    throw Error('Error creating conversation in the database');
+  }
 };
 
 export const retrieveConversation = async (conversationId: number) => {
