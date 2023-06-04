@@ -12,6 +12,8 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import * as NProgress from 'nprogress';
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 export type NextTopLoaderProps = {
   /**
@@ -94,7 +96,9 @@ const NextTopLoader = ({
     </style>
   );
 
-  React.useEffect(() => {
+  const router = useRouter();
+
+  useEffect(() => {
     NProgress.configure({
       showSpinner: showSpinner ?? true,
       trickle: crawl ?? true,
@@ -104,113 +108,28 @@ const NextTopLoader = ({
       speed: speed ?? 200
     });
 
-    function isAnchorOfCurrentUrl(currentUrl: string, newUrl: string) {
-      const currentUrlObj = new URL(currentUrl);
-      const newUrlObj = new URL(newUrl);
-      // Compare hostname, pathname, and search parameters
-      if (
-        currentUrlObj.hostname === newUrlObj.hostname &&
-        currentUrlObj.pathname === newUrlObj.pathname &&
-        currentUrlObj.search === newUrlObj.search
-      ) {
-        // Check if the new URL is just an anchor of the current URL page
-        const currentHash = currentUrlObj.hash;
-        const newHash = newUrlObj.hash;
-        return (
-          currentHash !== newHash &&
-          currentUrlObj.href.replace(currentHash, '') ===
-            newUrlObj.href.replace(newHash, '')
-        );
-      }
-      return false;
-    }
-
     // eslint-disable-next-line no-var
     let npgclass = document.querySelectorAll('html');
 
-    function findClosestElement(
-      element: HTMLElement | null
-    ): HTMLAnchorElement | HTMLButtonElement | null {
-      while (
-        element &&
-        element.tagName.toLowerCase() !== 'a' &&
-        // Detect when  user clicks on a new conversation button
-        element.id !== 'new-chat-button' &&
-        // Detect when user clicks on a conversation
-        !element.id.includes('select-conversation')
-      ) {
-        element = element.parentElement;
-      }
-
-      if (element?.id === 'new-chat-button')
-        return element as HTMLButtonElement;
-      else return element as HTMLAnchorElement;
-    }
-
-    function handleClick(event: MouseEvent) {
-      try {
-        const target = event.target as HTMLElement;
-        const anchor = findClosestElement(target);
-
-        if (anchor) {
-          const isNewChatButton = anchor.id === 'new-chat-button';
-          const isSelectConversationButton = anchor.id.includes(
-            'select-conversation'
-          );
-
-          const currentUrl = window.location.href;
-          const newUrl =
-            (anchor as HTMLAnchorElement).href ??
-            // Find new location based on the specific button
-            (isNewChatButton || isSelectConversationButton
-              ? `${window.location.origin}/chat`
-              : '');
-          const isExternalLink =
-            (anchor as HTMLAnchorElement).target === '_blank';
-          const isAnchor = isAnchorOfCurrentUrl(currentUrl, newUrl);
-
-          // Don't show animation if the user creates new conversation on the same page
-          if (
-            newUrl === currentUrl &&
-            (isNewChatButton || isSelectConversationButton)
-          )
-            return;
-
-          if (newUrl === currentUrl || isAnchor || isExternalLink) {
-            NProgress.start();
-            NProgress.done();
-            [].forEach.call(npgclass, function (el: Element) {
-              el.classList.remove('nprogress-busy');
-            });
-          } else {
-            NProgress.start();
-            (function (history) {
-              const pushState = history.pushState;
-              history.pushState = function () {
-                NProgress.done();
-                [].forEach.call(npgclass, function (el: Element) {
-                  el.classList.remove('nprogress-busy');
-                });
-                // eslint-disable-next-line prefer-rest-params, @typescript-eslint/no-explicit-any
-                return pushState.apply(history, arguments as any);
-              };
-            })(window.history);
-          }
-        }
-      } catch (err) {
-        NProgress.start();
-        NProgress.done();
-      }
-    }
-
-    // Add the global click event listener
-    document.addEventListener('click', handleClick);
-
-    // Clean up the global click event listener when the component is unmounted
-    return () => {
-      document.removeEventListener('click', handleClick);
+    const handleStart = () => {
+      NProgress.start();
     };
-  }, []);
+    const handleComplete = () => {
+      NProgress.done();
+      [].forEach.call(npgclass, function (el: Element) {
+        el.classList.remove('nprogress-busy');
+      });
+    };
+
+    router.events.on('routeChangeStart', handleStart);
+    router.events.on('routeChangeComplete', handleComplete);
+    router.events.on('routeChangeError', handleComplete);
+    return () => {
+      router.events.off('routeChangeStart', handleStart);
+      router.events.off('routeChangeComplete', handleComplete);
+      router.events.off('routeChangeError', handleComplete);
+    };
+  }, [router]);
 
   return styles;
 };
