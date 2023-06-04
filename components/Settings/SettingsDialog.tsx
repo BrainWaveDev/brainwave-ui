@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useCallback, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useCallback, useState, memo } from 'react'
 import { Dialog } from '@headlessui/react'
 import { ArrowRightIcon, UserCircleIcon } from '@heroicons/react/24/solid'
 import { LockClosedIcon, UserIcon } from '@heroicons/react/24/outline'
@@ -44,10 +44,10 @@ export default function SettingsDialog() {
   )
 }
 
-function Profile() {
+const Profile = memo(() => {
   const [profileName, setProfileName] = useState<string>('')
   const user = useUser()
-
+  
   useEffect(() => {
     if (user) {
       getProfile(user.id)
@@ -108,7 +108,7 @@ function Profile() {
       </div>
     </div>
   )
-}
+})
 
 function Password() {
 
