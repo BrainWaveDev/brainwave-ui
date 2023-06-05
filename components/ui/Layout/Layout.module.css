@@ -1,5 +1,5 @@
 .main {
-    @apply bg-white dark:bg-neutral6 grow overflow-scroll min-w-[350px];
+    @apply bg-white dark:bg-neutral6 grow overflow-y-scroll min-w-[350px] relative;
     /* Responsiveness */
     @apply h-screen sm:h-[calc(100vh_-_3rem)];
     @apply sm:my-6 sm:mr-5;
