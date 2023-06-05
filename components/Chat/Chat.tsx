@@ -47,8 +47,6 @@ export default memo(function Chat() {
 
   // ============== Handle Scrolling ==============
   const scrollDown = () => {
-    // TODO: Remove this
-    console.log('Scrolling down');
     if (autoScrollEnabled) {
       messagesEndRef.current?.scrollIntoView(true);
     }
@@ -115,7 +113,7 @@ export default memo(function Chat() {
   return (
     <>
       <div
-        className="flex-1 bg-white dark:bg-[#343541] min-h-full relative max-h-full overflow-y-scroll"
+        className="flex-1 bg-white dark:bg-[#343541] min-h-full relative max-h-full max-w-full min-w-full overflow-x-clip overflow-y-scroll"
         onScroll={handleScroll}
         ref={chatContainerRef}
       >
