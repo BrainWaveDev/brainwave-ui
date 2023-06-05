@@ -1,19 +1,15 @@
 import { OpenAIModels } from '@/types/openai';
 import { IconArrowDown } from '@tabler/icons-react';
-import { memo, MutableRefObject, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { ChatInput } from './ChatInput';
 import { ChatMessage } from './ChatMessage';
 import AppLogo from '@/components/icons/AppLogo';
-import classNames from 'classnames';
 import DocumentFilter from '@/components/Chat/DocumentFilter';
 import { getCurrentConversationFromStore } from '../../context/redux/currentConversationSlice';
 import { ChatLoader } from '@/components/Chat/ChatLoader';
+import { throttle } from '@/utils/helpers';
 
-interface Props {
-  stopConversationRef: MutableRefObject<boolean>;
-}
-
-export default memo(function Chat({ stopConversationRef }: Props) {
+export default memo(function Chat() {
   // ============== Redux State ==============
   const { conversation: currentConversation, loading } =
     getCurrentConversationFromStore();
@@ -49,7 +45,24 @@ export default memo(function Chat({ stopConversationRef }: Props) {
     });
   };
 
-  // ============== Initiate Observers ==============
+  // ============== Handle Scrolling ==============
+  const scrollDown = () => {
+    // TODO: Remove this
+    console.log('Scrolling down');
+    if (autoScrollEnabled) {
+      messagesEndRef.current?.scrollIntoView(true);
+    }
+  };
+  const throttledScrollDown = throttle(scrollDown, 250);
+
+  useEffect(() => {
+    // may have problems with conversation undefined
+    if (!currentConversation || currentConversation.messages.length === 0) {
+      return;
+    }
+    throttledScrollDown();
+  }, [currentConversation, throttledScrollDown]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -100,44 +113,30 @@ export default memo(function Chat({ stopConversationRef }: Props) {
   );
 
   return (
-    <div className="relative flex-1 bg-white dark:bg-[#343541] min-h-full max-h-full">
-      <>
-        <div
-          className={classNames(
-            'min-h-full max-h-full overflow-x-hidden pt-16'
-          )}
-          ref={chatContainerRef}
-          onScroll={handleScroll}
-        >
-          <DocumentFilter />
-          {currentConversation && currentConversation.messages.length > 0 ? (
-            <div className={'mt-1.5'}>
-              {currentConversation.messages.map((message, index) => (
-                <ChatMessage
-                  key={index}
-                  message={message}
-                  messageIndex={index}
-                />
-              ))}
-              {loading && <ChatLoader />}
-              <div
-                className="h-[162px] bg-white dark:bg-[#343541]"
-                ref={messagesEndRef}
-              />
-            </div>
-          ) : (
-            EmptyConversationCover
-          )}
-        </div>
-        <ChatInput
-          stopConversationRef={stopConversationRef}
-          textareaRef={textareaRef}
-          // need to pass in the model here in the future
-          model={OpenAIModels['gpt-3.5-turbo']}
-        />
-      </>
+    <>
+      <div
+        className="flex-1 bg-white dark:bg-[#343541] min-h-full relative max-h-full overflow-y-scroll"
+        onScroll={handleScroll}
+        ref={chatContainerRef}
+      >
+        <DocumentFilter />
+        {currentConversation && currentConversation.messages.length > 0 ? (
+          <div className={'mt-1.5'}>
+            {currentConversation.messages.map((message, index) => (
+              <ChatMessage key={index} message={message} messageIndex={index} />
+            ))}
+            {loading && <ChatLoader />}
+            <div
+              className="h-[162px] bg-white dark:bg-[#343541]"
+              ref={messagesEndRef}
+            />
+          </div>
+        ) : (
+          EmptyConversationCover
+        )}
+      </div>
       {showScrollDownButton && (
-        <div className="absolute bottom-0 right-0 mb-4 mr-4 pb-20">
+        <div className="absolute bottom-0 right-0 mb-4 mr-4 pb-20 z-30">
           <button
             className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-300 text-gray-800 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-neutral-200"
             onClick={handleScrollDown}
@@ -146,6 +145,11 @@ export default memo(function Chat({ stopConversationRef }: Props) {
           </button>
         </div>
       )}
-    </div>
+      <ChatInput
+        textareaRef={textareaRef}
+        // need to pass in the model here in the future
+        model={OpenAIModels['gpt-3.5-turbo']}
+      />
+    </>
   );
 });
