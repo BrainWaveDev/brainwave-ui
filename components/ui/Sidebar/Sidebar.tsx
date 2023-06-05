@@ -190,7 +190,11 @@ export default function Sidebar() {
             orientation={'horizontal'}
           />
           {/* ============== Chat list ============== */}
-          <Disclosure as={'div'} className={'w-full mt-2 mb-2'}>
+          <Disclosure
+            as={'div'}
+            className={'w-full mt-2 mb-2'}
+            defaultOpen={true}
+          >
             {({ open: chatListOpen }) => (
               <>
                 <Disclosure.Button
