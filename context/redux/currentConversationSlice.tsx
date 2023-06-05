@@ -16,13 +16,15 @@ interface SelectedConversationState {
   currentMessage: Message | undefined;
   messageIsStreaming: boolean;
   loading: boolean;
+  stopConversation: boolean;
 }
 
 const initialState: SelectedConversationState = {
   conversation: undefined,
   currentMessage: undefined,
   messageIsStreaming: false,
-  loading: false
+  loading: false,
+  stopConversation: false
 };
 
 const currentConversationSlice = createSlice({
@@ -88,6 +90,9 @@ const currentConversationSlice = createSlice({
     setIsStreaming: (state, action: PayloadAction<boolean>) => {
       state.messageIsStreaming = action.payload;
     },
+    setStopConversation: (state, action: PayloadAction<boolean>) => {
+      state.stopConversation = action.payload;
+    },
     clearSource: (state) => {
       const { conversation } = state;
       if (!conversation) return;
@@ -132,36 +137,38 @@ const thunkUserSent =
   (message: Message, user_id: string): AppThunk<Conversation | undefined> =>
   async (dispatch, getState) => {
     let { conversation } = getState().currentConversation;
+    const newConversation = conversation === undefined;
 
-    if (!conversation) {
+    if (newConversation) {
       conversation = randomPlaceholderConversation();
       dispatch(addConversation(conversation));
       dispatch(selectCurrentConversation(conversation));
-      dispatch(userSent(message));
-      dispatch(setLoading(true));
+    }
 
+    dispatch(userSent(message));
+    dispatch(setLoading(true));
+
+    if (newConversation) {
       try {
         // Create conversation in db
-        await createConversation(conversation);
+        await createConversation(conversation!);
       } catch (e) {
         // Delete conversation which failed to upload
         dispatch(setLoading(false));
         dispatch(clearSelectedConversation());
-        dispatch(deleteConversation(conversation));
+        dispatch(deleteConversation(conversation!));
         console.error('Failed to create conversation in database');
+        return;
       }
     }
 
-    if (!conversation)
-      throw new Error('No conversation found, this should never happen');
-
-    const messages = conversation.messages;
+    const messages = conversation!.messages;
     try {
       // insert message to db
       await insertMessage(
         message,
         messages.length - 1,
-        conversation.id,
+        conversation!.id,
         user_id
       );
     } catch (e: any) {
@@ -227,32 +234,32 @@ export const thunkStreamingResponse =
       const reader = data.getReader();
       const decoder = new TextDecoder('utf-8');
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        const chunkValue = decoder.decode(value);
-        dispatch(
-          currentConversationSlice.actions.appendLastAssistantMessage(chunkValue)
-        );
-      }
-      dispatch(setLoading(false));
-      dispatch(setIsStreaming(false));
-      const updatedConversation = getState().currentConversation.conversation!;
-      const updatedLastMessage =
-        updatedConversation?.messages[updatedConversation?.messages.length - 1];
-      if (updatedLastMessage?.role != 'assistant') {
-        console.error(
-          `something went wrong, last message is not assistant message`
-        );
-        return;
-      }
-      await insertMessage(
-        updatedLastMessage,
-        updatedConversation.messages.length - 1,
-        updatedConversation.id,
-        session.user?.id
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done || getState().currentConversation.stopConversation) break;
+      const chunkValue = decoder.decode(value);
+      dispatch(
+        currentConversationSlice.actions.appendLastAssistantMessage(chunkValue)
       );
-    };
+    }
+    dispatch(setLoading(false));
+    dispatch(setIsStreaming(false));
+    const updatedConversation = getState().currentConversation.conversation!;
+    const updatedLastMessage =
+      updatedConversation?.messages[updatedConversation?.messages.length - 1];
+    if (updatedLastMessage?.role != 'assistant') {
+      console.error(
+        `something went wrong, last message is not assistant message`
+      );
+      return;
+    }
+    await insertMessage(
+      updatedLastMessage,
+      updatedConversation.messages.length - 1,
+      updatedConversation.id,
+      session.user?.id
+    );
+  };
 
 export const thunkRegenerateResponse =
   (session: Session, search_space: number[]): AppThunk =>
@@ -350,6 +357,7 @@ export const {
   userSent,
   setLoading,
   setIsStreaming,
+  setStopConversation,
   selectCurrentConversation,
   clearMessagesInCurrentConversations
 } = currentConversationSlice.actions;
