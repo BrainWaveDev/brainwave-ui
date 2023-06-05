@@ -22,6 +22,7 @@ import {
   toggleSidebar
 } from '../../../context/redux/sidebarSlice';
 import { FolderIcon } from '@heroicons/react/24/outline';
+import { getCurrentConversationFromStore } from '../../../context/redux/currentConversationSlice';
 
 interface Props {
   searchTerm: string;
@@ -34,6 +35,8 @@ export const ChatFolder: FC<Props> = ({ searchTerm, currentFolder }) => {
   // =======================
   const dispatch = useAppDispatch();
   const conversations = getConversationsFromStorage();
+  const { conversation: currentConversation } =
+    getCurrentConversationFromStore();
   const folderConversations = useMemo(
     () =>
       conversations.filter(
@@ -235,7 +238,14 @@ export const ChatFolder: FC<Props> = ({ searchTerm, currentFolder }) => {
               key={conversation.id}
               className={'ml-4 gap-2 border-l border-neutral-400 pl-2'}
             >
-              <ConversationComponent conversation={conversation} />
+              <ConversationComponent
+                conversation={conversation}
+                current={
+                  currentConversation
+                    ? currentConversation.id === conversation.id
+                    : false
+                }
+              />
             </div>
           ))}
       </>
