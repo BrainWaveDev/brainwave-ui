@@ -62,6 +62,7 @@ export const ChatInput: FC<Props> = ({ model, textareaRef }) => {
 
     // TODO: Handle errors
     // 1. Update the current conversation messages
+    setContent('');
     await dispatch(
       optimisticCurrentConversationAction.userSent(
         {
@@ -71,7 +72,6 @@ export const ChatInput: FC<Props> = ({ model, textareaRef }) => {
         session?.user?.id!
       )
     );
-    setContent('');
 
     // 2. fetch the response from the api
     await dispatch(
