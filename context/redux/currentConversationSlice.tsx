@@ -148,9 +148,9 @@ const thunkUserSent =
     dispatch(userSent(message));
     dispatch(setLoading(true));
 
+    // Create conversation in db
     if (newConversation) {
       try {
-        // Create conversation in db
         await createConversation(conversation!);
       } catch (e) {
         // Delete conversation which failed to upload
@@ -164,7 +164,7 @@ const thunkUserSent =
 
     const messages = conversation!.messages;
     try {
-      // insert message to db
+      // Insert message to db
       await insertMessage(
         message,
         messages.length - 1,
