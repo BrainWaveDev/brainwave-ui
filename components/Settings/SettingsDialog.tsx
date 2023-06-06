@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useCallback, useState, memo } from 'react'
 import { Dialog } from '@headlessui/react'
-import { ArrowRightIcon, UserCircleIcon } from '@heroicons/react/24/solid'
+import { ArrowRightIcon, CheckCircleIcon, UserCircleIcon, WalletIcon } from '@heroicons/react/24/solid'
 import { LockClosedIcon, UserIcon } from '@heroicons/react/24/outline'
 import { useAppDispatch, useAppSelector } from 'context/redux/store'
 import { toggleSettingDialog } from 'context/redux/sidebarSlice'
@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { useUser } from '@supabase/auth-helpers-react'
 
 
-type Tabs = 'profile' | 'password'
+type Tabs = 'profile' | 'password' | 'subscription'
 
 export default function SettingsDialog() {
   const [currentTab, setCurrentTab] = useState<Tabs>('profile')
@@ -35,6 +35,9 @@ export default function SettingsDialog() {
                 {
                   (currentTab === 'password') && <Password />
                 }
+                {
+                  (currentTab === 'subscription') && <Subscription />
+                }
               </div>
             </div>
           </div>
@@ -47,7 +50,7 @@ export default function SettingsDialog() {
 const Profile = memo(() => {
   const [profileName, setProfileName] = useState<string>('')
   const user = useUser()
-  
+
   useEffect(() => {
     if (user) {
       getProfile(user.id)
@@ -219,7 +222,145 @@ function Password() {
   )
 }
 
+function Subscription() {
+  const [subscriptionType, setSubscriptionType] = useState('Free');
+  const [currentPlan, setCurrentPlan] = useState<'Free' | 'Pro'>('Free');
 
+  const handleSubscriptionChange = (subscription: string) => {
+    setSubscriptionType(subscription);
+    // You can also add logic here to update the user's subscription plan in your database
+  }
+
+  return (
+    <div className='w-full h-full'>
+      <h1 className='mb-8 text-4xl md:mb-6 font-semibold'>Subscription</h1>
+      <div className=''>
+        <div className='font-medium mb-1 text-lg'>
+          Choose Your Plan
+        </div>
+        <div className='grid grid-cols-2 px-6 justify-around mt-6 w-full h-[320px] gap-x-[10%]'>
+          <div className='bg-white col-span-1 border-2 border-slate-400 rounded-lg hover:border-blue-200'>
+            <h2
+              className='text-center font-semibold text-3xl mt-4'
+            >Free</h2>
+            <p
+              className='text-center font-normal text-base  mt-4'
+            >
+              Basic chat features
+            </p>
+
+            <div className="my-4 text-center">
+              <span className="mr-2 text-3xl">$0</span>
+              <span className="h4 text-sm text-slate-400">/mo</span>
+            </div>
+
+
+            <div className='flex align-middle justify-center pt-3'>
+              <div className=''>
+                <div className='flex mt-1'>
+                  <div className='w-[20px] h-[20px]'>
+                    <CheckCircleIcon className='object-fill' />
+                  </div>
+                  <p className='ml-1 text-xs'>Unlimited Messages</p>
+                </div>
+                <div className='flex mt-1'>
+                  <div className='w-[20px] h-[20px]'>
+                    <CheckCircleIcon className='object-fill' />
+                  </div>
+                  <p className='ml-1 text-xs'>Unlimited Messages</p>
+                </div>
+                <div className='flex mt-1'>
+                  <div className='w-[20px] h-[20px]'>
+                    <CheckCircleIcon className='object-fill' />
+                  </div>
+                  <p className='ml-1 text-xs'>Unlimited Messages</p>
+                </div>
+              </div>
+            </div>
+            <div className='w-full flex justify-center align-middle mt-5'>
+              <button className='rounded-full border w-full mx-3 bg-blue-500 text-white disabled:bg-gray-500'
+                disabled={currentPlan === 'Free'}
+              >
+                <div className='flex justify-center align-middle'>
+                  {
+                    currentPlan === 'Free' ? <p className='text-sm font-semibold py-2'>Current Plan</p> : <p className='text-sm font-semibold py-2'>Change Plan</p>
+                  }
+                </div>
+              </button>
+            </div>
+
+          </div>
+          <div className='bg-white col-span-1 border-4 border-blue-400 rounded-lg hover:border-blue-600 '>
+            <h2
+              className='text-center font-semibold text-3xl mt-4'
+            >Pro</h2>
+            <p
+              className='text-center font-normal text-base  mt-4'
+            >
+              Unlimited Storages
+            </p>
+
+            <div className="my-4 text-center">
+              <span className="mr-2 text-3xl">$0</span>
+              <span className="h4 text-sm text-slate-400">/mo</span>
+            </div>
+
+
+            <div className='flex align-middle justify-center pt-3'>
+              <div className=''>
+                <div className='flex mt-1'>
+                  <div className='w-[20px] h-[20px]'>
+                    <CheckCircleIcon className='object-fill' />
+                  </div>
+                  <p className='ml-1 text-xs'>Unlimited Storages</p>
+                </div>
+                <div className='flex mt-1'>
+                  <div className='w-[20px] h-[20px]'>
+                    <CheckCircleIcon className='object-fill' />
+                  </div>
+                  <p className='ml-1 text-xs'>Unlimited Storages</p>
+                </div>
+                <div className='flex mt-1'>
+                  <div className='w-[20px] h-[20px]'>
+                    <CheckCircleIcon className='object-fill' />
+                  </div>
+                  <p className='ml-1 text-xs'>Unlimited Storages</p>
+                </div>
+              </div>
+
+
+
+            </div>
+            <div className='w-full flex justify-center align-middle mt-5'>
+              <button className='rounded-full border w-full mx-3 bg-blue-500 text-white disabled:bg-gray-500 '
+                disabled={currentPlan === 'Pro'}
+              >
+                <div className='flex justify-center align-middle'>
+                  {
+                    currentPlan === 'Pro' ? <p className='text-sm font-semibold py-2'>Current Plan</p> : <p className='text-sm font-semibold py-2'>Upgrade</p>
+                  }
+                </div>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div className='font-medium mt-10 mb-2 text-lg rounded-3xl border-spacing-3 border-4 border-blackA10 inline-flex relative px-4 hover:border-blue-600'>
+        <Link
+          href={'/profile'}
+        >
+          Go To Profile
+        </Link>
+        <div className='flex flex-col justify-center align-middle h-[28px] ml-[5px] '>
+          <ArrowRightIcon
+            className='w-6 h-6'
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function SideOptions(setCurrentTab: Dispatch<SetStateAction<Tabs>>) {
   return (
@@ -251,6 +392,22 @@ function SideOptions(setCurrentTab: Dispatch<SetStateAction<Tabs>>) {
           Password
         </h3>
       </button>
+
+      <button
+        className='group flex items-center w-full px-3.5 py-1.5 rounded-full border-2 border-transparent base2 font-semibold transition-colors hover:bg-blue-200'
+        onClick={() => setCurrentTab('subscription')}
+      >
+        <div className='w-8 h-8 '>
+          <WalletIcon className='object-fill' />
+        </div>
+        <h3
+          className='ml-3.5 text-base font-semibold text-n-7 dark:text-n-1'
+        >
+          Subscription
+        </h3>
+      </button>
+
+
     </div>
   )
 }
