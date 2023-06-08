@@ -6,13 +6,15 @@ import { ChatMessage } from './ChatMessage';
 import AppLogo from '@/components/icons/AppLogo';
 import DocumentFilter from '@/components/Chat/DocumentFilter';
 import { getCurrentConversationFromStore } from '../../context/redux/currentConversationSlice';
-import { ChatLoader } from '@/components/Chat/ChatLoader';
 import { throttle } from '@/utils/helpers';
 
 export default memo(function Chat() {
   // ============== Redux State ==============
-  const { conversation: currentConversation, loading } =
-    getCurrentConversationFromStore();
+  const {
+    conversation: currentConversation,
+    loading,
+    messageIsStreaming
+  } = getCurrentConversationFromStore();
 
   // ============== Element References ==============
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -113,21 +115,29 @@ export default memo(function Chat() {
   return (
     <>
       <div
-        className="flex-1 bg-white dark:bg-[#343541] min-h-full relative max-h-full max-w-full min-w-full overflow-x-clip overflow-y-scroll"
+        className="flex-1 min-h-full relative max-h-full max-w-full min-w-full overflow-x-clip overflow-y-scroll p-5"
         onScroll={handleScroll}
         ref={chatContainerRef}
       >
-        <DocumentFilter />
+        {/*<DocumentFilter />*/}
         {currentConversation && currentConversation.messages.length > 0 ? (
-          <div className={'mt-1.5'}>
-            {currentConversation.messages.map((message, index) => (
-              <ChatMessage key={index} message={message} messageIndex={index} />
-            ))}
-            {loading && <ChatLoader />}
-            <div
-              className="h-[162px] bg-white dark:bg-[#343541]"
-              ref={messagesEndRef}
-            />
+          <div className={'space-y-10'}>
+            {currentConversation.messages.map((message, index) => {
+              const lastAssistantMessage =
+                index === currentConversation.messages.length - 1 &&
+                message.role === 'assistant';
+
+              return (
+                <ChatMessage
+                  key={index}
+                  message={message}
+                  messageIndex={index}
+                  displayLoadingState={loading && lastAssistantMessage}
+                  streamingMessage={messageIsStreaming && lastAssistantMessage}
+                />
+              );
+            })}
+            <div className="h-[162px]" ref={messagesEndRef} />
           </div>
         ) : (
           EmptyConversationCover
@@ -136,10 +146,10 @@ export default memo(function Chat() {
       {showScrollDownButton && (
         <div className="absolute bottom-0 right-0 mb-4 mr-4 pb-20 z-30">
           <button
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-300 text-gray-800 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-neutral-200"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-300 text-white shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-neutral-200"
             onClick={handleScrollDown}
           >
-            <IconArrowDown size={18} />
+            <IconArrowDown size={24} strokeWidth={1.5} />
           </button>
         </div>
       )}
