@@ -1,12 +1,16 @@
-import s from './LoadingDots.module.css';
+import classes from './LoadingDots.module.css';
+import classNames from 'classnames';
 
 const LoadingDots = () => {
   return (
-    <span className={s.root}>
-      <span />
-      <span />
-      <span />
-    </span>
+    <div className={classes.root}>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div
+          className={classNames(classes.dot, classes[`dot-${i + 1}`])}
+          key={i}
+        />
+      ))}
+    </div>
   );
 };
 

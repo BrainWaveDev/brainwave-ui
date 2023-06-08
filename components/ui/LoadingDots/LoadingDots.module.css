@@ -1,32 +1,28 @@
 .root {
-  @apply inline-flex text-center items-center leading-7;
+    @apply flex space-x-1.5;
 }
 
-.root span {
-  @apply bg-zinc-200 rounded-full h-2 w-2;
-  animation-name: blink;
-  animation-duration: 1.4s;
-  animation-iteration-count: infinite;
-  animation-fill-mode: both;
-  margin: 0 2px;
+.dot {
+    @apply w-2 h-2 rounded-full bg-neutral7 dark:bg-neutral1;
 }
 
-.root span:nth-of-type(2) {
-  animation-delay: 0.2s;
+.dot-1 {
+    @apply animate-[loaderDots_0.6s_0s_infinite_alternate];
 }
 
-.root span:nth-of-type(3) {
-  animation-delay: 0.4s;
+.dot-2 {
+    @apply animate-[loaderDots_0.6s_0.3s_infinite_alternate];
 }
 
-@keyframes blink {
-  0% {
-    opacity: 0.2;
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.2;
-  }
+.dot-3 {
+    @apply animate-[loaderDots_0.6s_0.6s_infinite_alternate];
+}
+
+@keyframes loaderDots {
+    0% {
+        opacity: 1;
+    }
+    50%, 100% {
+        opacity: 0.15
+    }
 }
