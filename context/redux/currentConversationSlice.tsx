@@ -84,6 +84,19 @@ const currentConversationSlice = createSlice({
         };
       }
     },
+    clearLastAssistantMessage: (state) => {
+      const { conversation } = state;
+      if (!conversation) return;
+      const messages = conversation.messages;
+      if (!messages) return;
+      const lastMessage = messages[messages.length - 1];
+      if (!lastMessage || lastMessage.role !== 'assistant') return;
+      messages.pop();
+      return {
+        ...state,
+        messages
+      };
+    },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
@@ -147,6 +160,9 @@ const thunkUserSent =
 
     dispatch(userSent(message));
     dispatch(setLoading(true));
+
+    // Show empty assistant message to render loading animation
+    dispatch(currentConversationSlice.actions.appendLastAssistantMessage(''));
 
     // Create conversation in db
     if (newConversation) {
