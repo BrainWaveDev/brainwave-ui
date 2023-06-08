@@ -262,7 +262,7 @@ export const ChatFolder: FC<Props> = ({ searchTerm, currentFolder }) => {
           setIsOpen(true);
         }}
       >
-        <FolderIcon className={'w-5 h-5'} strokeWidth={1} />
+        <FolderIcon className={'w-5 h-5'} strokeWidth={1.5} />
       </button>
     );
 };
