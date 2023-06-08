@@ -100,12 +100,7 @@ export const ConversationComponent: FC<Props> = memo(
     };
 
     return (
-      <motion.div
-        className="relative flex items-center my-0.5"
-        initial={{ height: 0 }}
-        animate={{ height: 'fit-content' }}
-        transition={{ ease: 'easeOut', duration: 0.5 }}
-      >
+      <div className="relative flex items-center my-0.5">
         {isRenaming && sidebarIsOpen ? (
           <div
             className={classNames(
@@ -215,7 +210,7 @@ export const ConversationComponent: FC<Props> = memo(
             </button>
           </div>
         )}
-      </motion.div>
+      </div>
     );
   }
 );
