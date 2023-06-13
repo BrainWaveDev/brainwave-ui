@@ -41,7 +41,7 @@ export default function Layout({ children, meta: pageMeta }: Props) {
     'min-h-[calc(100%_-_4.5rem)]',
     'h-[calc(100%_-_4.5rem)]',
     'max-h-[calc(100%_-_4.5rem)]',
-    'overflow-y-scroll',
+    'overflow-y-scroll overflow-x-clip',
     'scrollbar-hide'
   );
 
