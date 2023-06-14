@@ -1,12 +1,15 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { useAppSelector } from './store';
+import { set } from '@/utils/app/localcache';
 
 interface SidebarState {
   open: boolean;
+  settingDialogOpen: boolean;
 }
 
 const initialState: SidebarState = {
-  open: true
+  open: true,
+  settingDialogOpen: false
 };
 
 const sidebarSlice = createSlice({
@@ -29,19 +32,24 @@ const sidebarSlice = createSlice({
       const sidebarOpen = localStorage.getItem('sidebarOpen');
       if (sidebarOpen !== null) {
         return {
-          open: sidebarOpen === 'true'
+          open: sidebarOpen === 'true',
+          settingDialogOpen: false
         };
       } else {
         localStorage.setItem('sidebarOpen', 'true');
         return {
-          open: true
+          open: true,
+          settingDialogOpen: false
         };
       }
+    },
+    toggleSettingDialog: (state) => {
+      state.settingDialogOpen = !state.settingDialogOpen;
     }
   }
 });
 
-export const { toggleSidebar, setSidebar, initSidebar } = sidebarSlice.actions;
+export const { toggleSidebar, setSidebar, initSidebar,toggleSettingDialog } = sidebarSlice.actions;
 
 export const getSidebarStateFromStorage = () =>
   useAppSelector((state) => state.sidebar.open);
