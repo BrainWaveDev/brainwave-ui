@@ -27,12 +27,19 @@ import { useAppDispatch } from '../../../context/redux/store';
 import {
   getSidebarStateFromStorage,
   initSidebar,
+  setSidebar,
   toggleSettingDialog,
   toggleSidebar
 } from '../../../context/redux/sidebarSlice';
 import { optimisticConversationsActions } from 'context/redux/conversationsSlice';
 import { optimisticFoldersAction } from 'context/redux/folderSlice';
 import { useSessionContext } from '@supabase/auth-helpers-react';
+import {
+  getLoadingStateFromStore,
+  LoadingTrigger
+} from '../../../context/redux/loadingSlice';
+import useRouteChange from '../../../hooks/useRouteChange';
+import { RotatingLines } from 'react-loader-spinner';
 import SettingsDialog from '@/components/Settings/SettingsDialog';
 
 const NavLinks = [
@@ -68,22 +75,36 @@ type LinkType = ({
 
 export default function Sidebar() {
   // ===================================================
+  // Router
+  // ===================================================
+  const router = useRouter();
+  // Close sidebar on route change on mobile
+  useEffect(() => {
+    if (window.innerWidth < 640) {
+      dispatch(setSidebar(false));
+    }
+  }, [router.pathname]);
+
+  // ===================================================
   // Redux State
   // ===================================================
   const dispatch = useAppDispatch();
-  // Init sidebar state
   useEffect(() => {
-    dispatch(initSidebar());
+    // Initialize sidebar state to false if on mobile
+    if (window) {
+      dispatch(window.innerWidth > 640 ? initSidebar() : setSidebar(false));
+    }
   }, []);
   const sidebarOpen = getSidebarStateFromStorage();
   const onToggleSidebar = () => dispatch(toggleSidebar());
   const theme = getThemeFromStorage();
   const isDarkTheme = theme === 'dark';
+  const deletingConversations = getLoadingStateFromStore(
+    LoadingTrigger.DeletingConversations
+  );
 
-  // ===================================================
-  // Link Highlighting
-  // ===================================================
-  const router = useRouter();
+  // ============== Detect Page Changes ==============
+  const [pageLoading] = useRouteChange();
 
   // ========= Handlers =========
   const handleCreateFolder = async () => {
@@ -109,6 +130,7 @@ export default function Sidebar() {
   // sessions
   // ===================================================
   const { session } = useSessionContext();
+
   // ===================================================
   // Refs
   // ===================================================
@@ -120,7 +142,9 @@ export default function Sidebar() {
     );
   };
 
-
+  // ============================================================
+  // Tailwind Classes
+  // ============================================================
   const sidebarDisplay = sidebarOpen
   ? 'z-15 sm:z-10 sm:w-[20rem] sm:min-w-[20rem]'
   : '-z-15 sm:z-10 sm:w-24 sm:min-w-24';
@@ -192,7 +216,7 @@ export default function Sidebar() {
           {/* ============== Chat list ============== */}
           <Disclosure
             as={'div'}
-            className={'w-full mt-2 mb-2'}
+            className={'w-full mt-2 mb-2 relative'}
             defaultOpen={true}
           >
             {({ open: chatListOpen }) => (
@@ -228,57 +252,76 @@ export default function Sidebar() {
                   leaveFrom="transform scale-100 opacity-100"
                   leaveTo="transform scale-95 opacity-0"
                 >
-                  <Disclosure.Panel>
+                  <Disclosure.Panel className={'relative'}>
                     <Chatbar />
+                    {/* ========== Loading Spinner ========== */}
+                    {(pageLoading || deletingConversations) && (
+                      <div
+                        className={classNames(
+                          'absolute top-0 left-0 right-0 bottom-0 z-20',
+                          'flex items-center justify-center bg-zinc-900'
+                        )}
+                      >
+                        <RotatingLines
+                          strokeColor="#9ca3af"
+                          strokeWidth="2"
+                          animationDuration="1"
+                          width="2rem"
+                          visible={true}
+                        />
+                      </div>
+                    )}
                   </Disclosure.Panel>
                 </Transition>
               </>
             )}
           </Disclosure>
           {/* ============== New chat and folder buttons ============== */}
-          <div
-            className={classNames(
-              'flex items-center justify-center w-full rounded-lg border',
-              'bg-neutral6 border-neutral-600 py-2.5',
-              sidebarOpen ? 'flex-row' : 'flex-col gap-y-1'
-            )}
-          >
-            <button
+          {!(pageLoading || deletingConversations) && (
+            <div
               className={classNames(
-                'group flex text-sm grow flex-shrink-0 font-semibold cursor-pointer select-none items-center',
-                'gap-x-4 px-3 leading-normal text-white/50 hover:text-white transition-all duration-100'
+                'flex items-center justify-center w-full rounded-lg border',
+                'bg-neutral6 border-neutral-600 py-2.5',
+                sidebarOpen ? 'flex-row' : 'flex-col gap-y-1'
               )}
-              onClick={handleCreateConversation}
-              id={'new-chat-button'}
             >
-              <PlusCircleIcon
-                className={
-                  'w-[22px] h-[22px] fill-white/50 group-hover:fill-white transition-all duration-200'
-                }
+              <button
+                className={classNames(
+                  'group flex text-sm grow flex-shrink-0 font-semibold cursor-pointer select-none items-center',
+                  'gap-x-4 px-3 leading-normal text-white/50 hover:text-white transition-all duration-100'
+                )}
+                onClick={handleCreateConversation}
+                id={'new-chat-button'}
+              >
+                <PlusCircleIcon
+                  className={
+                    'w-[22px] h-[22px] fill-white/50 group-hover:fill-white transition-all duration-200'
+                  }
+                />
+                {sidebarOpen && 'New chat'}
+              </button>
+              <Separator.Root
+                className={classNames(
+                  'bg-neutral-600',
+                  'data-[orientation=vertical]:h-[80%] data-[orientation=vertical]:w-[2px]',
+                  'data-[orientation=horizontal]:w-[60%] data-[orientation=horizontal]:h-[1px]',
+                  'data-[orientation=horizontal]:my-1.5'
+                )}
+                decorative
+                orientation={sidebarOpen ? 'vertical' : 'horizontal'}
               />
-              {sidebarOpen && 'New chat'}
-            </button>
-            <Separator.Root
-              className={classNames(
-                'bg-neutral-600',
-                'data-[orientation=vertical]:h-[80%] data-[orientation=vertical]:w-[2px]',
-                'data-[orientation=horizontal]:w-[60%] data-[orientation=horizontal]:h-[1px]',
-                'data-[orientation=horizontal]:my-1.5'
-              )}
-              decorative
-              orientation={sidebarOpen ? 'vertical' : 'horizontal'}
-            />
-            <button
-              className="group mx-3 flex flex-shrink-0 cursor-pointer items-center transition-all duration-200"
-              onClick={handleCreateFolder}
-            >
-              <FolderPlusIcon
-                className={
-                  'w-[22px] h-[22px] fill-white/50 group-hover:fill-white transition-all duration-100'
-                }
-              />
-            </button>
-          </div>
+              <button
+                className="group mx-3 flex flex-shrink-0 cursor-pointer items-center transition-all duration-200"
+                onClick={handleCreateFolder}
+              >
+                <FolderPlusIcon
+                  className={
+                    'w-[22px] h-[22px] fill-white/50 group-hover:fill-white transition-all duration-100'
+                  }
+                />
+              </button>
+            </div>
+          )}
         </nav>
         {/* ============== Theme Switcher Buttons ============== */}
         <div
