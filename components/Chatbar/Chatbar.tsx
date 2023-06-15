@@ -16,12 +16,6 @@ import {
 } from 'context/redux/conversationsSlice';
 import { getSidebarStateFromStorage } from '../../context/redux/sidebarSlice';
 import * as Separator from '@radix-ui/react-separator';
-import useRouteChange from '../../hooks/useRouteChange';
-import { RotatingLines } from 'react-loader-spinner';
-import {
-  getLoadingStateFromStore,
-  LoadingTrigger
-} from '../../context/redux/loadingSlice';
 
 export default memo(function Chatbar() {
   // =========================
@@ -31,9 +25,6 @@ export default memo(function Chatbar() {
   const folders = getFoldersFromStorage();
   const conversations = getConversationsFromStorage();
   const sidebarOpen = getSidebarStateFromStorage();
-  const deletingConversations = getLoadingStateFromStore(
-    LoadingTrigger.DeletingConversations
-  );
 
   // ======= Filtering Conversations =======
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,9 +39,6 @@ export default memo(function Chatbar() {
       }),
     [searchTerm, conversations]
   );
-
-  // ===== Detect Page Loading =====
-  const [pageLoading] = useRouteChange();
 
   // =========================
   // Handlers
@@ -97,28 +85,11 @@ export default memo(function Chatbar() {
   return (
     <motion.div
       className={classNames(
-        'flex flex-col w-full mt-2 mb-1 relative',
+        'flex flex-col w-full mt-2 relative',
         'transition-all duration-150 transform-gpu max-h-full'
       )}
       animate={sidebarOpen ? 'open' : 'closed'}
     >
-      {/* ========== Loading Spinner ========== */}
-      {(pageLoading || deletingConversations) && (
-        <div
-          className={classNames(
-            'absolute top-0 left-0 right-0 bottom-0 z-20',
-            'flex items-center justify-center bg-zinc-900'
-          )}
-        >
-          <RotatingLines
-            strokeColor="#9ca3af"
-            strokeWidth="2"
-            animationDuration="1"
-            width="2rem"
-            visible={true}
-          />
-        </div>
-      )}
       {/* ========== Conversations Search Bar ========== */}
       {conversations.length > 1 && (
         <>
@@ -149,6 +120,7 @@ export default memo(function Chatbar() {
             >
               <Conversations conversations={filteredConversations} />
             </div>
+            <Separator.Root className={separatorStyle} />
           </>
         )
       ) : (
@@ -163,10 +135,6 @@ export default memo(function Chatbar() {
             No conversations.
           </div>
         </>
-      )}
-
-      {!(conversations.length > 0 && filteredConversations.length === 0) && (
-        <Separator.Root className={separatorStyle} />
       )}
       <ChatbarSettings />
     </motion.div>
