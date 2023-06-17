@@ -41,6 +41,7 @@ import {
 import useRouteChange from '../../../hooks/useRouteChange';
 import { RotatingLines } from 'react-loader-spinner';
 import SettingsDialog from '@/components/Settings/SettingsDialog';
+import { use100vh } from 'react-div-100vh';
 
 const NavLinks = [
   {
@@ -143,6 +144,9 @@ export default function Sidebar() {
     );
   };
 
+  // ======== Dynamically Set Sidebar Height ==========
+  const height = use100vh();
+
   // ============================================================
   // Tailwind Classes
   // ============================================================
@@ -163,7 +167,12 @@ export default function Sidebar() {
     // TODO: Add animation for sidebar sidebarOpen and close
     <>
       <SettingsDialog />
-      <aside className={classNames(classes.sidebar, sidebarDisplay)}>
+      <aside
+        className={classNames(classes.sidebar, sidebarDisplay)}
+        style={{
+          height: `${height}px`
+        }}
+      >
         <div
           className={classNames(
             'flex flex-row w-full items-center h-12 mb-6 place-content-between'
