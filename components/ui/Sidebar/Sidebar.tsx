@@ -170,7 +170,8 @@ export default function Sidebar() {
       <aside
         className={classNames(classes.sidebar, sidebarDisplay)}
         style={{
-          height: `${height}px`
+          height: `${height}px`,
+          maxHeight: `${height}px`
         }}
       >
         <div
