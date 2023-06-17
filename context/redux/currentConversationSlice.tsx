@@ -167,9 +167,6 @@ const thunkUserSent =
       index: newConversation ? 0 : conversation!.messages.length
     };
 
-    // TODO: Remove this
-    console.log('userSent', message);
-
     dispatch(userSent(message));
     dispatch(setLoading(true));
 
@@ -298,7 +295,6 @@ export const thunkStreamingResponse =
 
     await insertMessage(
       updatedLastMessage,
-      updatedConversation.messages.length - 1,
       updatedConversation.id,
       session.user?.id
     );
