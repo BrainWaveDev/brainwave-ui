@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import classNames from 'classnames';
 import classes from './Sidebar.module.css';
-import SidebarOpen from '@/components/icons/SidebarOpen';
-import SidebarClose from '@/components/icons/SidebarClose';
+import SideBarOpenIcon from '@/components/icons/SidebarOpen';
+import SideBarCloseIcon from '@/components/icons/SidebarClose';
 import Logo from '@/components/icons/Logo';
 import {
   ChatBubbleLeftIcon,
@@ -25,12 +25,12 @@ import {
 } from '../../../context/redux/themeSlice';
 import { useAppDispatch } from '../../../context/redux/store';
 import {
-  getSidebarStateFromStorage,
+  getModalStateFromStorage,
   initSidebar,
   setSidebar,
   toggleSettingDialog,
   toggleSidebar
-} from '../../../context/redux/sidebarSlice';
+} from '../../../context/redux/modalSlice';
 import { optimisticConversationsActions } from 'context/redux/conversationsSlice';
 import { optimisticFoldersAction } from 'context/redux/folderSlice';
 import { useSessionContext } from '@supabase/auth-helpers-react';
@@ -97,7 +97,7 @@ export default function Sidebar() {
       dispatch(window.innerWidth > 640 ? initSidebar() : setSidebar(false));
     }
   }, []);
-  const sidebarOpen = getSidebarStateFromStorage();
+  const { sideBarOpen } = getModalStateFromStorage();
   const onToggleSidebar = () => dispatch(toggleSidebar());
   const theme = getThemeFromStorage();
   const isDarkTheme = theme === 'dark';
@@ -110,14 +110,14 @@ export default function Sidebar() {
 
   // ========= Handlers =========
   const handleCreateFolder = async () => {
-    if (!sidebarOpen) onToggleSidebar();
+    if (!sideBarOpen) onToggleSidebar();
     await dispatch(optimisticFoldersAction.createNewFolder(session!.user.id));
     if (!isChatlistOpen()) {
       chatListButtonRef.current?.click();
     }
   };
   const handleCreateConversation = async () => {
-    if (!sidebarOpen) onToggleSidebar();
+    if (!sideBarOpen) onToggleSidebar();
     // Switch to chat page
     if (router.pathname !== '/chat') router.push('/chat');
     // Create a new conversation
@@ -150,7 +150,7 @@ export default function Sidebar() {
   // ============================================================
   // Tailwind Classes
   // ============================================================
-  const sidebarDisplay = sidebarOpen
+  const sidebarDisplay = sideBarOpen
     ? 'z-30 opacity-100 sm:z-30 sm:w-[20rem] sm:min-w-[20rem]'
     : '-z-30 opacity-0 sm:opacity-100 sm:z-30 sm:w-24 sm:min-w-24';
 
@@ -164,7 +164,7 @@ export default function Sidebar() {
   );
 
   return (
-    // TODO: Add animation for sidebar sidebarOpen and close
+    // TODO: Add animation for sidebar sideBarOpen and close
     <>
       <SettingsDialog />
       <aside
@@ -178,7 +178,7 @@ export default function Sidebar() {
             'flex flex-row w-full items-center h-12 mb-6 place-content-between'
           )}
         >
-          {sidebarOpen && (
+          {sideBarOpen && (
             <div className={classNames('flex flex-row items-center gap-x-3')}>
               <Logo className={'h-16 w-16'} />
               <h3 className={'text-2xl font-bold'}>BrainWave</h3>
@@ -188,10 +188,10 @@ export default function Sidebar() {
             className="hidden sm:block group focus:ring-0 h-fit mt-0.5 ml-3 cursor-pointer"
             onClick={onToggleSidebar}
           >
-            {sidebarOpen ? (
-              <SidebarClose className={sideBarToggleSVGStyle} />
+            {sideBarOpen ? (
+              <SideBarCloseIcon className={sideBarToggleSVGStyle} />
             ) : (
-              <SidebarOpen className={sideBarToggleSVGStyle} />
+              <SideBarOpenIcon className={sideBarToggleSVGStyle} />
             )}
           </button>
         </div>
@@ -201,7 +201,10 @@ export default function Sidebar() {
           )}
         >
           <nav
-            className={`flex flex-col grow items-start scrollbar-hide max-h-[calc(${height}px_-_14.5rem)] overflow-y-scroll`}
+            className={`flex flex-col grow items-start scrollbar-hide overflow-y-scroll`}
+            style={{
+              maxHeight: `calc(${height}px - 14.5rem)`
+            }}
           >
             {/* ============== Navigation links ============== */}
             <div
@@ -213,7 +216,7 @@ export default function Sidebar() {
                 <LinkComponent
                   key={link.name}
                   link={link}
-                  sidebarOpen={sidebarOpen}
+                  sideBarOpen={sideBarOpen}
                 />
               ))}
             </div>
@@ -242,7 +245,7 @@ export default function Sidebar() {
                         chatListOpen && 'rotate-180 transform'
                       )}
                     />
-                    {sidebarOpen && (
+                    {sideBarOpen && (
                       <span
                         className={
                           'font-semibold text-sm text-white/50 group-hover:text-white transition-all grow'
@@ -290,7 +293,7 @@ export default function Sidebar() {
                 className={classNames(
                   'flex items-center justify-center w-full rounded-lg border',
                   'bg-neutral6 border-neutral-600 py-2.5',
-                  sidebarOpen ? 'flex-row' : 'flex-col gap-y-1'
+                  sideBarOpen ? 'flex-row' : 'flex-col gap-y-1'
                 )}
               >
                 <button
@@ -306,7 +309,7 @@ export default function Sidebar() {
                       'w-[22px] h-[22px] fill-white/50 group-hover:fill-white transition-all duration-200'
                     }
                   />
-                  {sidebarOpen && 'New chat'}
+                  {sideBarOpen && 'New chat'}
                 </button>
                 <Separator.Root
                   className={classNames(
@@ -316,7 +319,7 @@ export default function Sidebar() {
                     'data-[orientation=horizontal]:my-1.5'
                   )}
                   decorative
-                  orientation={sidebarOpen ? 'vertical' : 'horizontal'}
+                  orientation={sideBarOpen ? 'vertical' : 'horizontal'}
                 />
                 <button
                   className="group mx-3 flex flex-shrink-0 cursor-pointer items-center transition-all duration-200"
@@ -338,16 +341,16 @@ export default function Sidebar() {
               'before:bottom-1 before:w-[calc(50%_-_0.25rem)] before:bg-zinc-900 before:rounded-[0.625rem] before:transition-all',
 
               isDarkTheme && 'before:translate-x-full',
-              !sidebarOpen && 'before:hidden place-content-center'
+              !sideBarOpen && 'before:hidden place-content-center'
             )}
           >
-            {(sidebarOpen || isDarkTheme) && (
+            {(sideBarOpen || isDarkTheme) && (
               <button
                 className={classNames(
                   'relative z-1 text-sm group flex justify-center items-center h-10',
                   'font-semibold transition-colors hover:text-white focus:ring-0 cursor-pointer',
                   isDarkTheme ? 'text-white/50' : 'text-white',
-                  sidebarOpen ? 'basis-1/2' : 'basis-1'
+                  sideBarOpen ? 'basis-1/2' : 'basis-1'
                 )}
                 onClick={() => dispatch(setTheme('light'))}
               >
@@ -356,13 +359,13 @@ export default function Sidebar() {
                     'inline-block w-6 h-6',
                     'transition-colors group-hover:fill-white',
                     !isDarkTheme ? 'fill-white' : 'fill-white/50',
-                    sidebarOpen ? 'mr-3' : 'mr-0'
+                    sideBarOpen ? 'mr-3' : 'mr-0'
                   )}
                 />
-                {sidebarOpen && 'Light'}
+                {sideBarOpen && 'Light'}
               </button>
             )}
-            {(sidebarOpen || !isDarkTheme) && (
+            {(sideBarOpen || !isDarkTheme) && (
               <button
                 className={classNames(
                   'relative z-1 text-sm group flex justify-center items-center h-10 basis-1/2 base2',
@@ -376,10 +379,10 @@ export default function Sidebar() {
                     'inline-block w-6 h-6',
                     'transition-colors group-hover:fill-white',
                     isDarkTheme ? 'fill-white' : 'fill-white/50',
-                    sidebarOpen ? 'mr-3' : 'mr-0'
+                    sideBarOpen ? 'mr-3' : 'mr-0'
                   )}
                 />
-                {sidebarOpen && 'Dark'}
+                {sideBarOpen && 'Dark'}
               </button>
             )}
           </div>
@@ -400,10 +403,10 @@ const linkHighlightStyle = classNames(
 
 function LinkComponent({
   link,
-  sidebarOpen
+  sideBarOpen
 }: {
   link: LinkType;
-  sidebarOpen: boolean;
+  sideBarOpen: boolean;
 }) {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -423,7 +426,7 @@ function LinkComponent({
         <link.icon
           className={'w-5 h-5 fill-white/80 group-hover:fill-white mx-3.5'}
         />
-        {sidebarOpen && (
+        {sideBarOpen && (
           <span
             className={
               'ml-2 font-semibold text-sm text-white/80 group-hover:text-white transition-all'
@@ -450,7 +453,7 @@ function LinkComponent({
         <link.icon
           className={'w-5 h-5 fill-white/80 group-hover:fill-white mx-3.5'}
         />
-        {sidebarOpen && (
+        {sideBarOpen && (
           <span
             className={
               'ml-2 font-semibold text-sm text-white/80 group-hover:text-white transition-all'
