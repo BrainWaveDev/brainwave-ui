@@ -4,6 +4,7 @@ export interface Message {
   id?: number;
   role: Role;
   content: string;
+  index?: number;
 }
 
 export type Role = 'assistant' | 'user';
@@ -35,12 +36,8 @@ export interface ConversationSummary extends ConversationIdentifiable {
   folderId: number | null;
 }
 
-
-export interface Conversation extends ConversationSummary{
+export interface Conversation extends ConversationSummary {
   id: number;
   messages: Message[];
   isPlaceholder?: boolean;
 }
-
-
-
