@@ -15,13 +15,17 @@ import { getCurrentConversationFromStore } from '../../context/redux/currentConv
 import { throttle } from '@/utils/helpers';
 import classNames from 'classnames';
 import { RotatingLines } from 'react-loader-spinner';
-import { setSidebar } from '../../context/redux/sidebarSlice';
+import {
+  getSidebarStateFromStorage,
+  setSidebar
+} from '../../context/redux/sidebarSlice';
 import { useAppDispatch } from '../../context/redux/store';
 
 export default memo(function Chat() {
   // ============== Redux State ==============
   const { conversation, fetchingConversation, loading, messageIsStreaming } =
     getCurrentConversationFromStore();
+  const sidebarOpen = getSidebarStateFromStorage();
   const dispatch = useAppDispatch();
 
   const currentConversation = useMemo(() => {
@@ -157,7 +161,8 @@ export default memo(function Chat() {
     <div
       className={classNames(
         'relative flex flex-col items-center min-h-full !h-full max-h-full',
-        fetchingConversation && 'justify-center'
+        fetchingConversation && 'justify-center',
+        sidebarOpen && 'pointer-events-none'
       )}
     >
       {fetchingConversation ? (
