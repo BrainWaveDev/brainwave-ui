@@ -98,10 +98,11 @@ export const createConversation = async (conversation: Conversation) => {
 };
 
 export const retrieveConversation = async (conversationId: number) => {
+  // Get conversation from local storage
   const { exist, resource } = get('conversation', conversationId.toString());
-  if (exist) {
-    return resource!;
-  }
+
+  if (exist) return resource as Conversation;
+
   const { data, error } = (await supabase
     .from('conversation')
     .select(
@@ -118,16 +119,31 @@ export const retrieveConversation = async (conversationId: number) => {
     .single()) as any;
 
   if (error) {
+    // Set conversation to the version in local storage
+    if (exist) return resource as Conversation;
     throw error;
   }
+
   const res = {
     id: data?.id, // no error
     name: data?.name,
     model: OpenAIModels['gpt-3.5-turbo'],
     prompt: DEFAULT_SYSTEM_PROMPT,
-    messages: data?.messages
+    messages: data?.messages.map(
+      (m: any) =>
+        ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          index: m.index
+        } as Message)
+    )
   } as Conversation;
+
+  // Remove previously saved conversation if it's a placeholder
+  if (exist) remove('conversation', conversationId.toString());
   set('conversation', conversationId.toString(), res); // @ts-nocheck
+
   // @ts-nocheck
   return res;
 };
@@ -234,7 +250,6 @@ export const clearAllConversations = async () => {
 
 export const insertMessage = async (
   message: Message,
-  index: number,
   conversation_id: number,
   user_id: string
 ) => {
@@ -246,7 +261,7 @@ export const insertMessage = async (
       content: message.content,
       role: message.role,
       user_id: user_id,
-      index: index
+      index: message.index!
     })
     .select()
     .throwOnError()
