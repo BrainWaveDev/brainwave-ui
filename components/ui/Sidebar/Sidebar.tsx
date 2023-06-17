@@ -147,8 +147,8 @@ export default function Sidebar() {
   // Tailwind Classes
   // ============================================================
   const sidebarDisplay = sidebarOpen
-    ? 'z-15 sm:z-10 sm:w-[20rem] sm:min-w-[20rem]'
-    : '-z-15 sm:z-10 sm:w-24 sm:min-w-24';
+    ? 'z-20 sm:z-10 sm:w-[20rem] sm:min-w-[20rem]'
+    : '-z-20 sm:z-10 sm:w-24 sm:min-w-24';
 
   const linkHighlightStyle = classNames(
     'bg-gradient-to-l from-[#323337] to-[rgba(70,79,111,0.3)]',
@@ -165,7 +165,7 @@ export default function Sidebar() {
 
   return (
     // TODO: Add animation for sidebar sidebarOpen and close
-    <div>
+    <>
       <SettingsDialog />
       <aside className={classNames(classes.sidebar, sidebarDisplay)}>
         <div
@@ -382,7 +382,7 @@ export default function Sidebar() {
           </div>
         </div>
       </aside>
-    </div>
+    </>
   );
 }
 
