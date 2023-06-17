@@ -3,7 +3,6 @@
     /* Responsiveness */
     @apply fixed lg:static;
     @apply w-screen max-w-[20rem];
-    @apply sm:!opacity-100 sm:!z-20 sm:!transition-none duration-0;
 }
 
 .openAndCloseButton {
