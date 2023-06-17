@@ -150,10 +150,6 @@ export default function Sidebar() {
     ? 'z-20 opacity-100 sm:z-10 sm:w-[20rem] sm:min-w-[20rem]'
     : '-z-20 opacity-0 sm:opacity-100 sm:z-10 sm:w-24 sm:min-w-24';
 
-  const linkHighlightStyle = classNames(
-    'bg-gradient-to-l from-[#323337] to-[rgba(70,79,111,0.3)]',
-    'shadow-[inset_0px_0.0625rem_0_rgba(255,255,255,0.05),0_0.25rem_0.5rem_0_rgba(0,0,0,0.1)]'
-  );
   const sideBarToggleSVGStyle = classNames(
     'inline-block w-6 h-7 transition-colors duration-75 fill-zinc-500',
     'group-hover:fill-white'
@@ -393,11 +389,6 @@ export default function Sidebar() {
 const linkHighlightStyle = classNames(
   'bg-gradient-to-l from-[#323337] to-[rgba(70,79,111,0.3)]',
   'shadow-[inset_0px_0.0625rem_0_rgba(255,255,255,0.05),0_0.25rem_0.5rem_0_rgba(0,0,0,0.1)]'
-);
-
-const sideBarToggleSVGStyle = classNames(
-  'inline-block w-6 h-7 transition-colors duration-75 fill-zinc-500',
-  'group-hover:fill-white'
 );
 
 function LinkComponent({
