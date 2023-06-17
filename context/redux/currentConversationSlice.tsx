@@ -14,6 +14,7 @@ import { randomPlaceholderConversation } from '@/utils/app/conversation';
 interface SelectedConversationState {
   conversation: Conversation | undefined;
   currentMessage: Message | undefined;
+  fetchingConversation: boolean;
   messageIsStreaming: boolean;
   loading: boolean;
   stopConversation: boolean;
@@ -22,6 +23,7 @@ interface SelectedConversationState {
 const initialState: SelectedConversationState = {
   conversation: undefined,
   currentMessage: undefined,
+  fetchingConversation: false,
   messageIsStreaming: false,
   loading: false,
   stopConversation: false
@@ -37,8 +39,11 @@ const currentConversationSlice = createSlice({
     clearSelectedConversation: (state) => {
       state.conversation = undefined;
     },
-    clearMessagesInCurrentConversations: (state) => {
-      if (state.conversation) state.conversation.messages = [];
+    setMessagesInCurrentConversations: (
+      state,
+      action: PayloadAction<Message[]>
+    ) => {
+      if (state.conversation) state.conversation.messages = action.payload;
     },
     userSent(state, action: PayloadAction<Message>) {
       const { conversation } = state;
@@ -59,12 +64,9 @@ const currentConversationSlice = createSlice({
       if (lastMessage.role !== 'assistant') {
         messages.push({
           content: action.payload,
-          role: 'assistant'
+          role: 'assistant',
+          index: messages.length
         });
-        state.conversation = {
-          ...conversation,
-          messages
-        };
       } else {
         lastMessage.content += action.payload;
       }
@@ -90,12 +92,11 @@ const currentConversationSlice = createSlice({
       const messages = conversation.messages;
       if (!messages) return;
       const lastMessage = messages[messages.length - 1];
-      if (!lastMessage || lastMessage.role !== 'assistant') return;
+      if (lastMessage === undefined || lastMessage.role !== 'assistant') return;
       messages.pop();
-      return {
-        ...state,
-        messages
-      };
+    },
+    setFetchingConversation: (state, action: PayloadAction<boolean>) => {
+      state.fetchingConversation = action.payload;
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
@@ -129,25 +130,27 @@ const currentConversationSlice = createSlice({
     }
   }
 });
-
 const thunkRetrieveConversationDetails =
   (summary: ConversationSummary): AppThunk =>
-    async (dispatch) => {
-      const tempConversation: Conversation = {
-        ...summary,
-        messages: []
-      };
-      dispatch(selectCurrentConversation(tempConversation));
-      try {
-        const conversation = await retrieveConversation(tempConversation.id);
-        dispatch(selectCurrentConversation(conversation));
-      } catch (e) {
-        dispatch(clearSelectedConversation());
-      }
+  async (dispatch) => {
+    dispatch(setFetchingConversation(true));
+    const tempConversation: Conversation = {
+      ...summary,
+      messages: []
     };
+    dispatch(selectCurrentConversation(tempConversation));
+    try {
+      const conversation = await retrieveConversation(tempConversation.id);
+      dispatch(selectCurrentConversation(conversation));
+    } catch (e) {
+      dispatch(clearSelectedConversation());
+    } finally {
+      dispatch(setFetchingConversation(false));
+    }
+  };
 
 const thunkUserSent =
-  (message: Message, user_id: string): AppThunk<Conversation | undefined> =>
+  (content: string, user_id: string): AppThunk =>
   async (dispatch, getState) => {
     let { conversation } = getState().currentConversation;
     const newConversation = conversation === undefined;
@@ -157,6 +160,15 @@ const thunkUserSent =
       dispatch(addConversation(conversation));
       dispatch(selectCurrentConversation(conversation));
     }
+
+    const message: Message = {
+      content,
+      role: 'user',
+      index: newConversation ? 0 : conversation!.messages.length
+    };
+
+    // TODO: Remove this
+    console.log('userSent', message);
 
     dispatch(userSent(message));
     dispatch(setLoading(true));
@@ -181,16 +193,11 @@ const thunkUserSent =
     const messages = conversation!.messages;
     try {
       // Insert message to db
-      await insertMessage(
-        message,
-        messages.length - 1,
-        conversation!.id,
-        user_id
-      );
+      await insertMessage(message, conversation!.id, user_id);
     } catch (e: any) {
-      // Clear conversation messages from Redux store
       dispatch(setLoading(false));
-      dispatch(clearMessagesInCurrentConversations());
+      // Clear last two messages in the conversation
+      dispatch(setMessagesInCurrentConversations(messages.slice(0, -2)));
       // TODO: ERROR: Failed to sync message history with database
       console.error('Failed to sync message history with database');
     }
@@ -201,33 +208,33 @@ export const thunkStreamingResponse =
     async (dispatch, getState) => {
       if (!getState().loading) dispatch(setLoading(true));
 
-      const { conversation } = getState().currentConversation;
-      if (!conversation) {
-        console.error(`there is no conversation, this should never happen`);
-        return;
-      }
-      const messages = conversation.messages;
-      const lastMessage = messages[messages.length - 1];
-      if (!lastMessage || lastMessage.role === 'assistant') {
-        //something went wrong, gotta fix
-        console.error(
-          `${lastMessage} is not a user message or there is no last message`
-        );
-        return;
-      }
-      dispatch(setIsStreaming(true));
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          jwt: session?.access_token,
-          messages: messages,
-          model: conversation.model,
-          search_space: search_space
-        })
-      });
+    const { conversation } = getState().currentConversation;
+    if (!conversation) {
+      console.error(`there is no conversation, this should never happen`);
+      return;
+    }
+    const messages = conversation.messages;
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage) {
+      //something went wrong, gotta fix
+      console.error('There is no last message');
+      return;
+    }
+    dispatch(setIsStreaming(true));
+    const controller = new AbortController();
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        jwt: session?.access_token,
+        messages: messages,
+        model: conversation.model,
+        search_space: search_space
+      })
+    });
 
       if (!response.ok || !response.body) {
         dispatch(setLoading(false));
@@ -250,16 +257,25 @@ export const thunkStreamingResponse =
       const reader = data.getReader();
       const decoder = new TextDecoder('utf-8');
 
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done || getState().currentConversation.stopConversation) break;
+    let done = false;
+
+    while (!done) {
+      if (getState().currentConversation.stopConversation) {
+        controller.abort();
+        done = true;
+        break;
+      }
+
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
       const chunkValue = decoder.decode(value);
       dispatch(
         currentConversationSlice.actions.appendLastAssistantMessage(chunkValue)
       );
     }
-    dispatch(setLoading(false));
+
     dispatch(setIsStreaming(false));
+
     const updatedConversation = getState().currentConversation.conversation!;
     const updatedLastMessage =
       updatedConversation?.messages[updatedConversation?.messages.length - 1];
@@ -269,6 +285,17 @@ export const thunkStreamingResponse =
       );
       return;
     }
+    if (getState().currentConversation.stopConversation) {
+      // Change stop conversation response back to false
+      dispatch(setStopConversation(false));
+
+      // Clear last assistant message if the stream was stopped
+      if (updatedLastMessage.content === '') {
+        dispatch(clearLastAssistantMessage());
+        return;
+      }
+    }
+
     await insertMessage(
       updatedLastMessage,
       updatedConversation.messages.length - 1,
@@ -375,7 +402,9 @@ export const {
   setIsStreaming,
   setStopConversation,
   selectCurrentConversation,
-  clearMessagesInCurrentConversations
+  setMessagesInCurrentConversations,
+  clearLastAssistantMessage,
+  setFetchingConversation
 } = currentConversationSlice.actions;
 
 export const getCurrentConversationFromStore = () =>
