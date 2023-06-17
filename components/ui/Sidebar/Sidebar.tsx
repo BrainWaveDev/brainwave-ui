@@ -151,8 +151,8 @@ export default function Sidebar() {
   // Tailwind Classes
   // ============================================================
   const sidebarDisplay = sidebarOpen
-    ? 'z-20 opacity-100 sm:z-10 sm:w-[20rem] sm:min-w-[20rem]'
-    : '-z-20 opacity-0 sm:opacity-100 sm:z-10 sm:w-24 sm:min-w-24';
+    ? 'z-30 opacity-100 sm:z-30 sm:w-[20rem] sm:min-w-[20rem]'
+    : '-z-30 opacity-0 sm:opacity-100 sm:z-30 sm:w-24 sm:min-w-24';
 
   const sideBarToggleSVGStyle = classNames(
     'inline-block w-6 h-7 transition-colors duration-75 fill-zinc-500',
@@ -170,8 +170,7 @@ export default function Sidebar() {
       <aside
         className={classNames(classes.sidebar, sidebarDisplay)}
         style={{
-          height: `${height}px`,
-          maxHeight: `${height}px`
+          height: `${height}px`
         }}
       >
         <div
@@ -202,9 +201,7 @@ export default function Sidebar() {
           )}
         >
           <nav
-            className={
-              'flex flex-col grow items-start scrollbar-hide max-h-[calc(100vh_-_14.5rem)] overflow-y-scroll'
-            }
+            className={`flex flex-col grow items-start scrollbar-hide max-h-[calc(${height}px_-_14.5rem)] overflow-y-scroll`}
           >
             {/* ============== Navigation links ============== */}
             <div
@@ -338,7 +335,7 @@ export default function Sidebar() {
           <div
             className={classNames(
               'relative flex w-full p-1 bg-neutral-800 rounded-xl before:absolute before:left-1 before:top-1 ml-0 mb-1.5',
-              'before:bottom-1 before:w-[calc(50%-0.25rem)] before:bg-zinc-900 before:rounded-[0.625rem] before:transition-all',
+              'before:bottom-1 before:w-[calc(50%_-_0.25rem)] before:bg-zinc-900 before:rounded-[0.625rem] before:transition-all',
 
               isDarkTheme && 'before:translate-x-full',
               !sidebarOpen && 'before:hidden place-content-center'
