@@ -8,21 +8,25 @@ import {
   retrieveConversation
 } from '@/utils/app/conversation';
 import { Session } from '@supabase/auth-helpers-react';
-import { addConversation } from './conversationsSlice';
+import { addConversation, deleteConversation } from './conversationsSlice';
 import { randomPlaceholderConversation } from '@/utils/app/conversation';
 
 interface SelectedConversationState {
   conversation: Conversation | undefined;
   currentMessage: Message | undefined;
+  fetchingConversation: boolean;
   messageIsStreaming: boolean;
   loading: boolean;
+  stopConversation: boolean;
 }
 
 const initialState: SelectedConversationState = {
   conversation: undefined,
   currentMessage: undefined,
+  fetchingConversation: false,
   messageIsStreaming: false,
-  loading: false
+  loading: false,
+  stopConversation: false
 };
 
 const currentConversationSlice = createSlice({
@@ -34,6 +38,12 @@ const currentConversationSlice = createSlice({
     },
     clearSelectedConversation: (state) => {
       state.conversation = undefined;
+    },
+    setMessagesInCurrentConversations: (
+      state,
+      action: PayloadAction<Message[]>
+    ) => {
+      if (state.conversation) state.conversation.messages = action.payload;
     },
     userSent(state, action: PayloadAction<Message>) {
       const { conversation } = state;
@@ -54,12 +64,9 @@ const currentConversationSlice = createSlice({
       if (lastMessage.role !== 'assistant') {
         messages.push({
           content: action.payload,
-          role: 'assistant'
+          role: 'assistant',
+          index: messages.length
         });
-        state.conversation = {
-          ...conversation,
-          messages
-        };
       } else {
         lastMessage.content += action.payload;
       }
@@ -79,11 +86,26 @@ const currentConversationSlice = createSlice({
         };
       }
     },
+    clearLastAssistantMessage: (state) => {
+      const { conversation } = state;
+      if (!conversation) return;
+      const messages = conversation.messages;
+      if (!messages) return;
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage === undefined || lastMessage.role !== 'assistant') return;
+      messages.pop();
+    },
+    setFetchingConversation: (state, action: PayloadAction<boolean>) => {
+      state.fetchingConversation = action.payload;
+    },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
     setIsStreaming: (state, action: PayloadAction<boolean>) => {
       state.messageIsStreaming = action.payload;
+    },
+    setStopConversation: (state, action: PayloadAction<boolean>) => {
+      state.stopConversation = action.payload;
     },
     clearSource: (state) => {
       const { conversation } = state;
@@ -108,101 +130,108 @@ const currentConversationSlice = createSlice({
     }
   }
 });
-
 const thunkRetrieveConversationDetails =
   (summary: ConversationSummary): AppThunk =>
-    async (dispatch) => {
-      const tempConversation: Conversation = {
-        ...summary,
-        messages: []
-      };
-      dispatch(selectCurrentConversation(tempConversation));
-      try {
-        const conversation = await retrieveConversation(tempConversation.id);
-        dispatch(selectCurrentConversation(conversation));
-      } catch (e) {
-        dispatch(clearSelectedConversation());
-      }
+  async (dispatch) => {
+    dispatch(setFetchingConversation(true));
+    const tempConversation: Conversation = {
+      ...summary,
+      messages: []
     };
+    dispatch(selectCurrentConversation(tempConversation));
+    try {
+      const conversation = await retrieveConversation(tempConversation.id);
+      dispatch(selectCurrentConversation(conversation));
+    } catch (e) {
+      dispatch(clearSelectedConversation());
+    } finally {
+      dispatch(setFetchingConversation(false));
+    }
+  };
 
 const thunkUserSent =
-  (message: Message, user_id: string): AppThunk<Conversation | undefined> =>
-    async (dispatch, getState) => {
-      let { conversation } = getState().currentConversation;
+  (content: string, user_id: string): AppThunk =>
+  async (dispatch, getState) => {
+    let { conversation } = getState().currentConversation;
+    const newConversation = conversation === undefined;
 
-      if (!conversation) {
-        const placeholder = randomPlaceholderConversation();
-        dispatch(selectCurrentConversation(placeholder));
-        try {
-          // We don't need to update the UI after this since
-          // the new conversation is already in the UI
-          const dbConversation = await createConversation(placeholder);
-          conversation = dbConversation;
-          dispatch(addConversation(dbConversation));
-        } catch (e) {
-          console.error(e);
-          // TODO: ERROR: Failed to create new conversation
-          dispatch(setLoading(false));
-          return;
-        }
-      }
+    if (newConversation) {
+      conversation = randomPlaceholderConversation();
+      dispatch(addConversation(conversation));
+      dispatch(selectCurrentConversation(conversation));
+    }
 
-      dispatch(userSent(message));
-      dispatch(setLoading(true));
-
-      try {
-        if (!conversation) {
-          throw new Error('No conversation found, this should never happen');
-        }
-        const messages = conversation.messages;
-        // insert message to db
-        await insertMessage(
-          message,
-          messages.length - 1,
-          conversation.id,
-          user_id
-        );
-      } catch (e) {
-        // TODO: ERROR: Failed to sync message history with database
-        dispatch(clearSelectedConversation());
-        throw e;
-      }
-
-      return conversation;
+    const message: Message = {
+      content,
+      role: 'user',
+      index: newConversation ? 0 : conversation!.messages.length
     };
+
+    dispatch(userSent(message));
+    dispatch(setLoading(true));
+
+    // Show empty assistant message to render loading animation
+    dispatch(currentConversationSlice.actions.appendLastAssistantMessage(''));
+
+    // Create conversation in db
+    if (newConversation) {
+      try {
+        await createConversation(conversation!);
+      } catch (e) {
+        // Delete conversation which failed to upload
+        dispatch(setLoading(false));
+        dispatch(clearSelectedConversation());
+        dispatch(deleteConversation(conversation!));
+        console.error('Failed to create conversation in database');
+        return;
+      }
+    }
+
+    const messages = conversation!.messages;
+    try {
+      // Insert message to db
+      await insertMessage(message, conversation!.id, user_id);
+    } catch (e: any) {
+      dispatch(setLoading(false));
+      // Clear last two messages in the conversation
+      dispatch(setMessagesInCurrentConversations(messages.slice(0, -2)));
+      // TODO: ERROR: Failed to sync message history with database
+      console.error('Failed to sync message history with database');
+    }
+  };
 
 export const thunkStreamingResponse =
   (session: Session, search_space: number[]): AppThunk =>
     async (dispatch, getState) => {
       if (!getState().loading) dispatch(setLoading(true));
 
-      const { conversation } = getState().currentConversation;
-      if (!conversation) {
-        console.error(`there is no conversation, this should never happen`);
-        return;
-      }
-      const messages = conversation.messages;
-      const lastMessage = messages[messages.length - 1];
-      if (!lastMessage || lastMessage.role === 'assistant') {
-        //something went wrong, gotta fix
-        console.error(
-          `${lastMessage} is not a user message or there is no last message`
-        );
-        return;
-      }
-      dispatch(setIsStreaming(true));
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          jwt: session?.access_token,
-          messages: messages,
-          model: conversation.model,
-          search_space: search_space
-        })
-      });
+    const { conversation } = getState().currentConversation;
+    if (!conversation) {
+      console.error(`there is no conversation, this should never happen`);
+      return;
+    }
+    const messages = conversation.messages;
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage) {
+      //something went wrong, gotta fix
+      console.error('There is no last message');
+      return;
+    }
+    dispatch(setIsStreaming(true));
+    const controller = new AbortController();
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        jwt: session?.access_token,
+        messages: messages,
+        model: conversation.model,
+        search_space: search_space
+      })
+    });
 
       if (!response.ok || !response.body) {
         dispatch(setLoading(false));
@@ -225,32 +254,51 @@ export const thunkStreamingResponse =
       const reader = data.getReader();
       const decoder = new TextDecoder('utf-8');
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        const chunkValue = decoder.decode(value);
-        dispatch(
-          currentConversationSlice.actions.appendLastAssistantMessage(chunkValue)
-        );
+    let done = false;
+
+    while (!done) {
+      if (getState().currentConversation.stopConversation) {
+        controller.abort();
+        done = true;
+        break;
       }
-      dispatch(setLoading(false));
-      dispatch(setIsStreaming(false));
-      const updatedConversation = getState().currentConversation.conversation!;
-      const updatedLastMessage =
-        updatedConversation?.messages[updatedConversation?.messages.length - 1];
-      if (updatedLastMessage?.role != 'assistant') {
-        console.error(
-          `something went wrong, last message is not assistant message`
-        );
+
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunkValue = decoder.decode(value);
+      dispatch(
+        currentConversationSlice.actions.appendLastAssistantMessage(chunkValue)
+      );
+    }
+
+    dispatch(setIsStreaming(false));
+
+    const updatedConversation = getState().currentConversation.conversation!;
+    const updatedLastMessage =
+      updatedConversation?.messages[updatedConversation?.messages.length - 1];
+    if (updatedLastMessage?.role != 'assistant') {
+      console.error(
+        `something went wrong, last message is not assistant message`
+      );
+      return;
+    }
+    if (getState().currentConversation.stopConversation) {
+      // Change stop conversation response back to false
+      dispatch(setStopConversation(false));
+
+      // Clear last assistant message if the stream was stopped
+      if (updatedLastMessage.content === '') {
+        dispatch(clearLastAssistantMessage());
         return;
       }
-      await insertMessage(
-        updatedLastMessage,
-        updatedConversation.messages.length - 1,
-        updatedConversation.id,
-        session.user?.id
-      );
-    };
+    }
+
+    await insertMessage(
+      updatedLastMessage,
+      updatedConversation.id,
+      session.user?.id
+    );
+  };
 
 export const thunkRegenerateResponse =
   (session: Session, search_space: number[]): AppThunk =>
@@ -348,7 +396,11 @@ export const {
   userSent,
   setLoading,
   setIsStreaming,
-  selectCurrentConversation
+  setStopConversation,
+  selectCurrentConversation,
+  setMessagesInCurrentConversations,
+  clearLastAssistantMessage,
+  setFetchingConversation
 } = currentConversationSlice.actions;
 
 export const getCurrentConversationFromStore = () =>

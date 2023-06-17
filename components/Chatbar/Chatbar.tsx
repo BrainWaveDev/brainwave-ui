@@ -1,5 +1,5 @@
 import { ConversationSummary } from '@/types/chat';
-import { memo, useMemo, useState } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import { IconMessagesOff } from '@tabler/icons-react';
 import { ChatFolders } from '../Folders/Chat/ChatFolders';
 import Search from '../Sidebar/Search';
@@ -15,6 +15,7 @@ import {
   optimisticConversationsActions
 } from 'context/redux/conversationsSlice';
 import { getSidebarStateFromStorage } from '../../context/redux/sidebarSlice';
+import * as Separator from '@radix-ui/react-separator';
 
 export default memo(function Chatbar() {
   // =========================
@@ -24,16 +25,29 @@ export default memo(function Chatbar() {
   const folders = getFoldersFromStorage();
   const conversations = getConversationsFromStorage();
   const sidebarOpen = getSidebarStateFromStorage();
+
+  // ======= Filtering Conversations =======
   const [searchTerm, setSearchTerm] = useState('');
+  const filteredConversations = useMemo(
+    () =>
+      conversations.filter((conversation) => {
+        // Select conversations without a folder
+        if (conversation.folderId) return false;
+
+        const searchable = conversation.name.toLocaleLowerCase();
+        return searchable.toLowerCase().includes(searchTerm.toLowerCase());
+      }),
+    [searchTerm, conversations]
+  );
 
   // =========================
   // Handlers
   // =========================
-  const handleUpdateConversationFolder = (
+  const handleUpdateConversationFolder = async (
     conversation: ConversationSummary,
     folderId: number | null = null
   ) => {
-    dispatch(
+    await dispatch(
       optimisticConversationsActions.updateConversation({
         ...conversation,
         folderId
@@ -42,17 +56,12 @@ export default memo(function Chatbar() {
   };
 
   // =========================
-  // Local State
-  // =========================
-  
-
-  // =========================
   // Effects
   // =========================
-  const handleDrop = (e: any) => {
+  const handleDrop = async (e: any) => {
     if (e.dataTransfer) {
       const conversation = JSON.parse(e.dataTransfer.getData('conversation'));
-      handleUpdateConversationFolder(conversation);
+      await handleUpdateConversationFolder(conversation);
       e.target.style.background = 'none';
     }
   };
@@ -66,54 +75,67 @@ export default memo(function Chatbar() {
     e.target.style.background = 'none';
   };
 
+  // ======== Tailwind Classes ========
+  const separatorStyle = classNames(
+    'bg-neutral6 data-[orientation=horizontal]:h-px',
+    'data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full',
+    'data-[orientation=vertical]:w-px'
+  );
+
   return (
     <motion.div
       className={classNames(
-        'flex flex-col w-full mt-2 mb-1',
-        'space-y-2 transition-all duration-150 transform-gpu'
+        'flex flex-col w-full mt-2 relative',
+        'transition-all duration-150 transform-gpu max-h-full'
       )}
       animate={sidebarOpen ? 'open' : 'closed'}
     >
-      {/* ========================= */}
-      {/* Conversations Search Bar */}
+      {/* ========== Conversations Search Bar ========== */}
       {conversations.length > 1 && (
-        <Search
-          searchTerm={searchTerm}
-          setSearchTerm={(value) => setSearchTerm(value)}
-        />
+        <>
+          <Search
+            searchTerm={searchTerm}
+            setSearchTerm={(value) => setSearchTerm(value)}
+          />
+          <Separator.Root className={classNames(separatorStyle, 'mt-3')} />
+        </>
       )}
-      {/* Chat Folders List */}
-      <div className="flex-grow overflow-auto">
-        {folders.length > 0 && (
-          <div className="flex border-b border-neutral6 pb-2">
-            <ChatFolders searchTerm={searchTerm} />
-          </div>
-        )}
-        {/* List of Conversations Without Folders */}
-        {conversations.length > 0 ? (
-          <div
-            className="pt-2 border-b border-neutral6 pb-2"
-            onDrop={(e) => handleDrop(e)}
-            onDragOver={allowDrop}
-            onDragEnter={highlightDrop}
-            onDragLeave={removeHighlight}
-          >
-            <Conversations
-              searchTerm={searchTerm}
-            />
-          </div>
-        ) : (
+      {/* ========== Chat Folders List ========== */}
+      {folders.length > 0 && (
+        <>
+          <ChatFolders searchTerm={searchTerm} />
+          <Separator.Root className={separatorStyle} />
+        </>
+      )}
+      {/* ==========  List of Conversations Without Folders ========== */}
+      {conversations.length > 0 ? (
+        filteredConversations.length > 0 && (
+          <>
+            <div
+              className={'flex justify-center items-center my-2'}
+              onDrop={(e) => handleDrop(e)}
+              onDragOver={allowDrop}
+              onDragEnter={highlightDrop}
+              onDragLeave={removeHighlight}
+            >
+              <Conversations conversations={filteredConversations} />
+            </div>
+            <Separator.Root className={separatorStyle} />
+          </>
+        )
+      ) : (
+        <>
           <div
             className={classNames(
-              'flex flex-col gap-3 items-center',
-              'text-sm leading-normal mt-4 mb-1 text-white opacity-50'
+              'flex flex-col items-center py-8',
+              'text-sm leading-normal text-white opacity-50'
             )}
           >
             <IconMessagesOff />
             No conversations.
           </div>
-        )}
-      </div>
+        </>
+      )}
       <ChatbarSettings />
     </motion.div>
   );

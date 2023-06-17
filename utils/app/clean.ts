@@ -1,5 +1,5 @@
-import { Conversation } from '../../types/chat';
-import { OpenAIModelID, OpenAIModels } from '../../types/openai';
+import { Conversation } from '@/types/chat';
+import { OpenAIModelID, OpenAIModels } from '@/types/openai';
 import { DEFAULT_SYSTEM_PROMPT } from './prompts';
 
 export const cleanSelectedConversation = (conversation: Conversation) => {

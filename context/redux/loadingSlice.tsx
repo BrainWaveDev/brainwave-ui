@@ -1,5 +1,5 @@
 /**
- * Piece state that reflects the loading state when application is updating state.
+ * Piece of state that reflects the loading state when application is updating state.
  */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { useAppSelector } from './store';
@@ -7,7 +7,8 @@ import { useAppSelector } from './store';
 export const enum LoadingTrigger {
   FetchingDocuments = 'fetchingDocuments',
   // UploadingDocuments = 'uploadingDocuments',
-  DeletingDocuments = 'deletingDocuments'
+  DeletingDocuments = 'deletingDocuments',
+  DeletingConversations = 'deletingConversations'
 }
 
 interface LoadingState {
@@ -15,13 +16,15 @@ interface LoadingState {
   fetchingDocuments: boolean;
   uploadingDocuments: boolean;
   deletingDocuments: boolean;
+  deletingConversations: boolean;
 }
 
 const initialState: LoadingState = {
   loading: false,
   fetchingDocuments: false,
   uploadingDocuments: false,
-  deletingDocuments: false
+  deletingDocuments: false,
+  deletingConversations: false
 };
 
 const loadingSlice = createSlice({

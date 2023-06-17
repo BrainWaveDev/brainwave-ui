@@ -35,7 +35,7 @@ export default memo(function Search({
   return (
     <div
       className={`relative flex items-center w-[calc(100%_-_0.375rem)] group ${
-        sidebarOpen ? 'ml-1.5' : 'ml-0.5 cursor-pointer'
+        sidebarOpen ? 'ml-1' : 'ml-0.5 cursor-pointer'
       }`}
       onClick={() => {
         if (!sidebarOpen) openSidebar();
@@ -44,7 +44,7 @@ export default memo(function Search({
     >
       <input
         className={classNames(
-          'w-full flex-1 rounded-lg border border-neutral-600',
+          'w-full flex-1 rounded-lg border border-neutral-600 mb-2',
           'bg-neutral6 px-4 py-3 pr-0 text-sm leading-3 text-white',
           'focus:ring-0 focus:border-neutral-400 placeholder:text-zinc-500',
           !sidebarOpen && 'cursor-pointer text-opacity-0'

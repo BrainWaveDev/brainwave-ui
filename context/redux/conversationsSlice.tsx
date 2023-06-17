@@ -1,6 +1,6 @@
 'use client';
-import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 import {
   Conversation,
   ConversationIdentifiable,
@@ -22,6 +22,7 @@ import {
   selectCurrentConversation
 } from './currentConversationSlice';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { endLoading, LoadingTrigger, startLoading } from './loadingSlice';
 
 type ConversationsState = ConversationSummary[];
 
@@ -151,11 +152,15 @@ const thunkUpdateConversation =
 
 const thunkClearConversations = (): AppThunk => async (dispatch) => {
   try {
+    dispatch(startLoading(LoadingTrigger.DeletingConversations));
     await clearAllConversations();
     dispatch(clearConversations());
+    dispatch(clearSelectedConversation());
   } catch (e: any) {
     // TODO: Show errors to user
     console.error(e.message);
+  } finally {
+    dispatch(endLoading(LoadingTrigger.DeletingConversations));
   }
 };
 

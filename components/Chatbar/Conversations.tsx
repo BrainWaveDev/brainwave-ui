@@ -1,38 +1,42 @@
 import { memo, useMemo } from 'react';
 import { ConversationComponent } from './Conversation';
-import { useAppSelector } from 'context/redux/store';
-import { useRouter } from 'next/router';
+import { ConversationSummary } from '@/types/chat';
+import { getCurrentConversationFromStore } from '../../context/redux/currentConversationSlice';
+// @ts-ignore
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default memo(function Conversations({ searchTerm }: { searchTerm: string }) {
-
-  const conversations = useAppSelector((state) => state.conversations);
-  const router = useRouter();
-
-  const filteredConversations = useMemo(
-    () =>
-      conversations.filter((conversation) => {
-        const searchable = conversation.name.toLocaleLowerCase();
-        return searchable.toLowerCase().includes(searchTerm.toLowerCase());
-      }),
-    [searchTerm, conversations]
+export default memo(function Conversations({
+  conversations
+}: {
+  conversations: ConversationSummary[];
+}) {
+  const { conversation: currentConversation } =
+    getCurrentConversationFromStore();
+  const renderedConversations = useMemo(
+    () => conversations.slice().reverse(),
+    [conversations]
   );
   return (
-    <div className="flex w-full flex-col gap-1"
-      onClick={(e) => {
-        e.stopPropagation();
-        if (router.pathname !== '/chat') router.push('/chat');
-      }
-      }
-    >
-      {filteredConversations
-        .slice()
-        .reverse()
-        .map((conversation) => (
-          <ConversationComponent
+    <div className="flex w-full flex-col gap-1">
+      <AnimatePresence initial={true}>
+        {renderedConversations.map((conversation) => (
+          <motion.div
             key={conversation.id}
-            conversation={conversation}
-          />
+            initial={{ height: 0 }}
+            animate={{ height: 'fit-content' }}
+            transition={{ ease: 'easeOut', duration: 0.5 }}
+          >
+            <ConversationComponent
+              conversation={conversation}
+              current={
+                currentConversation
+                  ? currentConversation.id === conversation.id
+                  : false
+              }
+            />
+          </motion.div>
         ))}
+      </AnimatePresence>
     </div>
   );
 });

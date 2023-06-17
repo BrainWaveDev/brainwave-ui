@@ -4,13 +4,16 @@ import { CheckIcon } from '@heroicons/react/24/outline';
 import { TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAppDispatch } from 'context/redux/store';
 import { optimisticConversationsActions } from 'context/redux/conversationsSlice';
+import { getSidebarStateFromStorage } from '../../context/redux/sidebarSlice';
+import { toggleSidebar } from '../../context/redux/sidebarSlice';
 
 export const ClearConversations: FC = () => {
   // ==============================
   // Redux State
   // ==============================
+  const sidebarOpen = getSidebarStateFromStorage();
   const dispatch = useAppDispatch();
-
+  const openSidebar = () => dispatch(toggleSidebar());
   // ==============================
   // Local State
   // ==============================
@@ -19,8 +22,8 @@ export const ClearConversations: FC = () => {
   // ==============================
   // Handles
   // ==============================
-  const handleClearConversations = () => {
-    dispatch(optimisticConversationsActions.clearConversations());
+  const handleClearConversations = async () => {
+    await dispatch(optimisticConversationsActions.clearConversations());
     setIsConfirming(false);
   };
 
@@ -30,8 +33,8 @@ export const ClearConversations: FC = () => {
   const IconClasses =
     'ml-auto h-[18px] w-[18px] min-w-[20px] text-neutral-400 hover:text-neutral-100';
 
-  return isConfirming ? (
-    <div className="flex w-full cursor-pointer items-center rounded-lg py-2.5 px-2 hover:bg-gray-500/10">
+  return isConfirming && sidebarOpen ? (
+    <div className="flex w-full cursor-pointer items-center rounded-lg py-2.5 px-2 hover:bg-gray-500/10 mt-1">
       <TrashIcon className={'w-[18px] h-[18px]'} strokeWidth={2} />
       <div className="ml-3 flex-1 text-left text-sm leading-3 text-white">
         Are you sure?
@@ -39,9 +42,9 @@ export const ClearConversations: FC = () => {
       <div className="flex w-[40px] gap-x-1 mr-0.5">
         <CheckIcon
           className={IconClasses}
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
-            handleClearConversations();
+            await handleClearConversations();
           }}
         />
         <XMarkIcon
@@ -55,9 +58,13 @@ export const ClearConversations: FC = () => {
     </div>
   ) : (
     <SidebarButton
-      text={'Clear conversations'}
+      className={'mt-1'}
+      text={sidebarOpen ? 'Clear conversations' : undefined}
       icon={<TrashIcon className={'w-[18px] h-[18px]'} strokeWidth={2} />}
-      onClick={() => setIsConfirming(true)}
+      onClick={() => {
+        if (!sidebarOpen) openSidebar();
+        setIsConfirming(true);
+      }}
     />
   );
 };

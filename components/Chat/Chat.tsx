@@ -1,22 +1,44 @@
 import { OpenAIModels } from '@/types/openai';
-import { IconArrowDown } from '@tabler/icons-react';
-import { memo, MutableRefObject, useEffect, useRef, useState } from 'react';
+import React, {
+  memo,
+  MouseEventHandler,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 import { ChatInput } from './ChatInput';
 import { ChatMessage } from './ChatMessage';
 import AppLogo from '@/components/icons/AppLogo';
-import classNames from 'classnames';
 import DocumentFilter from '@/components/Chat/DocumentFilter';
 import { getCurrentConversationFromStore } from '../../context/redux/currentConversationSlice';
-import { ChatLoader } from '@/components/Chat/ChatLoader';
+import { throttle } from '@/utils/helpers';
+import classNames from 'classnames';
+import { RotatingLines } from 'react-loader-spinner';
+import { setSidebar } from '../../context/redux/sidebarSlice';
+import { useAppDispatch } from '../../context/redux/store';
 
-interface Props {
-  stopConversationRef: MutableRefObject<boolean>;
-}
-
-export default memo(function Chat({ stopConversationRef }: Props) {
+export default memo(function Chat() {
   // ============== Redux State ==============
-  const { conversation: currentConversation, loading } =
+  const { conversation, fetchingConversation, loading, messageIsStreaming } =
     getCurrentConversationFromStore();
+  const dispatch = useAppDispatch();
+
+  const currentConversation = useMemo(() => {
+    if (conversation && conversation.messages) {
+      const messages = [...conversation.messages];
+      // Resort to sorting by ID if index is not available
+      return messages.sort((a, b) => {
+        if (a.index && b.index) {
+          return a.index - b.index;
+        } else {
+          return a.id! - b.id!;
+        }
+      });
+    } else {
+      return [];
+    }
+  }, [conversation]);
 
   // ============== Element References ==============
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -27,7 +49,9 @@ export default memo(function Chat({ stopConversationRef }: Props) {
   const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true);
   const [showScrollDownButton, setShowScrollDownButton] =
     useState<boolean>(false);
-  const handleScroll = () => {
+
+  const adjustScrollProperties = () => {
+    // Set scroll properties
     if (chatContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } =
         chatContainerRef.current;
@@ -42,14 +66,39 @@ export default memo(function Chat({ stopConversationRef }: Props) {
       }
     }
   };
-  const handleScrollDown = () => {
+
+  useEffect(() => {
+    // Toggle show scroll down button on conversation change
+    adjustScrollProperties();
+
+    // Close sidebar when conversation changes on mobile
+    if (window.innerWidth < 640) dispatch(setSidebar(false));
+  }, [currentConversation]);
+
+  const handleScrollDown: MouseEventHandler = (e) => {
+    e.stopPropagation();
     chatContainerRef.current?.scrollTo({
       top: chatContainerRef.current.scrollHeight,
       behavior: 'smooth'
     });
   };
 
-  // ============== Initiate Observers ==============
+  // ============== Handle Scrolling ==============
+  const scrollDown = () => {
+    if (autoScrollEnabled) {
+      messagesEndRef.current?.scrollIntoView(true);
+    }
+  };
+  const throttledScrollDown = throttle(scrollDown, 250);
+
+  useEffect(() => {
+    // may have problems with conversation undefined
+    if (!currentConversation || currentConversation.length === 0) {
+      return;
+    }
+    throttledScrollDown();
+  }, [currentConversation, throttledScrollDown]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -75,7 +124,12 @@ export default memo(function Chat({ stopConversationRef }: Props) {
   }, [messagesEndRef]);
 
   const EmptyConversationCover = (
-    <div className="mx-auto flex w-[350px] flex-col space-y-10 sm:w-[600px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full">
+    <div
+      className={classNames(
+        'mx-auto flex w-4/5 flex-col space-y-10 max-w-[600px] absolute',
+        'top-1/2 left-1/2 -translate-x-1/2 -translate-y-full'
+      )}
+    >
       <div className="text-center text-3xl font-semibold text-gray-800 dark:text-gray-100">
         <div>
           <div
@@ -100,51 +154,66 @@ export default memo(function Chat({ stopConversationRef }: Props) {
   );
 
   return (
-    <div className="relative flex-1 bg-white dark:bg-[#343541] min-h-full max-h-full">
-      <>
-        <div
-          className={classNames(
-            'min-h-full max-h-full overflow-x-hidden pt-16'
-          )}
-          ref={chatContainerRef}
-          onScroll={handleScroll}
-        >
-          <DocumentFilter />
-          {currentConversation && currentConversation.messages.length > 0 ? (
-            <div className={'mt-1.5'}>
-              {currentConversation.messages.map((message, index) => (
-                <ChatMessage
-                  key={index}
-                  message={message}
-                  messageIndex={index}
-                />
-              ))}
-              {loading && <ChatLoader />}
-              <div
-                className="h-[162px] bg-white dark:bg-[#343541]"
-                ref={messagesEndRef}
-              />
-            </div>
-          ) : (
-            EmptyConversationCover
-          )}
-        </div>
-        <ChatInput
-          stopConversationRef={stopConversationRef}
-          textareaRef={textareaRef}
-          // need to pass in the model here in the future
-          model={OpenAIModels['gpt-3.5-turbo']}
+    <div
+      className={classNames(
+        'relative flex flex-col items-center min-h-full !h-full max-h-full',
+        fetchingConversation && 'justify-center'
+      )}
+    >
+      {fetchingConversation ? (
+        <RotatingLines
+          strokeColor="#9ca3af"
+          strokeWidth="2"
+          animationDuration="1"
+          width="3.25rem"
+          visible={true}
         />
-      </>
-      {showScrollDownButton && (
-        <div className="absolute bottom-0 right-0 mb-4 mr-4 pb-20">
-          <button
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-300 text-gray-800 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-neutral-200"
-            onClick={handleScrollDown}
+      ) : (
+        <>
+          <div
+            className={classNames(
+              'grow relative max-w-full min-w-full flex flex-col',
+              'overflow-x-clip overflow-y-scroll px-5 pt-5 scrollbar-hide'
+            )}
+            onScroll={adjustScrollProperties}
+            ref={chatContainerRef}
           >
-            <IconArrowDown size={18} />
-          </button>
-        </div>
+            {/*<DocumentFilter />*/}
+            {currentConversation && currentConversation.length > 0 ? (
+              <div className={'space-y-10'}>
+                {currentConversation.map((message, index) => {
+                  const lastAssistantMessage =
+                    index === currentConversation.length - 1 &&
+                    message.role === 'assistant';
+                  return (
+                    <ChatMessage
+                      key={index}
+                      message={message}
+                      messageIndex={index}
+                      displayLoadingState={loading && lastAssistantMessage}
+                      streamingMessage={
+                        messageIsStreaming && lastAssistantMessage
+                      }
+                    />
+                  );
+                })}
+                <div
+                  className={'h-32 md:h-48 flex-shrink-0'}
+                  ref={messagesEndRef}
+                ></div>
+              </div>
+            ) : (
+              EmptyConversationCover
+            )}
+          </div>
+          <ChatInput
+            textareaRef={textareaRef}
+            // need to pass in the model here in the future
+            model={OpenAIModels['gpt-3.5-turbo']}
+            showScrollDownButton={showScrollDownButton}
+            handleScrollDown={handleScrollDown}
+          />
+        </>
       )}
     </div>
   );

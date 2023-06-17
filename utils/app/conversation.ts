@@ -1,9 +1,4 @@
-import {
-  Conversation,
-  ConversationIdentifiable,
-  ConversationSummary,
-  Message
-} from '@/types/chat';
+import { Conversation, ConversationSummary, Message } from '@/types/chat';
 import { supabase } from '../supabase-client';
 import { isGeneratedId, randomNumberId } from './createDBOperation';
 import { OpenAIModels } from 'types/openai';
@@ -14,23 +9,23 @@ import { SupabaseClient } from '@supabase/supabase-js';
 export const randomPlaceholderConversation = () => {
   return {
     id: randomNumberId(),
-    name: 'new conversation',
+    name: 'New conversation',
     model: OpenAIModels['gpt-3.5-turbo'],
     prompt: DEFAULT_SYSTEM_PROMPT,
     messages: [],
-    isPlaceholder: true,
     folderId: null
   } as Conversation;
 };
 
 export const updateConversation = async (
-  updatedConversation: ConversationIdentifiable
+  updatedConversation: ConversationSummary
 ) => {
   try {
     const { data, error } = await supabase
       .from('conversation')
       .update({
-        name: updatedConversation.name
+        name: updatedConversation.name,
+        folder_id: updatedConversation.folderId
       })
       .eq('id', updatedConversation.id)
       .select();
@@ -76,36 +71,38 @@ export const updateConversationFolder = async (
   return false;
 };
 
-export const createConversation = async (
-  conversation: ConversationIdentifiable
-) => {
-  const { data } = await supabase
-    .from('conversation')
-    .insert({
-      name: conversation.name
-    })
-    .select()
-    .throwOnError()
-    .single();
+export const createConversation = async (conversation: Conversation) => {
+  // Save conversation to the local storage
+  set('conversation', conversation.id.toString(), conversation);
 
-  const res = {
-    id: data?.id,
-    name: data?.name,
-    model: OpenAIModels['gpt-3.5-turbo'],
-    prompt: DEFAULT_SYSTEM_PROMPT,
-    messages: [],
-    folderId: data?.folder_id
-  } as Conversation;
+  try {
+    await supabase
+      .from('conversation')
+      .insert({
+        id: conversation.id,
+        name: conversation.name,
+        model: OpenAIModels['gpt-3.5-turbo'].name
+      })
+      .select()
+      .throwOnError();
 
-  set('conversation', res.id.toString(), res);
-  return res;
+    return conversation;
+  } catch (err) {
+    // Clear conversation from local storage
+    remove('conversation', conversation.id.toString());
+
+    // TODO: Better error handling
+    console.error('Error creating conversation:', err);
+    throw Error('Error creating conversation in the database');
+  }
 };
 
 export const retrieveConversation = async (conversationId: number) => {
+  // Get conversation from local storage
   const { exist, resource } = get('conversation', conversationId.toString());
-  if (exist) {
-    return resource!;
-  }
+
+  if (exist) return resource as Conversation;
+
   const { data, error } = (await supabase
     .from('conversation')
     .select(
@@ -122,16 +119,31 @@ export const retrieveConversation = async (conversationId: number) => {
     .single()) as any;
 
   if (error) {
+    // Set conversation to the version in local storage
+    if (exist) return resource as Conversation;
     throw error;
   }
+
   const res = {
     id: data?.id, // no error
     name: data?.name,
     model: OpenAIModels['gpt-3.5-turbo'],
     prompt: DEFAULT_SYSTEM_PROMPT,
-    messages: data?.messages
+    messages: data?.messages.map(
+      (m: any) =>
+        ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          index: m.index
+        } as Message)
+    )
   } as Conversation;
+
+  // Remove previously saved conversation if it's a placeholder
+  if (exist) remove('conversation', conversationId.toString());
   set('conversation', conversationId.toString(), res); // @ts-nocheck
+
   // @ts-nocheck
   return res;
 };
@@ -232,16 +244,16 @@ export const saveConversation = async (
 
 export const clearAllConversations = async () => {
   removeAll('conversation');
-  await supabase.from('conversation').delete().throwOnError();
+  // Delete cannot be used without WHERE clause
+  await supabase.from('conversation').delete().neq('id', -1).throwOnError();
 };
 
 export const insertMessage = async (
   message: Message,
-  index: number,
   conversation_id: number,
   user_id: string
 ) => {
-  console.debug('inserting message, conversation id = ', conversation_id );
+  console.debug('inserting message, conversation id = ', conversation_id);
   const { data } = await supabase
     .from('messages')
     .insert({
@@ -249,7 +261,7 @@ export const insertMessage = async (
       content: message.content,
       role: message.role,
       user_id: user_id,
-      index: index
+      index: message.index!
     })
     .select()
     .throwOnError()

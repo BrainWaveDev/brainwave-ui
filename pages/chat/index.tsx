@@ -1,15 +1,13 @@
 import Chat from '@/components/Chat/Chat';
 import Head from 'next/head';
-import { useRef, useEffect } from 'react';
+import { useEffect } from 'react';
 import { initStore } from 'context/redux/store';
 import { Conversation } from '@/types/chat';
 import { cleanConversationHistory } from '@/utils/app/clean';
 import { setConversations } from 'context/redux/conversationsSlice';
+import { removeAll } from '@/utils/app/localcache';
 
 const ChatUI = () => {
-  // ========= Element References =========
-  const stopConversationRef = useRef<boolean>(false);
-
   // ========= Initialize Conversations in the Local Storage =========
   // TODO: Use Redux Persist to store conversations state in the local storage
   useEffect(() => {
@@ -22,6 +20,9 @@ const ChatUI = () => {
       );
       setConversations(cleanedConversationHistory);
     }
+
+    // Clear conversations from local storage on page load
+    removeAll('conversation');
   }, []);
 
   return (
@@ -35,7 +36,7 @@ const ChatUI = () => {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Chat stopConversationRef={stopConversationRef} />
+      <Chat />
     </>
   );
 };

@@ -42,7 +42,7 @@ export default memo(function Header() {
     <header
       className={classNames(
         'flex flex-row items-center justify-between min-h-[4.5rem] h-[4.5rem] pl-10 pr-6 py-3 border-b',
-        'border-gray-200 shadow-[0_0.75rem_2.5rem_-0.75rem_rgba(0,0,0,0.06)',
+        'border-gray-200 shadow-[0_0.75rem_2.5rem_-0.75rem_rgba(0,0,0,0.06)]',
         'dark:border-zinc-700 dark:shadow-[0_0.75rem_2.5rem_-0.75rem_rgba(0,0,0,0.15)]',
         'overflow-visible'
       )}

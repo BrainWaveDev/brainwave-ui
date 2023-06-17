@@ -364,7 +364,7 @@ export default function FilesList() {
       <div className={'w-full'}>
         <table
           className={classNames(
-            'block w-full mt-0 pt-2 pb-9 px-6 lg:px-16 min-h-full relative'
+            'block w-full mt-0 pt-2 pb-9 px-10 lg:px-16 min-h-full relative'
           )}
         >
           <TableHeader
