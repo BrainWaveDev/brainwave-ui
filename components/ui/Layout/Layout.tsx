@@ -9,6 +9,7 @@ import Header from '@/components/ui/Header';
 import useThemeDetector from '../../../hooks/useThemeDetector';
 import { RotatingLines } from 'react-loader-spinner';
 import useRouteChange from '../../../hooks/useRouteChange';
+import { use100vh } from 'react-div-100vh';
 
 interface Props extends PropsWithChildren {
   meta?: PageMeta;
@@ -37,6 +38,13 @@ export default function Layout({ children, meta: pageMeta }: Props) {
   // ==============================
   // Tailwind Classes
   // ==============================
+  const height = use100vh();
+
+  const mainClasses = classNames(
+    'scrollbar-hide',
+    'sm:!h-[calc(100vh_-_3rem)]'
+  );
+
   const mainContentClasses = classNames(
     'min-h-[calc(100%_-_4.5rem)]',
     'h-[calc(100%_-_4.5rem)]',
@@ -54,7 +62,13 @@ export default function Layout({ children, meta: pageMeta }: Props) {
         <meta content={meta.description} name="description" />
       </Head>
       <Sidebar />
-      <main id="skip" className={classNames(classes.main, 'scrollbar-hide')}>
+      <main
+        id="skip"
+        className={classNames(classes.main, mainClasses)}
+        style={{
+          height: `${height}px`
+        }}
+      >
         {pageLoading ? (
           <div className={'w-full h-full flex items-center justify-center'}>
             <RotatingLines
