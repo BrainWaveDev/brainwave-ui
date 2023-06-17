@@ -1,8 +1,8 @@
 .sidebar {
-    @apply flex flex-col items-center place-content-center px-6 w-16 pt-9 pb-6 z-20 bg-zinc-900;
+    @apply flex flex-col items-center place-content-center px-6 w-16 pt-9 pb-6 z-30 bg-zinc-900;
     /* Responsiveness */
     @apply fixed lg:static;
-    @apply w-screen max-w-[20rem];
+    @apply w-screen max-w-[19rem] ;
 }
 
 .openAndCloseButton {
