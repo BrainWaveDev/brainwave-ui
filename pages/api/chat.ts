@@ -73,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
       user_id: user.id,
       embedding,
       match_count: 10,
-      match_threshold: 0.75,
+      match_threshold: 0.65,
       min_content_length: 50
     };
 
