@@ -210,12 +210,15 @@ export const thunkStreamingResponse =
       console.error(`there is no conversation, this should never happen`);
       return;
     }
-    const messages = conversation.messages;
+    const messages = [...conversation.messages];
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) {
       //something went wrong, gotta fix
       console.error('There is no last message');
       return;
+    } else if (lastMessage.content === '' && lastMessage.role === 'assistant') {
+      // Remove empty assistant message
+      messages.pop();
     }
     dispatch(setIsStreaming(true));
     const controller = new AbortController();

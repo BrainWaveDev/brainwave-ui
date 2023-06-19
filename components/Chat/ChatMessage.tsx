@@ -232,7 +232,7 @@ export const ChatMessage: FC<Props> = ({
       </div>
       <div
         className={classNames(
-          'relative flex flex-row -mt-8 z-10 w-full',
+          'relative flex flex-row -mt-8 w-full',
           'items-center',
           isAssistantMessage
             ? 'pl-6 place-content-between'

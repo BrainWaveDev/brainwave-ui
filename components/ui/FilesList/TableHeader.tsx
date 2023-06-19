@@ -32,13 +32,13 @@ export default memo(function TableHeader({
       <tr>
         <th
           className={classNames(
-            'absolute rounded-lg top-0 -left-2 -right-2 lg:-left-8 lg:-right-8 bottom-0 -z-10 shadow-sm',
+            'absolute rounded-lg top-0 left-0 right-0 md:-left-2 md:-right-2 lg:-left-8 lg:-right-8 bottom-0 -z-10 shadow-sm',
             'bg-transparent dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700'
           )}
         />
       </tr>
       <tr className={'relative flex'}>
-        <th className={'pl-2 pr-1 lg:pr-0 py-2 w-full'}>
+        <th className={'pl-4 pr-3 lg:pl-2 lg:pr-0 py-2 w-full'}>
           <div
             className={classNames(
               'w-full flex flex-row items-center h-full top-0 py-2 place-content-between',
