@@ -14,7 +14,7 @@ import {
   getConversationsFromStorage,
   optimisticConversationsActions
 } from 'context/redux/conversationsSlice';
-import { getSidebarStateFromStorage } from '../../context/redux/sidebarSlice';
+import { getModalStateFromStorage } from '../../context/redux/modalSlice';
 import * as Separator from '@radix-ui/react-separator';
 
 export default memo(function Chatbar() {
@@ -24,7 +24,7 @@ export default memo(function Chatbar() {
   const dispatch = useAppDispatch();
   const folders = getFoldersFromStorage();
   const conversations = getConversationsFromStorage();
-  const sidebarOpen = getSidebarStateFromStorage();
+  const sidebarOpen = getModalStateFromStorage();
 
   // ======= Filtering Conversations =======
   const [searchTerm, setSearchTerm] = useState('');

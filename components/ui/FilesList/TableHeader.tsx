@@ -12,7 +12,8 @@ export default memo(function TableHeader({
   handleColumnClick,
   allDocumentsSelected,
   selectAllDocuments,
-  controls,
+  settingsDropdown,
+  deleteButton,
   columnWidths
 }: {
   setFilter: (filter: string) => void;
@@ -21,7 +22,8 @@ export default memo(function TableHeader({
   handleColumnClick: (column: number) => void;
   allDocumentsSelected: boolean;
   selectAllDocuments: (selectAll: boolean) => void;
-  controls?: JSX.Element | JSX.Element[];
+  settingsDropdown?: JSX.Element;
+  deleteButton?: JSX.Element;
   columnWidths: { [_: string]: string };
 }) {
   return (
@@ -40,7 +42,9 @@ export default memo(function TableHeader({
           <div
             className={classNames(
               'w-full flex flex-row items-center h-full top-0 py-2 place-content-between',
-              controls ? 'place-content-between' : 'place-content-end'
+              settingsDropdown || deleteButton
+                ? 'place-content-between'
+                : 'place-content-end'
             )}
           >
             <div
@@ -58,7 +62,8 @@ export default memo(function TableHeader({
                 onChange={(event) => selectAllDocuments(event.target.checked)}
                 checked={allDocumentsSelected}
               />
-              {controls}
+              {settingsDropdown}
+              {deleteButton}
             </div>
             <div className="flex items-center my-auto gap-x-0">
               <label htmlFor="table-search" className="sr-only">

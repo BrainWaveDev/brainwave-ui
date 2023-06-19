@@ -10,6 +10,9 @@ import useThemeDetector from '../../../hooks/useThemeDetector';
 import { RotatingLines } from 'react-loader-spinner';
 import useRouteChange from '../../../hooks/useRouteChange';
 import { use100vh } from 'react-div-100vh';
+import { getModalStateFromStorage } from '../../../context/redux/modalSlice';
+import DocumentFilter from '@/components/Chat/DocumentFilter';
+import { useRouter } from 'next/router';
 
 interface Props extends PropsWithChildren {
   meta?: PageMeta;
@@ -27,6 +30,12 @@ export default function Layout({ children, meta: pageMeta }: Props) {
     ...pageMeta
   };
 
+  // ======= Redux State =======
+  const { documentFilterOpen } = getModalStateFromStorage();
+
+  // ======= Router =======
+  const router = useRouter();
+
   // ==============================
   // Theme State
   // ==============================
@@ -42,7 +51,8 @@ export default function Layout({ children, meta: pageMeta }: Props) {
 
   const mainClasses = classNames(
     'scrollbar-hide',
-    'sm:!h-[calc(100vh_-_3rem)]'
+    'sm:!h-[calc(100vh_-_3rem)]',
+    documentFilterOpen && 'pr-0 lg:pr-[20rem] xl:pr-[22.5rem]'
   );
 
   const mainContentClasses = classNames(
@@ -84,6 +94,9 @@ export default function Layout({ children, meta: pageMeta }: Props) {
             <Header />
             <div className={mainContentClasses}>{children}</div>
           </>
+        )}
+        {router.pathname === '/chat' && documentFilterOpen && (
+          <DocumentFilter />
         )}
       </main>
       <ErrorList />

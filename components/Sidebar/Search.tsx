@@ -2,9 +2,9 @@ import { ChangeEvent, createRef, memo } from 'react';
 import classNames from 'classnames';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import {
-  getSidebarStateFromStorage,
+  getModalStateFromStorage,
   setSidebar
-} from '../../context/redux/sidebarSlice';
+} from '../../context/redux/modalSlice';
 import { useAppDispatch } from '../../context/redux/store';
 
 export default memo(function Search({
@@ -18,7 +18,7 @@ export default memo(function Search({
   // Redux State
   // =========================
   const dispatch = useAppDispatch();
-  const sidebarOpen = getSidebarStateFromStorage();
+  const { sideBarOpen } = getModalStateFromStorage();
   const openSidebar = () => dispatch(setSidebar(true));
 
   // =========================
@@ -35,10 +35,10 @@ export default memo(function Search({
   return (
     <div
       className={`relative flex items-center w-[calc(100%_-_0.375rem)] group ${
-        sidebarOpen ? 'ml-1' : 'ml-0.5 cursor-pointer'
+        sideBarOpen ? 'ml-1' : 'ml-0.5 cursor-pointer'
       }`}
       onClick={() => {
-        if (!sidebarOpen) openSidebar();
+        if (!sideBarOpen) openSidebar();
         searchRef.current?.focus();
       }}
     >
@@ -47,16 +47,16 @@ export default memo(function Search({
           'w-full flex-1 rounded-lg border border-neutral-600 mb-2',
           'bg-neutral6 px-4 py-3 pr-0 text-sm leading-3 text-white',
           'focus:ring-0 focus:border-neutral-400 placeholder:text-zinc-500',
-          !sidebarOpen && 'cursor-pointer text-opacity-0'
+          !sideBarOpen && 'cursor-pointer text-opacity-0'
         )}
         type="text"
-        placeholder={sidebarOpen ? 'Search conversations...' : ''}
+        placeholder={sideBarOpen ? 'Search conversations...' : ''}
         value={searchTerm}
         onChange={handleSearchChange}
         ref={searchRef}
-        readOnly={!sidebarOpen}
+        readOnly={!sideBarOpen}
       />
-      {sidebarOpen && searchTerm && (
+      {sideBarOpen && searchTerm && (
         <XMarkIcon
           className={classNames(
             'absolute right-3 w-[18px] text-neutral-400',
@@ -65,7 +65,7 @@ export default memo(function Search({
           onClick={clearSearch}
         />
       )}
-      {!sidebarOpen && (
+      {!sideBarOpen && (
         <MagnifyingGlassIcon
           className={classNames(
             'absolute top-3 left-3 h-5 stroke-neutral-400 group-hover:stroke-white ',

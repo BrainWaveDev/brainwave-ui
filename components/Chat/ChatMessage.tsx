@@ -244,7 +244,7 @@ export const ChatMessage: FC<Props> = ({
             'p-2 rounded-xl border-4',
             isAssistantMessage
               ? 'border-transparent '
-              : 'bg-neutral3 border-white dark:bg-zinc-700 dark:border-zinc-700'
+              : 'bg-gray-300 border-white dark:bg-zinc-700 dark:border-zinc-700'
           )}
         >
           {isAssistantMessage ? (
@@ -307,4 +307,3 @@ export const ChatMessage: FC<Props> = ({
     </div>
   );
 };
-ChatMessage.displayName = 'ChatMessage';

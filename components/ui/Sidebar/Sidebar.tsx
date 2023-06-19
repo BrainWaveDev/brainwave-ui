@@ -152,7 +152,7 @@ export default function Sidebar() {
   // ============================================================
   const sidebarDisplay = sideBarOpen
     ? 'z-30 opacity-100 sm:z-30 sm:w-[20rem] sm:min-w-[20rem]'
-    : '-z-30 opacity-0 sm:opacity-100 sm:z-30 sm:w-24 sm:min-w-24';
+    : '-z-20 opacity-0 sm:opacity-100 sm:z-30 sm:w-24 sm:min-w-24';
 
   const sideBarToggleSVGStyle = classNames(
     'inline-block w-6 h-7 transition-colors duration-75 fill-zinc-500',

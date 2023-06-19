@@ -29,13 +29,6 @@ export default function Files() {
       </div>
       {/* Display remaining space */}
       {/* TODO: Implement the sidebar */}
-      {/*<div*/}
-      {/*  className={classNames(*/}
-      {/*    'absolute top-0 right-0 bottom-0 flex flex-col min-w-[22.5rem]',*/}
-      {/*    'pt-[8rem] pb-24 rounded-r-[1.25rem] rounded-l-none shadow-[inset_0_1.5rem_3.75rem_rgba(0,0,0,0.1)]',*/}
-      {/*    'border-l border-gray-200 dark:border-zinc-700'*/}
-      {/*  )}*/}
-      {/*></div>*/}
     </div>
   );
 }

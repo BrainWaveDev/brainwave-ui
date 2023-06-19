@@ -315,41 +315,46 @@ export default function FilesList() {
   );
 
   // ===================================================
-  // Document removal button passed to the table header
+  // Document control buttons passed to the table header
   // ===================================================
-  const FileListControls = (
-    <>
-      <AnimatePresence>
-        <SettingsDropdown
-          displayOptions={displayOptions}
-          documentsPerPage={documentsPerPage}
-          selectDocumentsPerPage={selectDocumentsPerPage}
-          sortByColumn={sortByColumn}
-          sortAscending={sortAscending}
-          handleColumnClick={handleColumnClick}
-        />
-        {selectedDocuments.size > 0 && (
-          <motion.button
-            className={classNames(
-              'font-semibold text-white text-sm inline-flex',
-              'items-center justify-center bg-red-500 hover:bg-red-500/[0.9] cursor-pointer outline-none',
-              'border border-red-400',
-              'transition duration-150 shadow-sm gap-x-1.5',
-              'w-9 h-9 rounded-full md:rounded-md md:w-auto md:h-auto md:px-3 md:py-1.5 '
-            )}
-            aria-label="Delete file(s)"
-            key={'FileDeleteButton'}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={deleteDocuments}
-          >
-            <TrashIcon className="w-4 h-4" />
-            <span className={'hidden md:inline-block'}>Delete</span>
-          </motion.button>
-        )}
-      </AnimatePresence>
-    </>
+  const SettingsDropdownElement = (
+    <SettingsDropdown
+      displayOptions={displayOptions}
+      documentsPerPage={documentsPerPage}
+      selectDocumentsPerPage={selectDocumentsPerPage}
+      sortByColumn={sortByColumn}
+      sortAscending={sortAscending}
+      handleColumnClick={handleColumnClick}
+    />
+  );
+
+  const DeleteButton = useMemo(
+    () => (
+      <>
+        <AnimatePresence>
+          {selectedDocuments.size > 0 && (
+            <motion.button
+              className={classNames(
+                'font-semibold text-white text-sm inline-flex',
+                'items-center justify-center bg-red-500 hover:bg-red-500/[0.9] cursor-pointer outline-none',
+                'border border-red-400 shadow-sm gap-x-1.5',
+                'w-9 h-9 rounded-full md:rounded-md md:w-auto md:h-auto md:px-3 md:py-1.5 '
+              )}
+              aria-label="Delete file(s)"
+              key={'FileDeleteButton'}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={deleteDocuments}
+            >
+              <TrashIcon className="w-4 h-4" />
+              <span className={'hidden md:inline-block'}>Delete</span>
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </>
+    ),
+    [selectedDocuments, deleteDocuments]
   );
 
   return (
@@ -364,7 +369,7 @@ export default function FilesList() {
       <div className={'w-full'}>
         <table
           className={classNames(
-            'block w-full mt-0 pt-2 pb-9 px-10 lg:px-16 min-h-full relative'
+            'block w-full mt-0 pt-2 pb-9 px-4 sm:px-9 lg:px-16 min-h-full relative'
           )}
         >
           <TableHeader
@@ -377,7 +382,8 @@ export default function FilesList() {
               selectedDocuments.size === documents.length
             }
             selectAllDocuments={selectAllDocuments}
-            controls={FileListControls}
+            deleteButton={DeleteButton}
+            settingsDropdown={SettingsDropdownElement}
             columnWidths={ColumnWidths}
           />
           <tbody

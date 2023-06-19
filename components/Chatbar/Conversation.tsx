@@ -12,9 +12,9 @@ import classNames from 'classnames';
 import { optimisticCurrentConversationAction } from '../../context/redux/currentConversationSlice';
 import { optimisticConversationsActions } from '../../context/redux/conversationsSlice';
 import {
-  getSidebarStateFromStorage,
+  getModalStateFromStorage,
   toggleSidebar
-} from '../../context/redux/sidebarSlice';
+} from '../../context/redux/modalSlice';
 import { useRouter } from 'next/router';
 // @ts-ignore
 import { motion } from 'framer-motion';
@@ -30,7 +30,7 @@ export const ConversationComponent: FC<Props> = memo(
     // Redux State
     // =======================
     const dispatch = useAppDispatch();
-    const sidebarIsOpen = getSidebarStateFromStorage();
+    const { sideBarOpen } = getModalStateFromStorage();
     const openSidebar = () => dispatch(toggleSidebar());
 
     // ===== Conversation Highlighting =====
@@ -56,7 +56,7 @@ export const ConversationComponent: FC<Props> = memo(
     // =======================
     const handleSelectConversation = async () => {
       if (router.pathname !== '/chat') await router.push('/chat');
-      if (!sidebarIsOpen) openSidebar();
+      if (!sideBarOpen) openSidebar();
       await dispatch(
         optimisticCurrentConversationAction.retrieveAndSelectConversation(
           conversation
@@ -101,7 +101,7 @@ export const ConversationComponent: FC<Props> = memo(
 
     return (
       <div className="relative flex items-center my-0.5">
-        {isRenaming && sidebarIsOpen ? (
+        {isRenaming && sideBarOpen ? (
           <div
             className={classNames(
               'flex w-full items-center gap-3 px-2.5 py-1.5 rounded-lg shadow bg-blackA10'
@@ -124,7 +124,7 @@ export const ConversationComponent: FC<Props> = memo(
           <button
             className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm transition-colors duration-200 hover:bg-[#343541]/90 group
             ${isSelected ? 'bg-[#343541]/90' : ''} ${
-              !sidebarIsOpen && 'justify-center'
+              !sideBarOpen && 'justify-center'
             }`}
             onClick={handleSelectConversation}
             draggable="true"
@@ -138,7 +138,7 @@ export const ConversationComponent: FC<Props> = memo(
               )}
               strokeWidth={2}
             />
-            {sidebarIsOpen && (
+            {sideBarOpen && (
               <div
                 className={classNames(
                   'relative max-h-5 flex-1 group-hover:text-neutral-100',
@@ -154,7 +154,7 @@ export const ConversationComponent: FC<Props> = memo(
             )}
           </button>
         )}
-        {(isDeleting || isRenaming) && sidebarIsOpen && (
+        {(isDeleting || isRenaming) && sideBarOpen && (
           <div className="absolute right-1 z-10 flex text-gray-300">
             <button
               className="min-w-[20px] p-1 text-neutral-400 hover:text-neutral-100"
@@ -187,7 +187,7 @@ export const ConversationComponent: FC<Props> = memo(
             </button>
           </div>
         )}
-        {isSelected && sidebarIsOpen && !isDeleting && !isRenaming && (
+        {isSelected && sideBarOpen && !isDeleting && !isRenaming && (
           <div className="absolute right-1 z-10 flex flex-row items-center justify-center gap-x-1 mr-1 text-gray-300">
             <button
               className="min-w-[20px] p-0 text-neutral-400 hover:text-neutral-100"

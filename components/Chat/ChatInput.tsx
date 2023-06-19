@@ -147,7 +147,7 @@ export const ChatInput: FC<Props> = memo(
                 className={classNames(
                   'flex h-10 w-10 items-center justify-center rounded-full',
                   'bg-gray-300 text-white shadow-md hover:shadow-xl',
-                  'focus:outline-none dark:bg-gray-700 dark:text-neutral-200',
+                  'focus:outline-none dark:bg-zinc-600 dark:text-neutral-200',
                   'transition-shadow duration-150'
                 )}
                 onClick={handleScrollDown}

@@ -202,8 +202,8 @@ const thunkUserSent =
 
 export const thunkStreamingResponse =
   (session: Session, search_space: number[]): AppThunk =>
-    async (dispatch, getState) => {
-      if (!getState().loading) dispatch(setLoading(true));
+  async (dispatch, getState) => {
+    if (!getState().loading) dispatch(setLoading(true));
 
     const { conversation } = getState().currentConversation;
     if (!conversation) {
@@ -233,26 +233,26 @@ export const thunkStreamingResponse =
       })
     });
 
-      if (!response.ok || !response.body) {
-        dispatch(setLoading(false));
-        dispatch(setIsStreaming(false));
-
-        // TODO: Implement proper error handling
-        console.error(`response is not ok or there is no body`);
-        return;
-      }
-
+    if (!response.ok || !response.body) {
       dispatch(setLoading(false));
+      dispatch(setIsStreaming(false));
 
-      const data = response.body;
+      // TODO: Implement proper error handling
+      console.error(`response is not ok or there is no body`);
+      return;
+    }
 
-      if (!data) {
-        console.error(`there is no data`);
-        return;
-      }
+    dispatch(setLoading(false));
 
-      const reader = data.getReader();
-      const decoder = new TextDecoder('utf-8');
+    const data = response.body;
+
+    if (!data) {
+      console.error(`there is no data`);
+      return;
+    }
+
+    const reader = data.getReader();
+    const decoder = new TextDecoder('utf-8');
 
     let done = false;
 
@@ -302,87 +302,87 @@ export const thunkStreamingResponse =
 
 export const thunkRegenerateResponse =
   (session: Session, search_space: number[]): AppThunk =>
-    async (dispatch, getState) => {
-      dispatch(setLoading(true));
+  async (dispatch, getState) => {
+    dispatch(setLoading(true));
 
-      dispatch(currentConversationSlice.actions.removeLastAssistantMessage());
-      const { conversation } = getState().currentConversation;
+    dispatch(currentConversationSlice.actions.removeLastAssistantMessage());
+    const { conversation } = getState().currentConversation;
 
-      if (!conversation) {
-        console.error(`there is no conversation, this should never happen`);
-        return;
-      }
-      const messages = getState().currentConversation.conversation?.messages;
-      if(!messages) {
-        console.error(`there is no messages, this should never happen`);
-        return;
-      }
-      const lastMessage = messages[messages.length - 1];
-      if (!lastMessage || lastMessage.role === 'assistant') {
-        //something went wrong, gotta fix
-        console.error(
-          `${lastMessage} is not a user message or there is no last message`
-        );
-        return;
-      }
-      dispatch(currentConversationSlice.actions.removeLastAssistantMessage());
+    if (!conversation) {
+      console.error(`there is no conversation, this should never happen`);
+      return;
+    }
+    const messages = getState().currentConversation.conversation?.messages;
+    if (!messages) {
+      console.error(`there is no messages, this should never happen`);
+      return;
+    }
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || lastMessage.role === 'assistant') {
+      //something went wrong, gotta fix
+      console.error(
+        `${lastMessage} is not a user message or there is no last message`
+      );
+      return;
+    }
+    dispatch(currentConversationSlice.actions.removeLastAssistantMessage());
 
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          jwt: session?.access_token,
-          messages: messages,
-          model: conversation.model,
-          search_space: search_space
-        })
-      });
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        jwt: session?.access_token,
+        messages: messages,
+        model: conversation.model,
+        search_space: search_space
+      })
+    });
 
-      if (!response.ok || !response.body) {
-        // TODO: Implement proper error handling
-        console.error(`response is not ok or there is no body`);
-        return;
-      }
+    if (!response.ok || !response.body) {
+      // TODO: Implement proper error handling
+      console.error(`response is not ok or there is no body`);
+      return;
+    }
 
-      dispatch(setLoading(false));
+    dispatch(setLoading(false));
 
-      const data = response.body;
+    const data = response.body;
 
-      if (!data) {
-        console.error(`there is no data`);
-        return;
-      }
+    if (!data) {
+      console.error(`there is no data`);
+      return;
+    }
 
-      const reader = data.getReader();
-      const decoder = new TextDecoder('utf-8');
+    const reader = data.getReader();
+    const decoder = new TextDecoder('utf-8');
 
-      dispatch(setIsStreaming(true));
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        const chunkValue = decoder.decode(value);
-        dispatch(
-          currentConversationSlice.actions.appendLastAssistantMessage(chunkValue)
-        );
-      }
-      dispatch(setIsStreaming(false));
-      const updatedConversation = getState().currentConversation.conversation!;
-      const updatedLastMessage =
-        updatedConversation?.messages[updatedConversation?.messages.length - 1];
-      if (updatedLastMessage?.role != 'assistant') {
-        console.error(
-          `something went wrong, last message is not assistant message`
-        );
-        return;
-      }
-      await replaceLastMessage(
-        updatedLastMessage,
-        updatedConversation.messages.length - 1,
-        updatedConversation.id,
-      )
-    };
+    dispatch(setIsStreaming(true));
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      const chunkValue = decoder.decode(value);
+      dispatch(
+        currentConversationSlice.actions.appendLastAssistantMessage(chunkValue)
+      );
+    }
+    dispatch(setIsStreaming(false));
+    const updatedConversation = getState().currentConversation.conversation!;
+    const updatedLastMessage =
+      updatedConversation?.messages[updatedConversation?.messages.length - 1];
+    if (updatedLastMessage?.role != 'assistant') {
+      console.error(
+        `something went wrong, last message is not assistant message`
+      );
+      return;
+    }
+    await replaceLastMessage(
+      updatedLastMessage,
+      updatedConversation.messages.length - 1,
+      updatedConversation.id
+    );
+  };
 
 export const optimisticCurrentConversationAction = {
   retrieveAndSelectConversation: thunkRetrieveConversationDetails,

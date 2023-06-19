@@ -1,28 +1,29 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { useAppSelector } from './store';
-import { set } from '@/utils/app/localcache';
 
-interface SidebarState {
-  open: boolean;
+interface ModalState {
+  sideBarOpen: boolean;
   settingDialogOpen: boolean;
+  documentFilterOpen: boolean;
 }
 
-const initialState: SidebarState = {
-  open: true,
-  settingDialogOpen: false
+const initialState: ModalState = {
+  sideBarOpen: true,
+  settingDialogOpen: false,
+  documentFilterOpen: false
 };
 
-const sidebarSlice = createSlice({
-  name: 'sidebar',
+const modalSlice = createSlice({
+  name: 'modal',
   initialState,
   reducers: {
     toggleSidebar: (state) => {
-      const newState = !state.open;
-      state.open = newState;
+      const newState = !state.sideBarOpen;
+      state.sideBarOpen = newState;
       localStorage.setItem('sidebarOpen', newState.toString());
     },
     setSidebar: (state, action: PayloadAction<boolean>) => {
-      state.open = action.payload;
+      state.sideBarOpen = action.payload;
       localStorage.setItem('sidebarOpen', action.payload.toString());
     },
     initSidebar: (state) => {
@@ -32,26 +33,35 @@ const sidebarSlice = createSlice({
       const sidebarOpen = localStorage.getItem('sidebarOpen');
       if (sidebarOpen !== null) {
         return {
-          open: sidebarOpen === 'true',
-          settingDialogOpen: false
+          ...initialState,
+          open: sidebarOpen === 'true'
         };
       } else {
         localStorage.setItem('sidebarOpen', 'true');
         return {
-          open: true,
-          settingDialogOpen: false
+          ...initialState,
+          open: true
         };
       }
     },
     toggleSettingDialog: (state) => {
       state.settingDialogOpen = !state.settingDialogOpen;
+    },
+    toggleDocumentFilter: (state) => {
+      state.documentFilterOpen = !state.documentFilterOpen;
     }
   }
 });
 
-export const { toggleSidebar, setSidebar, initSidebar,toggleSettingDialog } = sidebarSlice.actions;
+export const {
+  toggleSidebar,
+  setSidebar,
+  initSidebar,
+  toggleSettingDialog,
+  toggleDocumentFilter
+} = modalSlice.actions;
 
-export const getSidebarStateFromStorage = () =>
-  useAppSelector((state) => state.sidebar.open);
+export const getModalStateFromStorage = () =>
+  useAppSelector((state) => state.modal);
 
-export default sidebarSlice.reducer;
+export default modalSlice.reducer;

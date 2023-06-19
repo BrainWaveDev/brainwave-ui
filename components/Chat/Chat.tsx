@@ -15,17 +15,13 @@ import { getCurrentConversationFromStore } from '../../context/redux/currentConv
 import { throttle } from '@/utils/helpers';
 import classNames from 'classnames';
 import { RotatingLines } from 'react-loader-spinner';
-import {
-  getSidebarStateFromStorage,
-  setSidebar
-} from '../../context/redux/sidebarSlice';
+import { setSidebar } from '../../context/redux/modalSlice';
 import { useAppDispatch } from '../../context/redux/store';
 
 export default memo(function Chat() {
   // ============== Redux State ==============
   const { conversation, fetchingConversation, loading, messageIsStreaming } =
     getCurrentConversationFromStore();
-  const sidebarOpen = getSidebarStateFromStorage();
   const dispatch = useAppDispatch();
 
   const currentConversation = useMemo(() => {
@@ -161,8 +157,7 @@ export default memo(function Chat() {
     <div
       className={classNames(
         'relative flex flex-col items-center min-h-full !h-full max-h-full',
-        fetchingConversation && 'justify-center',
-        sidebarOpen && 'pointer-events-none'
+        fetchingConversation && 'justify-center'
       )}
     >
       {fetchingConversation ? (
@@ -176,14 +171,22 @@ export default memo(function Chat() {
       ) : (
         <>
           <div
+            // Document filter rendered on small screens
+            className={classNames(
+              'z-10 flex lg:hidden ',
+              'bg-transparent border-nonerelative sticky top-0 left-0 w-full'
+            )}
+          >
+            <DocumentFilter />
+          </div>
+          <div
             className={classNames(
               'grow relative max-w-full min-w-full flex flex-col',
-              'overflow-x-clip overflow-y-scroll px-5 pt-5 scrollbar-hide'
+              'overflow-x-clip overflow-y-scroll px-5 pt-7 scrollbar-hide'
             )}
             onScroll={adjustScrollProperties}
             ref={chatContainerRef}
           >
-            {/*<DocumentFilter />*/}
             {currentConversation && currentConversation.length > 0 ? (
               <div className={'space-y-10'}>
                 {currentConversation.map((message, index) => {

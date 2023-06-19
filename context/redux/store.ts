@@ -9,7 +9,7 @@ import thunkMiddleware, { ThunkAction } from 'redux-thunk';
 import documentSlice, { optimisticDocumentActions } from './documentSlice';
 import currentConversationSlice from './currentConversationSlice';
 import searchSpaceSlice, { selectAllSearchSpace } from './searchSpaceSlice';
-import sidebarSlice from './sidebarSlice';
+import modalSlice from './modalSlice';
 import { createWrapper, HYDRATE } from 'next-redux-wrapper';
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
 import { Database } from '@/types/supabase';
@@ -26,9 +26,9 @@ const combinedReducer = combineReducers({
   theme: themeSlice,
   currentConversation: currentConversationSlice,
   searchSpace: searchSpaceSlice,
-  sidebar: sidebarSlice,
+  modal: modalSlice,
   loading: loadingSlice,
-  error :  errorSlice
+  error: errorSlice
 });
 
 type CombinedReducerState = ReturnType<typeof combinedReducer>;
@@ -39,7 +39,7 @@ const reducer = (state: any, action: any): CombinedReducerState => {
       ...action.payload,
       theme: state.theme,
       currentConversation: state.currentConversation,
-      sidebar: state.sidebar,
+      modal: state.modal,
       loading: state.loading
     };
   } else {
@@ -110,7 +110,6 @@ export const initStore = wrapper.getServerSideProps(
         await store.dispatch(
           selectAllSearchSpace(store.getState().documents.map((d) => d.id))
         );
-
       } else {
         await store.dispatch(selectAllSearchSpace([]));
       }

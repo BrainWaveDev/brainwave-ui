@@ -18,9 +18,9 @@ import {
 } from '../../../context/redux/conversationsSlice';
 import { ConversationSummary } from '@/types/chat';
 import {
-  getSidebarStateFromStorage,
+  getModalStateFromStorage,
   toggleSidebar
-} from '../../../context/redux/sidebarSlice';
+} from '../../../context/redux/modalSlice';
 import { FolderIcon } from '@heroicons/react/24/outline';
 import { getCurrentConversationFromStore } from '../../../context/redux/currentConversationSlice';
 
@@ -47,7 +47,7 @@ export const ChatFolder: FC<Props> = ({ searchTerm, currentFolder }) => {
       ),
     [conversations, currentFolder.id, searchTerm]
   );
-  const sidebarIsOpen = getSidebarStateFromStorage();
+  const { sideBarOpen } = getModalStateFromStorage();
   const openSidebar = () => dispatch(toggleSidebar());
 
   // =======================
@@ -122,7 +122,7 @@ export const ChatFolder: FC<Props> = ({ searchTerm, currentFolder }) => {
     e.target.style.background = 'none';
   };
 
-  if (sidebarIsOpen)
+  if (sideBarOpen)
     return (
       <>
         <div className="relative flex items-center">
