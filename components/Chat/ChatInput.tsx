@@ -64,12 +64,14 @@ export const ChatInput: FC<Props> = memo(
         alert('Please enter a message');
         return;
       }
+
+      const userInput = content;
       setContent('');
 
       // TODO: Handle errors
       await dispatch(
         optimisticCurrentConversationAction.userSent(
-          content,
+          userInput,
           session?.user?.id!
         )
       );
