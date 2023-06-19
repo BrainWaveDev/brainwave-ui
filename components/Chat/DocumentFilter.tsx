@@ -74,7 +74,7 @@ export default function DocumentFilter() {
           <Popover.Portal>
             <Popover.Content
               className={classNames(
-                'rounded-md pt-5 w-96 bg-white dark:bg-zinc-700',
+                'z-20 rounded-md pt-5 w-96 max-w-[90vw] bg-white dark:bg-zinc-700',
                 'shadow-[0_10px_20px_-5px_hsla(206,22%,7%,.35),0_10px_10px_-15px_hsla(206,22%,7%,.2)]',
                 'will-change-[transform,opacity] data-[state=open]:data-[side=top]:animate-slideDownAndFade',
                 'data-[state=open]:data-[side=right]:animate-slideLeftAndFade',
@@ -317,7 +317,6 @@ const DocumentRow = memo(
       <div
         className={classNames(
           'flex items-center place-content-between w-full py-2.5',
-          'hover:bg-gray-100/75 dark:hover:bg-zinc-700',
           'px-5 cursor-pointer z-[5] group',
           !selected && 'bg-gray-100/75 dark:bg-zinc-700'
         )}
@@ -333,11 +332,11 @@ const DocumentRow = memo(
           </div>
           <h2
             className={classNames(
-              'text-sm',
+              'text-sm transition-colors duration-150',
               selected
                 ? 'text-gray-800 dark:text-white'
                 : 'text-gray-500 dark:text-gray-400',
-              'group-hover:text-gray-800 dark:group-hover:text-white',
+              'group-hover:text-teal-300',
               'overflow-hidden max-w-[80%]',
               'truncate text-ellipsis'
             )}
@@ -352,13 +351,13 @@ const DocumentRow = memo(
             'bg-white dark:bg-zinc-600 dark:border-zinc-600 dark:focus:ring-white dark:focus:ring-0',
             'dark:focus:outline-0 w-4 h-4'
           )}
-          id="c1"
           checked={selected}
           onCheckedChange={(checked) => {
             if (typeof checked === 'boolean') {
               onSelectedChange(document.id);
             }
           }}
+          onClick={() => onSelectedChange(document.id)}
         >
           <Checkbox.Indicator className="text-teal-400">
             <CheckIcon />
