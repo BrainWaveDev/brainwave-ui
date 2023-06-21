@@ -42,11 +42,11 @@ export default function FilePreview({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
       className={classNames(
-        'relative flex items-center border transition duration-150 h-[3.25rem]',
+        'relative flex items-center border h-[3.25rem]',
         'min-h-[3.25rem] max-h-[3.25rem] shadow-sm',
         'bg-white dark:bg-zinc-700 border-gray-200 dark:border-zinc-600',
         'rounded-lg px-0 py-1 group border-white hover:border-teal-200',
-        'active:border-teal-200 w-full xs:max-w-full place-self-center',
+        'active:border-teal-200 w-[95%] sm:w-full xs:max-w-full place-self-center',
         uploadState !== UploadState.NotUploading
           ? 'place-content-center'
           : 'place-content-between'
@@ -113,7 +113,7 @@ export default function FilePreview({
               <div className="flex items-center w-8 h-8 text-teal-400 dark:text-teal-500 rounded-full max-w-[15%]">
                 <DocumentTextIcon strokeWidth="1.5" className="w-5 h-5" />
               </div>
-              <div className={'w-[85%]'}>
+              <div className={'w-[85%] max-w-[85%]'}>
                 <h2
                   className={classNames(
                     'font-normal text-sm mb-0.5 ',
