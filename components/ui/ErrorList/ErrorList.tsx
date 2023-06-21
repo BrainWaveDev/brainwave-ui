@@ -14,7 +14,10 @@ const Error = ({
 }) => {
   return (
     <motion.div
-      className="flex w-full max-w-md bg-white rounded-lg shadow-md group relative"
+      className={classNames(
+        'flex w-full max-w-md bg-white dark:bg-neutral5',
+        'rounded-lg shadow border border-gray-100 dark:border-zinc-700 group relative'
+      )}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1, transition: { duration: 0.2 } }}
       exit={{
@@ -26,7 +29,10 @@ const Error = ({
       }}
     >
       <div className="flex items-center justify-center w-12 bg-red-500 rounded-l-lg">
-        <TriangleIcon className={'w-6 h-6 stroke-white'} strokeWidth={1.5} />
+        <TriangleIcon
+          className={'w-6 h-6 stroke-white dark:stroke-gray-200'}
+          strokeWidth={1.5}
+        />
       </div>
 
       <div className="px-4 py-2 -mx-3">
@@ -49,7 +55,7 @@ const Error = ({
           <XMarkIcon
             strokeWidth={1}
             className={
-              'stroke-white rounded-full w-6 h-6 p-0.5 shadow transition duration-150 bg-zinc-300 hover:bg-zinc-400'
+              'stroke-white rounded-full w-6 h-6 p-0.5 shadow transition duration-150 bg-zinc-700 hover:bg-zinc-500'
             }
           />
         </button>
@@ -67,7 +73,7 @@ export default function ErrorList() {
   return (
     <div
       className={
-        'fixed top-[7.5vh] right-10 flex flex-col gap-y-3 justify-start'
+        'fixed top-[7.5vh] right-10 flex flex-col gap-y-3 justify-start z-30'
       }
     >
       <AnimatePresence>

@@ -56,7 +56,7 @@ export default memo(function TableHeader({
                 type="checkbox"
                 className={classNames(
                   'block table-layout:hidden text-teal-400 border-gray-300 rounded cursor-pointer',
-                  'focus:outline-0 active:outline-0 focus:ring-teal-400 w-4 h-4 ml-1 mr-0.5',
+                  'focus:outline-0 active:outline-0 focus:ring-teal-400 w-3 h-3 md:w-4 md:h-4 ml-1 mr-0.5',
                   'bg-white dark:bg-zinc-700 dark:border-zinc-700 dark:focus:ring-zinc-700 dark:focus:ring-1'
                 )}
                 onChange={(event) => selectAllDocuments(event.target.checked)}
@@ -109,7 +109,7 @@ export default memo(function TableHeader({
               type="checkbox"
               className={classNames(
                 'text-teal-400 border-gray-300 rounded cursor-pointer',
-                'focus:outline-0 active:outline-0 focus:ring-teal-400',
+                'focus:outline-0 active:outline-0 focus:ring-teal-400 w-3 h-3 md:w-4 md:h-4',
                 'bg-white dark:bg-zinc-700 dark:border-zinc-700 dark:focus:ring-zinc-700 dark:focus:ring-1'
               )}
               onChange={(event) => selectAllDocuments(event.target.checked)}

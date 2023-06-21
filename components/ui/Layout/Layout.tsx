@@ -52,7 +52,9 @@ export default function Layout({ children, meta: pageMeta }: Props) {
   const mainClasses = classNames(
     'scrollbar-hide',
     'sm:!h-[calc(100vh_-_3rem)]',
-    documentFilterOpen && 'pr-0 lg:pr-[20rem] xl:pr-[22.5rem]'
+    router.pathname === '/chat' &&
+      documentFilterOpen &&
+      'pr-0 lg:pr-[20rem] xl:pr-[22.5rem]'
   );
 
   const mainContentClasses = classNames(

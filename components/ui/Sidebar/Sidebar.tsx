@@ -235,7 +235,8 @@ export default function Sidebar() {
                   <Disclosure.Button
                     className={classNames(
                       'group flex items-center w-full h-7 pl-2.5 pr-2 py-6',
-                      'gap-x-4 text-left text-md text-white/50 focus:ring-0'
+                      'gap-x-4 text-left text-md text-white/50 focus:ring-0',
+                      'focus:outline-none'
                     )}
                     ref={chatListButtonRef}
                   >
