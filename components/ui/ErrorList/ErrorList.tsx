@@ -15,8 +15,9 @@ const Error = ({
   return (
     <motion.div
       className={classNames(
-        'flex w-full max-w-md bg-white dark:bg-neutral5',
-        'rounded-lg shadow border border-gray-100 dark:border-zinc-700 group relative'
+        'flex min-w-sm max-w-sm md:max-w-md bg-white dark:bg-neutral5',
+        'rounded-lg shadow border border-gray-100 dark:border-zinc-700 group',
+        'relative'
       )}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1, transition: { duration: 0.2 } }}
@@ -28,7 +29,7 @@ const Error = ({
         }
       }}
     >
-      <div className="flex items-center justify-center w-12 bg-red-500 rounded-l-lg">
+      <div className="flex items-center justify-center min-w-12 w-12 -ml-[1px] -my-[1px] bg-red-500 rounded-l-lg">
         <TriangleIcon
           className={'w-6 h-6 stroke-white dark:stroke-gray-200'}
           strokeWidth={1.5}
@@ -72,9 +73,13 @@ export default function ErrorList() {
 
   return (
     <div
-      className={
-        'fixed top-[7.5vh] right-10 flex flex-col gap-y-3 justify-start z-30'
-      }
+      className={classNames(
+        'fixed top-[7.5vh] flex',
+        'flex-col gap-y-3 justify-start z-20',
+        'right-1/2 translate-x-1/2',
+        'xs:translate-x-0 xs:right-3 sm:right-6 md:right-12',
+        'min-w-[300px] xs:min-w-fit items-center'
+      )}
     >
       <AnimatePresence>
         {errors.map((error) => (
