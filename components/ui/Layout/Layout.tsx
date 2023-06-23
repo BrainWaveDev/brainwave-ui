@@ -119,7 +119,8 @@ export default function Layout({ children, meta: pageMeta }: Props) {
           'min-w-[300px] xs:min-w-fit items-center',
           'max-h-[calc(100vh_-_5.5rem)]',
           'sm:max-h-[calc(100vh_-_8rem)]',
-          'overflow-y-scroll'
+          'overflow-y-scroll overflow-x-hidden',
+          'scrollbar-hide'
         )}
       >
         <AnimatePresence>

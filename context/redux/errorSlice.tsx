@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { useAppSelector } from './store';
+import { useAppSelector, AppThunk } from './store';
+import { wait } from '@/utils/helpers';
 
 export type Error = {
   message: string | JSX.Element;
@@ -32,12 +33,26 @@ const errorSlice = createSlice({
       return {
         errors: state.errors.filter((error) => error.id != action.payload)
       };
-      // state.errors = state.errors.filter((error) => error.id != action.payload);
     }
   }
 });
 
+const thunkAddErrorWithTimeout =
+  (message: string | JSX.Element, timeout: number = 3000): AppThunk =>
+  async (dispatch) => {
+    const error = createError(message);
+    dispatch(addError(error));
+    await wait(timeout);
+    dispatch(removeError(error.id));
+  };
+
+export const getErrorsFromLocalStorage = () =>
+  useAppSelector((state) => state.errors);
 
 export const { addError, removeError } = errorSlice.actions;
+
+export const optimisticErrorActions = {
+  addErrorWithTimeout: thunkAddErrorWithTimeout
+};
 
 export default errorSlice.reducer;

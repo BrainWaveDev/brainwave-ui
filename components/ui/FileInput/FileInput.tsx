@@ -10,11 +10,7 @@ import { FileInfo, UploadState } from '../../../lib/classes';
 import { AnimatePresence, isDragActive, motion } from 'framer-motion';
 import { supabase } from '@/utils/supabase-client';
 import { wait } from '@/utils/helpers';
-import {
-  createError,
-  addError,
-  removeError
-} from '../../../context/redux/errorSlice';
+import { optimisticErrorActions } from '../../../context/redux/errorSlice';
 import AlertModal, {
   ModalState,
   setModalOpen
@@ -93,18 +89,20 @@ export default function FileInput() {
         if (!existingFileNames.includes(selectedFiles[i].name)) {
           newFiles.push(new FileInfo(selectedFiles[i]));
         } else {
-          const duplicateFileError = createError(
-            'You cannot upload the same file(s) twice!'
+          dispatch(
+            optimisticErrorActions.addErrorWithTimeout(
+              'You cannot upload the same file(s) twice!'
+            )
           );
-          dispatch(addError(duplicateFileError));
         }
       }
 
       if (invalidFileType) {
-        const fileTypeError = createError(
-          'You can only upload TXT, PDF, DOC, DOCX and HTML files.'
+        dispatch(
+          optimisticErrorActions.addErrorWithTimeout(
+            'You can only upload TXT, PDF, DOC, DOCX and HTML files.'
+          )
         );
-        dispatch(addError(fileTypeError));
       }
 
       setFiles(newFiles);
@@ -187,13 +185,7 @@ export default function FileInput() {
         updatedFiles.push(file);
 
         if (errorMessage) {
-          const fileUploadError = createError(errorMessage);
-          addError(fileUploadError);
-
-          // Automatically clear error alert
-          setTimeout(() => {
-            removeError(fileUploadError.id);
-          }, 3000);
+          dispatch(optimisticErrorActions.addErrorWithTimeout(errorMessage));
         }
       });
 
