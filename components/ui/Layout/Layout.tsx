@@ -1,4 +1,4 @@
-import React, { PropsWithChildren } from 'react';
+import React, { PropsWithChildren, useEffect } from 'react';
 import Head from 'next/head';
 import classes from './Layout.module.css';
 import { PageMeta } from '@/types/index';
@@ -13,12 +13,13 @@ import { getModalStateFromStorage } from '../../../context/redux/modalSlice';
 import DocumentFilter from '@/components/Chat/DocumentFilter';
 import { useRouter } from 'next/router';
 import {
+  getErrorsFromLocalStorage,
+  optimisticErrorActions,
   removeError
 } from '../../../context/redux/errorSlice';
 import { AnimatePresence } from 'framer-motion';
 import { useAppDispatch } from '../../../context/redux/store';
 import ErrorAlert from '@/components/ui/ErrorAlert';
-import { getErrorsFromLocalStorage } from 'context/ErrorContext';
 
 interface Props extends PropsWithChildren {
   meta?: PageMeta;
@@ -73,6 +74,15 @@ export default function Layout({ children, meta: pageMeta }: Props) {
     'scrollbar-hide'
   );
 
+  // ===== Remove any errors that appear on the first page load =====
+  useEffect(() => {
+    if (errors.length > 0) {
+      setTimeout(() => {
+        dispatch(optimisticErrorActions.clearErrorsWithTimeout());
+      }, 3000);
+    }
+  }, []);
+
   return (
     <>
       <Head>
@@ -119,7 +129,7 @@ export default function Layout({ children, meta: pageMeta }: Props) {
           'min-w-[300px] xs:min-w-fit items-center',
           'max-h-[calc(100vh_-_5.5rem)]',
           'sm:max-h-[calc(100vh_-_8rem)]',
-          'overflow-y-scroll overflow-x-hidden',
+          'overflow-y-scroll overflow-x-visible',
           'scrollbar-hide'
         )}
       >
