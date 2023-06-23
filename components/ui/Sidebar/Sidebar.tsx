@@ -151,7 +151,7 @@ export default function Sidebar() {
   // Tailwind Classes
   // ============================================================
   const sidebarDisplay = sideBarOpen
-    ? 'z-30 opacity-100 sm:z-30 sm:w-[20rem] sm:min-w-[20rem]'
+    ? 'z-40 opacity-100 sm:w-[20rem] sm:min-w-[20rem]'
     : '-z-20 opacity-0 sm:opacity-100 sm:z-30 sm:w-24 sm:min-w-24';
 
   const sideBarToggleSVGStyle = classNames(
@@ -270,7 +270,7 @@ export default function Sidebar() {
                       {(pageLoading || deletingConversations) && (
                         <div
                           className={classNames(
-                            'absolute top-0 left-0 right-0 bottom-0 z-20',
+                            'absolute top-0 left-0 right-0 bottom-0 z-40',
                             'flex items-center justify-center bg-zinc-900'
                           )}
                         >

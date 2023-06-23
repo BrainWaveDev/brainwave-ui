@@ -112,11 +112,14 @@ export default function Layout({ children, meta: pageMeta }: Props) {
       <div
         // Display list of errors
         className={classNames(
-          'fixed top-[7.5vh] flex',
-          'flex-col gap-y-3 justify-start z-20',
+          'fixed top-[5.25rem] sm:top-[6rem] flex z-20',
+          'flex-col gap-y-3 justify-start ',
           'right-1/2 translate-x-1/2',
-          'xs:translate-x-0 xs:right-3 sm:right-6 md:right-12',
-          'min-w-[300px] xs:min-w-fit items-center'
+          'xs:translate-x-0 xs:right-3 sm:right-8 md:right-12',
+          'min-w-[300px] xs:min-w-fit items-center',
+          'max-h-[calc(100vh_-_5.5rem)]',
+          'sm:max-h-[calc(100vh_-_8rem)]',
+          'overflow-y-scroll'
         )}
       >
         <AnimatePresence>
