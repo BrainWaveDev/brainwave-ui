@@ -46,13 +46,26 @@ const thunkAddErrorWithTimeout =
     dispatch(removeError(error.id));
   };
 
+// Clears all errors with a timeout between each clearance
+const thunkClearAllErrorsWithTimeout =
+  (timeout: number = 1000): AppThunk =>
+  async (dispatch, getState) => {
+    const { errors } = getState().errors;
+    const errorIds = errors.map((error) => error.id);
+    for (const id of errorIds) {
+      dispatch(removeError(id));
+      await wait(timeout);
+    }
+  };
+
 export const getErrorsFromLocalStorage = () =>
   useAppSelector((state) => state.errors);
 
 export const { addError, removeError } = errorSlice.actions;
 
 export const optimisticErrorActions = {
-  addErrorWithTimeout: thunkAddErrorWithTimeout
+  addErrorWithTimeout: thunkAddErrorWithTimeout,
+  clearErrorsWithTimeout: thunkClearAllErrorsWithTimeout
 };
 
 export default errorSlice.reducer;
