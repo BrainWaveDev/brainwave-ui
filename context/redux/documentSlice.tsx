@@ -5,6 +5,7 @@ import { deleteDocuments, fetchAllDocuments } from '@/utils/app/documents';
 import { Document } from '@/types/document';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { endLoading, LoadingTrigger, startLoading } from './loadingSlice';
+import { optimisticErrorActions } from './errorSlice';
 
 type DocumentState = Document[];
 
@@ -36,7 +37,10 @@ const thunkAddAllDocuments = (supabaseClient?: SupabaseClient): AppThunk => {
       const documents = await fetchAllDocuments(supabaseClient);
       dispatch(documentSlice.actions.setAllDocuments(documents));
     } catch (e) {
-      console.error(e);
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout('Failed to fetch documents')
+      );
+      console.error('ERROR: Failed to fetch documents');
     } finally {
       dispatch(endLoading(LoadingTrigger.FetchingDocuments));
     }
@@ -49,7 +53,12 @@ const thunkDeleteDocuments = (document_ids: number[]): AppThunk => {
       document_ids.includes(document.id)
     );
     if (!documents) {
-      // TODO: Display error
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          'Specified documents do not exist'
+        )
+      );
+      console.error('ERROR: Specified documents do not exist');
       return;
     }
     dispatch(startLoading(LoadingTrigger.DeletingDocuments));
@@ -58,6 +67,10 @@ const thunkDeleteDocuments = (document_ids: number[]): AppThunk => {
       await deleteDocuments(document_ids);
     } catch (e) {
       dispatch(documentSlice.actions.addAllDocuments(documents));
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout('Failed to delete documents')
+      );
+      console.error('ERROR: Failed to delete specified documents');
     } finally {
       dispatch(endLoading(LoadingTrigger.DeletingDocuments));
     }
