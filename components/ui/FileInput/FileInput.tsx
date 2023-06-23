@@ -10,10 +10,13 @@ import { FileInfo, UploadState } from '../../../lib/classes';
 import { AnimatePresence, isDragActive, motion } from 'framer-motion';
 import { supabase } from '@/utils/supabase-client';
 import { wait } from '@/utils/helpers';
-import { ErrorAlert, useErrorContext } from '../../../context/ErrorContext';
+import {
+  createError,
+  addError,
+  removeError
+} from '../../../context/redux/errorSlice';
 import AlertModal, {
   ModalState,
-  ModalType,
   setModalOpen
 } from '@/components/ui/AlertModal';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
@@ -47,7 +50,6 @@ export default function FileInput() {
   // ==============================
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [modalState, setModalState] = useState<ModalState | null>(null);
-  const { errorDispatch } = useErrorContext();
 
   // ==============================
   // Modal Buttons
@@ -91,23 +93,18 @@ export default function FileInput() {
         if (!existingFileNames.includes(selectedFiles[i].name)) {
           newFiles.push(new FileInfo(selectedFiles[i]));
         } else {
-          setModalState({
-            open: true,
-            title: 'Duplicate Files',
-            description: 'You cannot upload the same file(s) twice!',
-            type: ModalType.Alert
-          });
+          const duplicateFileError = createError(
+            'You cannot upload the same file(s) twice!'
+          );
+          dispatch(addError(duplicateFileError));
         }
       }
 
       if (invalidFileType) {
-        setModalState({
-          open: true,
-          title: 'Invalid File Type',
-          description:
-            'You can only upload TXT, PDF, DOC, DOCX and HTML files.',
-          type: ModalType.Alert
-        });
+        const fileTypeError = createError(
+          'You can only upload TXT, PDF, DOC, DOCX and HTML files.'
+        );
+        dispatch(addError(fileTypeError));
       }
 
       setFiles(newFiles);
@@ -190,14 +187,12 @@ export default function FileInput() {
         updatedFiles.push(file);
 
         if (errorMessage) {
-          const newError = new ErrorAlert(errorMessage);
-          errorDispatch({ type: 'addError', error: newError });
+          const fileUploadError = createError(errorMessage);
+          addError(fileUploadError);
+
           // Automatically clear error alert
           setTimeout(() => {
-            errorDispatch({
-              type: 'removeError',
-              id: newError.id
-            });
+            removeError(fileUploadError.id);
           }, 3000);
         }
       });
