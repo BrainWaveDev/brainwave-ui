@@ -7,8 +7,8 @@
 .filePreviewGrid {
     @apply w-full grid mt-1 justify-center scrollbar-hide;
     @apply grid-cols-1;
-    @apply md:grid-cols-2;
-    @apply lg:grid-cols-[repeat_auto_fit_minmax(15rem,30%)];
+    @apply md:grid-cols-[minmax(15rem,30%)_minmax(15rem,30%)];
+    @apply xl:grid-cols-[repeat(auto-fit,minmax(15rem,30%))];
     /* Responsiveness */
     @apply gap-3;
 }
