@@ -1,10 +1,8 @@
 import FileInput from '@/components/ui/FileInput/FileInput';
 import FilesList from '@/components/ui/FilesList';
 import { initStore } from 'context/redux/store';
-import { useErrorContext } from '../context/ErrorContext';
 
 export default function HomePage({ error }: { error: string | null }) {
-  const { errorDispatch } = useErrorContext();
   return (
     <>
       <header className="bg-white shadow">
