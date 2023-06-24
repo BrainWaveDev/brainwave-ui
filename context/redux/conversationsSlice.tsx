@@ -23,6 +23,7 @@ import {
 } from './currentConversationSlice';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { endLoading, LoadingTrigger, startLoading } from './loadingSlice';
+import { optimisticErrorActions } from './errorSlice';
 
 type ConversationsState = ConversationSummary[];
 
@@ -72,8 +73,7 @@ const conversationsSlice = createSlice({
       if (index !== -1) {
         state[index] = action.payload.dbConversation;
       } else {
-        // TODO: Throw error
-        console.error(
+        throw Error(
           "Couldn't find conversation with ID " +
             action.payload.tempConversation.id
         );
@@ -112,6 +112,12 @@ const thunkCreateNewConversation = (): AppThunk => async (dispatch) => {
     );
     dispatch(selectCurrentConversation(conversation));
   } catch (e) {
+    console.error("Couldn't create new conversation");
+    dispatch(
+      optimisticErrorActions.addErrorWithTimeout(
+        "ERROR: Couldn't create new conversation"
+      )
+    );
     dispatch(deleteConversation({ id: tempConversation.id }));
   }
 };
@@ -124,6 +130,12 @@ const thunkDeleteConversation =
     try {
       await deleteConversationFromDB(conversation.id);
     } catch (e) {
+      console.error("Couldn't remove conversation");
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          "ERROR: Couldn't remove conversation"
+        )
+      );
       dispatch(addConversation(conversation));
     }
   };
@@ -135,15 +147,25 @@ const thunkUpdateConversation =
     const originalConversation = getState().conversations.find(
       (c) => c.id === conversation.id
     );
-    // TODO: This should throw an error
     if (!originalConversation) {
-      console.error('Conversation not found');
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          "Couldn't update conversation"
+        )
+      );
+      console.error("ERROR: Couldn't update conversation");
       return;
     }
     dispatch(conversationsSlice.actions.updateConversation(conversation));
     try {
       await updateConversationDB(conversation);
     } catch (e) {
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          "Couldn't update conversation"
+        )
+      );
+      console.error("ERROR: Couldn't update conversation");
       dispatch(
         conversationsSlice.actions.updateConversation(originalConversation)
       );
@@ -157,8 +179,10 @@ const thunkClearConversations = (): AppThunk => async (dispatch) => {
     dispatch(clearConversations());
     dispatch(clearSelectedConversation());
   } catch (e: any) {
-    // TODO: Show errors to user
-    console.error(e.message);
+    dispatch(
+      optimisticErrorActions.addErrorWithTimeout("Couldn't clear conversations")
+    );
+    console.error("ERROR: Couldn't clear conversations");
   } finally {
     dispatch(endLoading(LoadingTrigger.DeletingConversations));
   }
@@ -167,20 +191,38 @@ const thunkClearConversations = (): AppThunk => async (dispatch) => {
 const thunkFetchAllConversations =
   (supabaseClient?: SupabaseClient): AppThunk =>
   async (dispatch) => {
-    const conversations = await fetchAllConversations(supabaseClient);
-    dispatch(setConversations(conversations));
+    try {
+      const conversations = await fetchAllConversations(supabaseClient);
+      dispatch(setConversations(conversations));
+    } catch (e) {
+      console.error("ERROR: Couldn't fetch conversations");
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          "Couldn't fetch conversations"
+        )
+      );
+    }
   };
 
 const thunkInitConversations = (): AppThunk => async (dispatch, getState) => {
-  await dispatch(thunkFetchAllConversations());
-  const conversations = getState().conversations;
-  if (conversations.length === 0) return;
-  dispatch(
-    selectCurrentConversation({
-      ...conversations[0],
-      messages: []
-    })
-  );
+  try {
+    await dispatch(thunkFetchAllConversations());
+    const conversations = getState().conversations;
+    if (conversations.length === 0) return;
+    dispatch(
+      selectCurrentConversation({
+        ...conversations[0],
+        messages: []
+      })
+    );
+  } catch (e) {
+    console.error("Couldn't fetch conversations");
+    dispatch(
+      optimisticErrorActions.addErrorWithTimeout(
+        "ERROR: Couldn't fetch conversations"
+      )
+    );
+  }
 };
 
 export const optimisticConversationsActions = {
@@ -189,17 +231,14 @@ export const optimisticConversationsActions = {
   // update conversation does not update messages
   updateConversation: thunkUpdateConversation,
   clearConversations: thunkClearConversations,
-  fetchAllConversations: thunkFetchAllConversations,
-  initAllConversations: thunkInitConversations
+  fetchAllConversations: thunkFetchAllConversations
 };
 
 export const {
   addConversation,
   setConversations,
   deleteConversation,
-  updateConversation,
-  clearConversations,
-  replaceWithDBConversation
+  clearConversations
 } = conversationsSlice.actions;
 
 export const getConversationsFromStorage = () =>
