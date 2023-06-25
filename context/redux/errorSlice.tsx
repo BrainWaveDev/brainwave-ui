@@ -40,6 +40,9 @@ const errorSlice = createSlice({
 const thunkAddErrorWithTimeout =
   (message: string | JSX.Element, timeout: number = 3000): AppThunk =>
   async (dispatch) => {
+    if (typeof message === 'string') {
+      console.error('ERROR: ' + message);
+    }
     const error = createError(message);
     dispatch(addError(error));
     await wait(timeout);
