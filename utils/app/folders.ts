@@ -50,7 +50,7 @@ export const fetchAllFolders = async (supabaseClient?: SupabaseClient) => {
     .select('*');
 
   if (error) {
-    throw error;
+    throw Error(error.message);
   }
 
   return data.map((dbFolder) => {
