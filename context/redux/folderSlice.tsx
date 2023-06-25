@@ -75,9 +75,10 @@ const thunkCreateNewFolder =
       );
     } catch (e: any) {
       dispatch(deleteFolder(tempFolder));
-      console.error(
-        'Failed to create new folder with the following error: ',
-        e.message
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          'Failed to create new folder'
+        )
       );
     }
   };
@@ -95,7 +96,6 @@ const thunkDeleteFolder =
       dispatch(
         optimisticErrorActions.addErrorWithTimeout('Failed to delete folder')
       );
-      console.error('ERROR: Failed to delete folder');
       dispatch(addFolder(folder));
     }
   };
@@ -115,7 +115,6 @@ const thunkUpdateFolderName =
           'Failed to update folder name'
         )
       );
-      console.error('ERROR: Failed to update folder name');
       dispatch(updateFolderName({ id: folderId, newName: folder.name }));
     }
   };
@@ -132,7 +131,6 @@ const thunkFetchAllFolders =
           'Failed to get a list of folders'
         )
       );
-      console.error('ERROR: Failed to get a list of folders from the server');
     }
   };
 

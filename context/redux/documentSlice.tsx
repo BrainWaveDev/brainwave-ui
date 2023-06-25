@@ -40,7 +40,6 @@ const thunkAddAllDocuments = (supabaseClient?: SupabaseClient): AppThunk => {
       dispatch(
         optimisticErrorActions.addErrorWithTimeout('Failed to fetch documents')
       );
-      console.error('ERROR: Failed to fetch documents');
     } finally {
       dispatch(endLoading(LoadingTrigger.FetchingDocuments));
     }
@@ -58,7 +57,6 @@ const thunkDeleteDocuments = (document_ids: number[]): AppThunk => {
           'Specified documents do not exist'
         )
       );
-      console.error('ERROR: Specified documents do not exist');
       return;
     }
     dispatch(startLoading(LoadingTrigger.DeletingDocuments));
@@ -70,7 +68,6 @@ const thunkDeleteDocuments = (document_ids: number[]): AppThunk => {
       dispatch(
         optimisticErrorActions.addErrorWithTimeout('Failed to delete documents')
       );
-      console.error('ERROR: Failed to delete specified documents');
     } finally {
       dispatch(endLoading(LoadingTrigger.DeletingDocuments));
     }

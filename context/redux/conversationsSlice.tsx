@@ -112,10 +112,9 @@ const thunkCreateNewConversation = (): AppThunk => async (dispatch) => {
     );
     dispatch(selectCurrentConversation(conversation));
   } catch (e) {
-    console.error("Couldn't create new conversation");
     dispatch(
       optimisticErrorActions.addErrorWithTimeout(
-        "ERROR: Couldn't create new conversation"
+        "Couldn't create new conversation"
       )
     );
     dispatch(deleteConversation({ id: tempConversation.id }));
@@ -130,10 +129,9 @@ const thunkDeleteConversation =
     try {
       await deleteConversationFromDB(conversation.id);
     } catch (e) {
-      console.error("Couldn't remove conversation");
       dispatch(
         optimisticErrorActions.addErrorWithTimeout(
-          "ERROR: Couldn't remove conversation"
+          "Couldn't remove conversation"
         )
       );
       dispatch(addConversation(conversation));
@@ -153,7 +151,6 @@ const thunkUpdateConversation =
           "Couldn't update conversation"
         )
       );
-      console.error("ERROR: Couldn't update conversation");
       return;
     }
     dispatch(conversationsSlice.actions.updateConversation(conversation));
@@ -165,7 +162,6 @@ const thunkUpdateConversation =
           "Couldn't update conversation"
         )
       );
-      console.error("ERROR: Couldn't update conversation");
       dispatch(
         conversationsSlice.actions.updateConversation(originalConversation)
       );
@@ -182,7 +178,6 @@ const thunkClearConversations = (): AppThunk => async (dispatch) => {
     dispatch(
       optimisticErrorActions.addErrorWithTimeout("Couldn't clear conversations")
     );
-    console.error("ERROR: Couldn't clear conversations");
   } finally {
     dispatch(endLoading(LoadingTrigger.DeletingConversations));
   }
@@ -195,7 +190,6 @@ const thunkFetchAllConversations =
       const conversations = await fetchAllConversations(supabaseClient);
       dispatch(setConversations(conversations));
     } catch (e) {
-      console.error("ERROR: Couldn't fetch conversations");
       dispatch(
         optimisticErrorActions.addErrorWithTimeout(
           "Couldn't fetch conversations"
@@ -216,11 +210,8 @@ const thunkInitConversations = (): AppThunk => async (dispatch, getState) => {
       })
     );
   } catch (e) {
-    console.error("Couldn't fetch conversations");
     dispatch(
-      optimisticErrorActions.addErrorWithTimeout(
-        "ERROR: Couldn't fetch conversations"
-      )
+      optimisticErrorActions.addErrorWithTimeout("Couldn't fetch conversations")
     );
   }
 };
