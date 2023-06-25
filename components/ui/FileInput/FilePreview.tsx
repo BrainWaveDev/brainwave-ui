@@ -43,10 +43,10 @@ export default function FilePreview({
       transition={{ duration: 0.15 }}
       className={classNames(
         'relative flex items-center border h-[3.25rem]',
-        'min-h-[3.25rem] max-h-[3.25rem] shadow-sm',
+        'min-h-[3.25rem] max-h-[3.25rem] shadow-sm justify-left',
         'bg-white dark:bg-zinc-700 border-gray-200 dark:border-zinc-600',
         'rounded-lg px-0 py-1 group border-white hover:border-teal-200',
-        'active:border-teal-200 w-[95%] sm:w-full xs:max-w-full place-self-center',
+        'active:border-teal-200 w-[95%] sm:w-full xs:max-w-sm place-self-center',
         uploadState !== UploadState.NotUploading
           ? 'place-content-center'
           : 'place-content-between'

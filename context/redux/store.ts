@@ -28,7 +28,7 @@ const combinedReducer = combineReducers({
   searchSpace: searchSpaceSlice,
   modal: modalSlice,
   loading: loadingSlice,
-  error: errorSlice
+  errors: errorSlice
 });
 
 type CombinedReducerState = ReturnType<typeof combinedReducer>;
@@ -41,6 +41,7 @@ const reducer = (state: any, action: any): CombinedReducerState => {
       currentConversation: state.currentConversation,
       modal: state.modal,
       loading: state.loading
+      // errors: state.errors
     };
   } else {
     return combinedReducer(state, action);

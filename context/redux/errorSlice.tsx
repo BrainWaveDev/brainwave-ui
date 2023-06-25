@@ -1,44 +1,45 @@
-import type { PayloadAction } from '@reduxjs/toolkit';
-import { createSlice } from '@reduxjs/toolkit';
-import { AppThunk, useAppSelector } from './store';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { endLoading, LoadingTrigger, startLoading } from './loadingSlice';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { useAppSelector } from './store';
 
-enum ErrorType {
-    CHAT_API_ERROR = 'CHAT_API_ERROR',
-    FILE_UPLOAD_ERROR = 'FILE_UPLOAD_ERROR',
-}
+export type Error = {
+  message: string | JSX.Element;
+  id: string;
+};
 
-type ErrorState<E extends ErrorType> = {
-    error: E;
-    isActive: boolean;
-}
+export const createError = (message: string | JSX.Element) => {
+  return {
+    message,
+    id: Math.random().toString().split('.')[1]
+  };
+};
 
-type errorStates = {
-    CHAT_API_ERROR: ErrorState<ErrorType.CHAT_API_ERROR>;
-    FILE_UPLOAD_ERROR: ErrorState<ErrorType.FILE_UPLOAD_ERROR>;
-}
+type ErrorState = {
+  errors: Error[];
+};
 
-const initialState: errorStates = {
-    CHAT_API_ERROR: {
-        error: ErrorType.CHAT_API_ERROR,
-        isActive: false,
-    },
-    FILE_UPLOAD_ERROR: {
-        error: ErrorType.FILE_UPLOAD_ERROR,
-        isActive: false,
-    },
+const initialState: ErrorState = {
+  errors: []
 };
 
 const errorSlice = createSlice({
-    name: 'errors',
-    initialState,
-    reducers: {
-        setError: (state, action: PayloadAction<{errorType: keyof typeof initialState, value: boolean}>) => {
-            state[action.payload.errorType].isActive = action.payload.value;
-        },
+  name: 'errors',
+  initialState,
+  reducers: {
+    addError: (state, action: PayloadAction<Error>) => {
+      state.errors.push(action.payload);
     },
+    removeError: (state, action: PayloadAction<string>) => {
+      return {
+        errors: state.errors.filter((error) => error.id != action.payload)
+      };
+      // state.errors = state.errors.filter((error) => error.id != action.payload);
+    }
+  }
 });
 
-export const { setError } = errorSlice.actions;
+export const getErrorsFromLocalStorage = () =>
+  useAppSelector((state) => state.errors);
+
+export const { addError, removeError } = errorSlice.actions;
+
 export default errorSlice.reducer;

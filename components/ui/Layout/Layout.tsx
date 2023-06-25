@@ -1,7 +1,6 @@
 import React, { PropsWithChildren } from 'react';
 import Head from 'next/head';
 import classes from './Layout.module.css';
-import ErrorList from '@/components/ui/ErrorList/ErrorList';
 import { PageMeta } from '@/types/index';
 import classNames from 'classnames';
 import Sidebar from '../Sidebar';
@@ -13,6 +12,13 @@ import { use100vh } from 'react-div-100vh';
 import { getModalStateFromStorage } from '../../../context/redux/modalSlice';
 import DocumentFilter from '@/components/Chat/DocumentFilter';
 import { useRouter } from 'next/router';
+import {
+  getErrorsFromLocalStorage,
+  removeError
+} from '../../../context/redux/errorSlice';
+import { AnimatePresence } from 'framer-motion';
+import { useAppDispatch } from '../../../context/redux/store';
+import ErrorAlert from '@/components/ui/ErrorAlert';
 
 interface Props extends PropsWithChildren {
   meta?: PageMeta;
@@ -32,6 +38,8 @@ export default function Layout({ children, meta: pageMeta }: Props) {
 
   // ======= Redux State =======
   const { documentFilterOpen } = getModalStateFromStorage();
+  const { errors } = getErrorsFromLocalStorage();
+  const dispatch = useAppDispatch();
 
   // ======= Router =======
   const router = useRouter();
@@ -101,7 +109,28 @@ export default function Layout({ children, meta: pageMeta }: Props) {
           <DocumentFilter />
         )}
       </main>
-      <ErrorList />
+      <div
+        // Display list of errors
+        className={classNames(
+          'fixed top-[7.5vh] flex',
+          'flex-col gap-y-3 justify-start z-20',
+          'right-1/2 translate-x-1/2',
+          'xs:translate-x-0 xs:right-3 sm:right-6 md:right-12',
+          'min-w-[300px] xs:min-w-fit items-center'
+        )}
+      >
+        <AnimatePresence>
+          {errors.map((error) => (
+            <ErrorAlert
+              message={error.message}
+              key={error.id}
+              onRemove={() => {
+                dispatch(removeError(error.id));
+              }}
+            />
+          ))}
+        </AnimatePresence>
+      </div>
     </>
   );
 }
