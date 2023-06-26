@@ -5,11 +5,10 @@ import PageIndex from '@/components/ui/FilesList/PageIndex';
 import React, { useCallback, useMemo, useState } from 'react';
 import TableHeader from '@/components/ui/FilesList/TableHeader';
 import AlertModal, {
+  ModalActionButton,
   ModalState,
-  ModalType,
   setModalOpen
 } from '@/components/ui/AlertModal';
-import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { useAppDispatch } from 'context/redux/store';
 import {
   getDocumentsFromStore,
@@ -103,38 +102,18 @@ export default function FilesList() {
   const [modalState, setModalState] = useState<ModalState | null>(null);
 
   // ===================================================
-  // Modal
+  // Modal Action Buttons
   // ===================================================
-  const ModalActionButtons = (
-    <>
-      <AlertDialog.Action
-        asChild
-        onClick={() => setModalState(setModalOpen(false))}
-      >
-        <button className="text-mauve11 bg-mauve4 hover:bg-mauve5 focus:shadow-mauve7 inline-flex h-[35px] items-center justify-center rounded-[4px] px-[15px] font-medium leading-none outline-none focus:shadow-[0_0_0_2px]">
-          Cancel
-        </button>
-      </AlertDialog.Action>
-      <AlertDialog.Action
-        asChild
-        onClick={async () => {
-          setModalState(setModalOpen(false));
-          dispatch(startLoading(LoadingTrigger.DeletingDocuments));
-          dispatch(
-            optimisticDocumentActions.deleteDocuments(
-              Array.from(selectedDocuments)
-            )
-          );
-          setSelectedDocuments(new Set<number>());
-          dispatch(endLoading(LoadingTrigger.DeletingDocuments));
-        }}
-      >
-        <button className="text-red11 bg-red4 hover:bg-red5 focus:shadow-red7 inline-flex h-[35px] items-center justify-center rounded-[4px] px-[15px] font-medium leading-none outline-none focus:shadow-[0_0_0_2px]">
-          Confirm
-        </button>
-      </AlertDialog.Action>
-    </>
-  );
+  const closeModal = () => setModalState(setModalOpen(false));
+  const confirmDelete = async () => {
+    setModalState(setModalOpen(false));
+    dispatch(startLoading(LoadingTrigger.DeletingDocuments));
+    dispatch(
+      optimisticDocumentActions.deleteDocuments(Array.from(selectedDocuments))
+    );
+    setSelectedDocuments(new Set<number>());
+    dispatch(endLoading(LoadingTrigger.DeletingDocuments));
+  };
 
   // ===================================================
   // Document removal
@@ -147,8 +126,7 @@ export default function FilesList() {
       title: 'Confirm deletion',
       description: `This action cannot be reverted. Are you want to delete selected document${
         selectedDocuments.size > 1 ? 's' : ''
-      }?`,
-      type: ModalType.Alert
+      }?`
     });
   };
 
@@ -363,7 +341,20 @@ export default function FilesList() {
         <AlertModal
           modalState={modalState}
           setModalState={setModalState}
-          actionButtons={ModalActionButtons}
+          actionButtons={
+            <>
+              <ModalActionButton
+                text={'Cancel'}
+                onClick={closeModal}
+                type={'Regular'}
+              />
+              <ModalActionButton
+                text={'Confirm'}
+                onClick={confirmDelete}
+                type={'Confirmation'}
+              />
+            </>
+          }
         />
       )}
       <div className={'w-full'}>
