@@ -235,8 +235,8 @@ export const ChatMessage: FC<Props> = ({
           'relative flex flex-row -mt-8 w-full',
           'items-center',
           isAssistantMessage
-            ? 'pl-6 place-content-between'
-            : 'pr-6 place-content-end'
+            ? 'pl-4 place-content-between'
+            : 'pr-4 place-content-end'
         )}
       >
         <div
