@@ -21,29 +21,31 @@ const SignIn = () => {
 
   if (!user)
     return (
-      <div className="flex justify-center height-screen-helper">
-        <div className="flex flex-col justify-between max-w-lg p-3 m-auto w-80 ">
-          <div className="flex justify-center pb-12 ">
-            <Logo width="64px" height="64px" />
-          </div>
-          <div className="flex flex-col space-y-4">
-            <Auth
-              supabaseClient={supabaseClient}
-              providers={['google', 'github']}
-              redirectTo={getURL()}
-              magicLink={true}
-              appearance={{
-                theme: ThemeSupa,
-                variables: {
-                  default: {
-                    colors: {
-                      brand: 'rgb(50,65,89)',
-                      brandAccent: 'rgb(50,65,89)'
+      <div className='flex min-h-screen min-w-[100vw] justify-center align-middle'>
+        <div className="flex justify-center height-screen-helper">
+          <div className="flex flex-col justify-between max-w-lg p-3 m-auto w-80 ">
+            <div className="flex justify-center pb-12 ">
+              <Logo width="64px" height="64px" />
+            </div>
+            <div className="flex flex-col space-y-4">
+              <Auth
+                supabaseClient={supabaseClient}
+                providers={['google', 'github']}
+                redirectTo={getURL()}
+                magicLink={true}
+                appearance={{
+                  theme: ThemeSupa,
+                  variables: {
+                    default: {
+                      colors: {
+                        brand: 'rgb(50,65,89)',
+                        brandAccent: 'rgb(50,65,89)'
+                      }
                     }
                   }
-                }
-              }}
-            />
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>

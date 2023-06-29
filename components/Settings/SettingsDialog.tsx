@@ -20,7 +20,7 @@ import {
   validatePassword
 } from '@/utils/app/userSettings';
 import Link from 'next/link';
-import { useUser } from '@supabase/auth-helpers-react';
+import { useSessionContext, useUser } from '@supabase/auth-helpers-react';
 
 type Tabs = 'profile' | 'password' | 'subscription';
 
@@ -80,6 +80,12 @@ const Profile = memo(() => {
     }
   };
 
+  const sessionContext = useSessionContext();
+  const handleLogout = async () => {
+    await sessionContext.supabaseClient.auth.signOut();
+    window.location.reload();
+  };
+
   return (
     <div className="w-full h-full">
       <h1 className="mb-8 text-4xl md:mb-6 font-semibold">Profile</h1>
@@ -105,11 +111,21 @@ const Profile = memo(() => {
           Update User Name
         </button>
       </div>
+      <div className='inline-flex flex-col justify-around align-top'>
+
+
       <div className="font-medium mt-10 mb-2 text-lg rounded-3xl border-spacing-3 border-4 border-blackA10 inline-flex relative px-4 hover:border-blue-600">
         <Link href={'/subscription'}>Go To Subscription</Link>
         <div className="flex flex-col justify-center align-middle h-[28px] ml-[5px] ">
           <ArrowRightIcon className="w-6 h-6" />
         </div>
+      </div>
+
+      <div className="font-medium mt-5 mb-2 text-lg rounded-3xl border-spacing-1 border-4 max-w-fit border-blackA10 px-4 hover:border-blue-600 ">
+        <button onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ import 'styles/chrome-bug.css';
 import TopLoader from '@/components/ui/TopLoader';
 import { useRouter } from 'next/router';
 
-export const static_page = ['/faq']
+export const static_page = ['/faq','/signin']
 
 export default function MyApp({ Component, ...rest }: AppProps) {
   const { store, props } = wrapper.useWrappedStore(rest);
