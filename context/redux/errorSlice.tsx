@@ -37,8 +37,6 @@ const errorSlice = createSlice({
   }
 });
 
-export const getErrorsFromLocalStorage = () =>
-  useAppSelector((state) => state.errors);
 
 export const { addError, removeError } = errorSlice.actions;
 

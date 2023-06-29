@@ -10,6 +10,9 @@ import { wrapper } from 'context/redux/store';
 import 'styles/main.css';
 import 'styles/chrome-bug.css';
 import TopLoader from '@/components/ui/TopLoader';
+import { useRouter } from 'next/router';
+
+export const static_page = ['/faq']
 
 export default function MyApp({ Component, ...rest }: AppProps) {
   const { store, props } = wrapper.useWrappedStore(rest);
@@ -19,6 +22,21 @@ export default function MyApp({ Component, ...rest }: AppProps) {
   useEffect(() => {
     document.body.classList?.remove('loading');
   }, []);
+
+  const router = useRouter();
+  if(static_page.includes(router.pathname)) {
+    return(
+      <div className="h-full w-full flex flex-row">
+      <SessionContextProvider supabaseClient={supabaseClient}>
+        <MyUserContextProvider>
+          <Provider store={store}>
+              <Component {...props.pageProps} />
+          </Provider>
+        </MyUserContextProvider>
+      </SessionContextProvider>
+    </div>
+    )
+  }
 
   return (
     <div className="h-full w-full flex flex-row">

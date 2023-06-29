@@ -13,12 +13,12 @@ import { getModalStateFromStorage } from '../../../context/redux/modalSlice';
 import DocumentFilter from '@/components/Chat/DocumentFilter';
 import { useRouter } from 'next/router';
 import {
-  getErrorsFromLocalStorage,
   removeError
 } from '../../../context/redux/errorSlice';
 import { AnimatePresence } from 'framer-motion';
 import { useAppDispatch } from '../../../context/redux/store';
 import ErrorAlert from '@/components/ui/ErrorAlert';
+import { getErrorsFromLocalStorage } from 'context/ErrorContext';
 
 interface Props extends PropsWithChildren {
   meta?: PageMeta;
