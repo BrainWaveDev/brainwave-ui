@@ -42,7 +42,8 @@ export default memo(function Header() {
   // ==============================
   const sideBarSpanClass = classNames(
     'w-5 h-0.5 my-0.5 bg-neutral7 dark:bg-neutral4',
-    'rounded-full transition-all duration-150'
+    'rounded-full transition-all',
+    'duration-300 group-hover:bg-teal-400 group-active:bg-teal-400'
   );
   const headerShadow = classNames(
     'lg:shadow-[0_0.75rem_2.5rem_-0.75rem_rgba(0,0,0,0.06)]',
@@ -82,7 +83,7 @@ export default memo(function Header() {
         <button
           className={`flex sm:hidden absolute shrink-0 flex-col items-start justify-center w-9 h-9 overflow-visible ${
             sideBarOpen ? 'right-[calc((100vw_-_22rem)/2)]' : 'right-4'
-          } xs:right-6 transition-all duration-150 focus:outline-0 focus:!ring-0`}
+          } xs:right-6 transition-all duration-300 focus:outline-0 focus:!ring-0 group`}
           onClick={onToggleSidebar}
         >
           <span
