@@ -126,7 +126,7 @@ export default memo(function Chat() {
   const EmptyConversationCover = (
     <div
       className={classNames(
-        'mx-auto flex w-4/5 flex-col space-y-10 max-w-[600px] absolute',
+        'mx-auto flex w-4/5 flex-col space-y-10 max-w-full absolute',
         'top-1/2 left-1/2 -translate-x-1/2 -translate-y-full'
       )}
     >
@@ -144,7 +144,7 @@ export default memo(function Chat() {
             Bot
           </div>
           <div className="text-center text-xl text-gray-500 dark:text-gray-400">
-            <div className="mb-2 md:whitespace-nowrap">
+            <div className="mb-2">
               Start conversation with your documents by typing a prompt below.
             </div>
           </div>
