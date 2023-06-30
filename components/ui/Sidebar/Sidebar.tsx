@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 import classes from './Sidebar.module.css';
 import SideBarOpenIcon from '@/components/icons/SidebarOpen';
@@ -29,7 +29,9 @@ import {
   initSidebar,
   setSidebar,
   toggleSettingDialog,
-  toggleSidebar
+  toggleSidebar,
+  openSettingDialog,
+  closeSettingDialog
 } from '../../../context/redux/modalSlice';
 import { optimisticConversationsActions } from 'context/redux/conversationsSlice';
 import { optimisticFoldersAction } from 'context/redux/folderSlice';
@@ -42,26 +44,6 @@ import useRouteChange from '../../../hooks/useRouteChange';
 import { RotatingLines } from 'react-loader-spinner';
 import SettingsDialog from '@/components/Settings/SettingsDialog';
 import { use100vh } from 'react-div-100vh';
-
-const NavLinks = [
-  {
-    name: 'Chat',
-    href: '/chat',
-    icon: ChatBubbleLeftIcon
-  },
-  {
-    name: 'Files',
-    href: '/files',
-    icon: FolderIcon
-  },
-  {
-    name: 'Settings',
-    icon: Cog8ToothIcon,
-    onClick: (dispatch: ReturnType<typeof useAppDispatch>) => {
-      dispatch(toggleSettingDialog());
-    }
-  }
-];
 
 type LinkType =
   | {
@@ -97,13 +79,35 @@ export default function Sidebar() {
       dispatch(window.innerWidth > 640 ? initSidebar() : setSidebar(false));
     }
   }, []);
-  const { sideBarOpen } = getModalStateFromStorage();
+  const { sideBarOpen, settingDialogOpen } = getModalStateFromStorage();
   const onToggleSidebar = () => dispatch(toggleSidebar());
   const theme = getThemeFromStorage();
   const isDarkTheme = theme === 'dark';
   const deletingConversations = getLoadingStateFromStore(
     LoadingTrigger.DeletingConversations
   );
+
+  // const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const openSettingsDialog = () => dispatch(openSettingDialog());
+  const closeSettingsDialog = () => dispatch(closeSettingDialog());
+
+  const NavLinks = [
+    {
+      name: 'Chat',
+      href: '/chat',
+      icon: ChatBubbleLeftIcon
+    },
+    {
+      name: 'Files',
+      href: '/files',
+      icon: FolderIcon
+    },
+    {
+      name: 'Settings',
+      icon: Cog8ToothIcon,
+      onClick: openSettingsDialog
+    }
+  ];
 
   // ============== Detect Page Changes ==============
   const [pageLoading] = useRouteChange();
@@ -166,7 +170,10 @@ export default function Sidebar() {
   return (
     // TODO: Add animation for sidebar sideBarOpen and close
     <>
-      <SettingsDialog />
+      <SettingsDialog
+        settingDialogOpen={settingDialogOpen}
+        closeSettingDialog={closeSettingsDialog}
+      />
       <aside
         className={classNames(classes.sidebar, sidebarDisplay)}
         style={{
