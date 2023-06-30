@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import classNames from 'classnames';
 import classes from './Sidebar.module.css';
 import SideBarOpenIcon from '@/components/icons/SidebarOpen';
@@ -28,7 +28,6 @@ import {
   getModalStateFromStorage,
   initSidebar,
   setSidebar,
-  toggleSettingDialog,
   toggleSidebar,
   openSettingDialog,
   closeSettingDialog
