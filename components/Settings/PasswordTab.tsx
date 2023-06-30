@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/router';
 import { RotatingLines } from 'react-loader-spinner';
 import LockIcon from '@/components/icons/LockIcon';
+import { wait } from '@/utils/helpers';
+import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const PasswordTab = memo(
   ({
@@ -30,6 +32,14 @@ const PasswordTab = memo(
     const [confirmNewPassword, setConfirmNewPassword] = useState<string>('');
     const [passwordMismatch, setPasswordMismatch] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
+    const [updateSuccess, setUpdateSuccess] = useState<boolean | null>(null);
+
+    // Display update status
+    const displayUpdateStatus = async (success: boolean) => {
+      setUpdateSuccess(success);
+      await wait(2000);
+      setUpdateSuccess(null);
+    };
 
     const onUpdatePassword = async () => {
       if (!userEmail) return;
@@ -43,6 +53,7 @@ const PasswordTab = memo(
       } catch (e) {
         setCurrentPasswordError(true);
         setLoading(false);
+        await displayUpdateStatus(false);
         return;
       }
 
@@ -51,10 +62,12 @@ const PasswordTab = memo(
       } catch (e) {
         setError("Couldn't update password");
         setLoading(false);
+        await displayUpdateStatus(false);
         return;
       }
 
       setLoading(false);
+      await setUpdateSuccess(true);
       await signoutUser();
       router.reload();
     };
@@ -193,6 +206,12 @@ const PasswordTab = memo(
                 width="1.5rem"
                 visible={true}
               />
+            ) : updateSuccess !== null ? (
+              updateSuccess ? (
+                <CheckIcon className={'w-[1.5rem] h-[1.5rem] stroke-white'} />
+              ) : (
+                <XMarkIcon className={'w-[1.5rem] h-[1.5rem] stroke-white'} />
+              )
             ) : (
               'Change password'
             )}
