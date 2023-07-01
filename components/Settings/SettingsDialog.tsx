@@ -51,9 +51,14 @@ const SettingsDialog = memo(
     const onUpdateProfile = useCallback(
       async (newUsername: string) => {
         if (user) {
-          updateProfileName(user.id, newUsername)
-            .then(() => router.reload())
-            .catch(() => setError("Couldn't update profile"));
+          try {
+            await updateProfileName(user.id, newUsername);
+            setUsername(newUsername);
+          } catch (e) {
+            setError("Couldn't update profile");
+          }
+        } else {
+          setError("Couldn't get profile information");
         }
       },
       [user, router, setError]
@@ -113,7 +118,9 @@ const SettingsDialog = memo(
                       {currentTab === 'profile' && (
                         <ProfileTab
                           username={username}
+                          userId={user?.id}
                           updateUsername={onUpdateProfile}
+                          setError={setErrorMessage}
                         />
                       )}
                       {currentTab === 'password' && (

@@ -190,7 +190,7 @@ const PasswordTab = memo(
             className={classNames(
               'mt-8 w-full bg-teal-400 text-white font-bold',
               'hover:bg-teal-400/80 active:bg-teal-400/80',
-              'text-sm px-6 py-3 rounded-xl outline-none focus:outline-none mr-1 mb-1',
+              'text-sm px-6 py-2.5 rounded-xl outline-none focus:outline-none mr-1 mb-1',
               'transition-all duration-300 ease-in flex items-center justify-center',
               loading ? 'cursor-wait' : 'cursor-pointer'
             )}
@@ -213,7 +213,7 @@ const PasswordTab = memo(
                 <XMarkIcon className={'w-[1.5rem] h-[1.5rem] stroke-white'} />
               )
             ) : (
-              'Change password'
+              <p className={'inline-block py-0.5'}>Change password</p>
             )}
           </button>
         </div>

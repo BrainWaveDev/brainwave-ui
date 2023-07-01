@@ -1,22 +1,59 @@
-import { memo, useState } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import classNames from 'classnames';
+import { updateProfileName } from '@/utils/app/userSettings';
+import { RotatingLines } from 'react-loader-spinner';
+import { wait } from '@/utils/helpers';
+import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const ProfileTab = memo(
   ({
     username,
-    updateUsername
+    userId,
+    setError
   }: {
-    username: string;
+    username?: string;
+    userId?: string;
     updateUsername: (newUsername: string) => void;
+    setError: (errorMessage: string) => void;
   }) => {
     // ==== Local State ====
-    const [profileName, setProfileName] = useState<string>(username);
+    const [profileName, setProfileName] = useState<string | undefined>(
+      username
+    );
+    const [loading, setLoading] = useState<boolean>(false);
+    const [updateSuccess, setUpdateSuccess] = useState<boolean | null>(null);
+
+    // Display update status
+    const displayUpdateStatus = async (success: boolean) => {
+      setUpdateSuccess(success);
+      await wait(2000);
+      setUpdateSuccess(null);
+    };
+
+    // ==== Profile Update ====
+    const updateUsername = useCallback(
+      async (newUsername: string) => {
+        if (!userId) return;
+
+        try {
+          setLoading(true);
+          await updateProfileName(userId, newUsername);
+          setLoading(false);
+          await displayUpdateStatus(true);
+        } catch (e) {
+          setError("Couldn't update profile");
+          setLoading(false);
+          await displayUpdateStatus(false);
+        }
+      },
+      [userId, setError]
+    );
 
     // ==== Styling ====
     const NameInputClasses = classNames(
       'w-full h-13 px-3.5 border-0 text-base',
       'text-neutral7 outline-none transition-all duration-300 placeholder:text-neutral4/50',
-      profileName.length > 0
+      profileName && profileName.length > 0
         ? 'bg-transparent'
         : 'bg-neutral2 dark:bg-neutral6',
       'focus:bg-transparent dark:text-neutral3 overflow-hidden rounded-lg',
@@ -45,7 +82,9 @@ const ProfileTab = memo(
               className={classNames(
                 'inline-block w-6 h-6 absolute top-2.5 left-3.5',
                 'pointer-events-none transition-colors duration-300',
-                profileName.length > 0 ? 'fill-neutral4' : 'fill-neutral4/50'
+                profileName && profileName.length > 0
+                  ? 'fill-neutral4'
+                  : 'fill-neutral4/50'
               )}
               width="24"
               height="24"
@@ -59,14 +98,30 @@ const ProfileTab = memo(
           className={classNames(
             'mt-5 w-full bg-teal-400 text-white font-bold',
             'hover:bg-teal-400/90 active:bg-teal-400/90',
-            'text-sm px-6 py-3 rounded-xl outline-none focus:outline-none mr-1 mb-1',
-            'transition-all duration-300 ease-in'
+            'text-sm px-6 py-2.5 rounded-xl outline-none focus:outline-none mr-1 mb-1',
+            'transition-all duration-300 ease-in flex items-center justify-center'
           )}
           type="button"
           style={{ transition: 'all .15s ease' }}
-          onClick={() => updateUsername(profileName)}
+          onClick={() => updateUsername(profileName!)}
         >
-          Save changes
+          {loading ? (
+            <RotatingLines
+              strokeColor="white"
+              strokeWidth="2"
+              animationDuration="1"
+              width="1.5rem"
+              visible={true}
+            />
+          ) : updateSuccess !== null ? (
+            updateSuccess ? (
+              <CheckIcon className={'w-[1.5rem] h-[1.5rem] stroke-white'} />
+            ) : (
+              <XMarkIcon className={'w-[1.5rem] h-[1.5rem] stroke-white'} />
+            )
+          ) : (
+            <p className={'inline-block py-0.5'}>Save changes</p>
+          )}
         </button>
       </div>
     );
