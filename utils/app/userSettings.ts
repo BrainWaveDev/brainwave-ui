@@ -12,15 +12,18 @@ export const validatePassword = async (email: string, password: string) => {
   return true;
 };
 
+export const updateEmail = async (email: string) => {
+  const { error } = await supabase.auth.updateUser({
+    email
+  });
+  if (error) throw error;
+};
+
 export const updatePassword = async (password: string) => {
   const { error } = await supabase.auth.updateUser({
-    password: password
+    password
   });
-  if (error) {
-    console.log(error);
-    throw error;
-  }
-  return true;
+  if (error) throw error;
 };
 
 export const signoutUser = async () => {

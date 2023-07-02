@@ -1,25 +1,45 @@
-import FileInput from '@/components/ui/FileInput/FileInput';
-import FilesList from '@/components/ui/FilesList';
+import Chat from '@/components/Chat/Chat';
+import Head from 'next/head';
+import { useEffect } from 'react';
 import { initStore } from 'context/redux/store';
+import { Conversation } from '@/types/chat';
+import { cleanConversationHistory } from '@/utils/app/clean';
+import { setConversations } from 'context/redux/conversationsSlice';
+import { removeAll } from '@/utils/app/localcache';
 
-export default function HomePage({ error }: { error: string | null }) {
+const ChatUI = () => {
+  // ========= Initialize Conversations in the Local Storage =========
+  // TODO: Use Redux Persist to store conversations state in the local storage
+  useEffect(() => {
+    const conversationHistory = localStorage.getItem('conversationHistory');
+    if (conversationHistory) {
+      const parsedConversationHistory: Conversation[] =
+        JSON.parse(conversationHistory);
+      const cleanedConversationHistory = cleanConversationHistory(
+        parsedConversationHistory
+      );
+      setConversations(cleanedConversationHistory);
+    }
+
+    // Clear conversations from local storage on page load
+    removeAll('conversation');
+  }, []);
+
   return (
     <>
-      <header className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            File Manager
-          </h1>
-        </div>
-      </header>
-      <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <FileInput />
-      </div>
-      <div className="mx-auto max-w-7xl pt-2 pb-6 sm:px-6 lg:px-8">
-        <FilesList />
-      </div>
+      <Head>
+        <title>BrainBot</title>
+        <meta name="description" content="ChatGPT but better." />
+        <meta
+          name="viewport"
+          content="height=device-height ,width=device-width, initial-scale=1, user-scalable=no"
+        />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <Chat />
     </>
   );
-}
+};
 
+export default ChatUI;
 export const getServerSideProps = initStore;

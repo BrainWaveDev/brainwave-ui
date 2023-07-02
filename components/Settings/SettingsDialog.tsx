@@ -15,6 +15,11 @@ import { useRouter } from 'next/router';
 
 export type Tabs = 'profile' | 'password' | 'subscription';
 
+export type UpdateAlert = {
+  message: string;
+  type: 'error' | 'success';
+};
+
 const SettingsDialog = memo(
   ({
     settingDialogOpen,
@@ -25,10 +30,10 @@ const SettingsDialog = memo(
   }) => {
     // ==== Local State ====
     const [currentTab, setCurrentTab] = useState<Tabs>('profile');
-    const [error, setError] = useState<string | null>(null);
-    const setErrorMessage = useCallback(
-      (message: string) => setError(message),
-      [setError]
+    const [updateAlert, setUpdateAlert] = useState<UpdateAlert | null>(null);
+    const onChangeUpdateAlert = useCallback(
+      (message: UpdateAlert | null) => setUpdateAlert(message),
+      [setUpdateAlert]
     );
 
     // ==== User Information ====
@@ -40,7 +45,12 @@ const SettingsDialog = memo(
           .then((profile) =>
             setUsername(profile.user_name ? profile.user_name : '')
           )
-          .catch(() => setError("Couldn't fetch profile information"));
+          .catch(() =>
+            setUpdateAlert({
+              message: "Couldn't fetch profile information",
+              type: 'error'
+            })
+          );
       }
     }, [user]);
 
@@ -55,13 +65,19 @@ const SettingsDialog = memo(
             await updateProfileName(user.id, newUsername);
             setUsername(newUsername);
           } catch (e) {
-            setError("Couldn't update profile");
+            setUpdateAlert({
+              message: "Couldn't update profile",
+              type: 'error'
+            });
           }
         } else {
-          setError("Couldn't get profile information");
+          setUpdateAlert({
+            message: "Couldn't get profile information",
+            type: 'error'
+          });
         }
       },
-      [user, router, setError]
+      [user, router, setUpdateAlert]
     );
 
     return (
@@ -98,7 +114,7 @@ const SettingsDialog = memo(
               >
                 <div
                   className={classNames(
-                    'flex md:block bg-white w-full max-w-full md:max-w-[48rem]',
+                    'flex md:block bg-white w-full max -w-full md:max-w-[48rem]',
                     'min-h-full md:min-h-[44rem] md:h-fit md:rounded-[1.5rem] p-12',
                     'lg:px-8 md:px-5 md:pb-8 relative',
                     'bg-neutral1 dark:bg-neutral7'
@@ -118,24 +134,26 @@ const SettingsDialog = memo(
                       {currentTab === 'profile' && (
                         <ProfileTab
                           username={username}
+                          setUsername={setUsername}
+                          userEmail={user?.email}
                           userId={user?.id}
                           updateUsername={onUpdateProfile}
-                          setError={setErrorMessage}
+                          setUpdateAlert={onChangeUpdateAlert}
                         />
                       )}
                       {currentTab === 'password' && (
                         <PasswordTab
                           userEmail={user?.email}
-                          setError={setErrorMessage}
+                          setUpdateAlert={onChangeUpdateAlert}
                         />
                       )}
                       {currentTab === 'subscription' && <SubscriptionTab />}
                     </div>
                   </div>
                   <AnimatePresence>
-                    {error && (
+                    {updateAlert && (
                       <motion.div
-                        // Error message displayed at the bottom of the dialog
+                        // Error updateAlert displayed at the bottom of the dialog
                         className={classNames(
                           'left-0 right-0 flex items-center justify-center',
                           'absolute bottom-4'
@@ -145,12 +163,21 @@ const SettingsDialog = memo(
                         exit={{ opacity: 0 }}
                       >
                         <div className="flex items-center justify-center gap-x-1.5 -ml-6">
-                          <TriangleIcon
-                            className={'w-6 h-6 mt-0.5 stroke-red-500'}
-                            strokeWidth={1.5}
-                          />
-                          <span className="font-semibold text-red-500">
-                            {error}
+                          {updateAlert.type === 'error' && (
+                            <TriangleIcon
+                              className={'w-6 h-6 mt-0.5 stroke-red-500'}
+                              strokeWidth={1.5}
+                            />
+                          )}
+                          <span
+                            className={classNames(
+                              'font-semibold',
+                              updateAlert.type === 'success'
+                                ? 'text-teal-400'
+                                : 'text-red-500'
+                            )}
+                          >
+                            {updateAlert.message}
                           </span>
                         </div>
                       </motion.div>

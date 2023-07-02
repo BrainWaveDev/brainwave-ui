@@ -11,15 +11,20 @@ import { useRouter } from 'next/router';
 import { RotatingLines } from 'react-loader-spinner';
 import LockIcon from '@/components/icons/LockIcon';
 import { wait } from '@/utils/helpers';
-import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+  CheckIcon,
+  ExclamationCircleIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline';
+import { UpdateAlert } from './SettingsDialog';
 
 const PasswordTab = memo(
   ({
     userEmail,
-    setError
+    setUpdateAlert
   }: {
     userEmail?: string;
-    setError: (errorMessage: string) => void;
+    setUpdateAlert: (message: UpdateAlert) => void;
   }) => {
     // ==== Page Refresh ====
     const router = useRouter();
@@ -60,7 +65,10 @@ const PasswordTab = memo(
       try {
         await updatePassword(newPassword);
       } catch (e) {
-        setError("Couldn't update password");
+        setUpdateAlert({
+          message: 'Something went wrong. Please try again.',
+          type: 'error'
+        });
         setLoading(false);
         await displayUpdateStatus(false);
         return;
@@ -148,7 +156,14 @@ const PasswordTab = memo(
           <p className="font-semibold mt-6 mb-2 text-sm text-neutral7 dark:text-neutral1">
             Confirm new password
           </p>
-          <div className="border border-neutral2 dark:border-neutral6 rounded-xl relative mb-2">
+          <div
+            className={classNames(
+              'border rounded-xl relative mb-2',
+              passwordMismatch
+                ? 'border-red-500'
+                : 'border-neutral2 dark:border-neutral6'
+            )}
+          >
             <input
               type="password"
               className={InputClasses(confirmNewPassword)}
@@ -166,13 +181,16 @@ const PasswordTab = memo(
           <AnimatePresence initial={false}>
             {passwordMismatch ? (
               <motion.p
-                className="text-red-500 text-sm mt-0 mb-0"
+                className="text-red-500 text-sm mt-1"
                 initial={{ opacity: 0, display: 'none' }}
-                animate={{ opacity: 1, display: 'block' }}
+                animate={{ opacity: 1, display: 'flex' }}
                 exit={{ opacity: 0, display: 'none' }}
                 key={'PasswordMismatchError'}
               >
-                Password not match
+                <ExclamationCircleIcon
+                  className={'inline-block mx-1 w-5 h-5'}
+                />
+                Passwords do not match
               </motion.p>
             ) : (
               <motion.p
