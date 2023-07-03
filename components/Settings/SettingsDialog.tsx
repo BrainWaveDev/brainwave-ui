@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useState, Fragment, memo } from 'react';
+import React, { useCallback, useEffect, useState, Fragment, memo } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { getProfile, updateProfileName } from '@/utils/app/userSettings';
+import {
+  getProfile,
+  signoutUser,
+  updateProfileName
+} from '@/utils/app/userSettings';
 import { useUser } from '@supabase/auth-helpers-react';
 import classNames from 'classnames';
 import ProfileTab from '@/components/Settings/ProfileTab';
@@ -10,8 +14,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import TabSwitcher from '@/components/Settings/TabSwitcher';
 import PasswordTab from '@/components/Settings/PasswordTab';
 import SubscriptionTab from '@/components/Settings/SubscriptionTab';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowLeftOnRectangleIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/router';
+import * as Separator from '@radix-ui/react-separator';
 
 export type Tabs = 'profile' | 'password' | 'subscription';
 
@@ -57,6 +65,12 @@ const SettingsDialog = memo(
     // ==== Page Refresh ====
     const router = useRouter();
 
+    // ==== Sign out ====
+    const signOut = async () => {
+      await signoutUser();
+      router.reload();
+    };
+
     // ==== Profile Update ====
     const onUpdateProfile = useCallback(
       async (newUsername: string) => {
@@ -78,6 +92,14 @@ const SettingsDialog = memo(
         }
       },
       [user, router, setUpdateAlert]
+    );
+
+    const separatorStyle = classNames(
+      'md:hidden',
+      'bg-neutral3 dark:bg-neutral6 data-[orientation=horizontal]:h-[1px]',
+      'data-[orientation=horizontal]:w-[75%]',
+      'data-[orientation=horizontal]:min-h-[1px]',
+      'mx-auto mt-4 mb-3'
     );
 
     return (
@@ -150,39 +172,61 @@ const SettingsDialog = memo(
                       {currentTab === 'subscription' && <SubscriptionTab />}
                     </div>
                   </div>
-                  <AnimatePresence>
-                    {updateAlert && (
-                      <motion.div
-                        // Error updateAlert displayed at the bottom of the dialog
-                        className={classNames(
-                          'left-0 right-0 flex items-center justify-center',
-                          'absolute bottom-4'
-                        )}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                      >
-                        <div className="flex items-center justify-center gap-x-1.5 -ml-6">
-                          {updateAlert.type === 'error' && (
-                            <TriangleIcon
-                              className={'w-6 h-6 mt-0.5 stroke-red-500'}
-                              strokeWidth={1.5}
-                            />
+                  <div
+                    className={
+                      'left-0 right-0 absolute bottom-4 flex flex-col items-center justify-center w-full'
+                    }
+                  >
+                    <AnimatePresence>
+                      {updateAlert && (
+                        <motion.div
+                          // Error updateAlert displayed at the bottom of the dialog
+                          className={classNames(
+                            'flex items-center justify-center'
                           )}
-                          <span
-                            className={classNames(
-                              'font-semibold',
-                              updateAlert.type === 'success'
-                                ? 'text-teal-400'
-                                : 'text-red-500'
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          <div className="flex items-center justify-center gap-x-1.5 -ml-6">
+                            {updateAlert.type === 'error' && (
+                              <TriangleIcon
+                                className={'w-6 h-6 mt-0.5 stroke-red-500'}
+                                strokeWidth={1.5}
+                              />
                             )}
-                          >
-                            {updateAlert.message}
-                          </span>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                            <span
+                              className={classNames(
+                                'font-semibold',
+                                updateAlert.type === 'success'
+                                  ? 'text-teal-400'
+                                  : 'text-red-500'
+                              )}
+                            >
+                              {updateAlert.message}
+                            </span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    <Separator.Root
+                      className={classNames(separatorStyle)}
+                      orientation={'horizontal'}
+                    />
+                    <button
+                      className={classNames(
+                        'md:hidden self-center -ml-2',
+                        'group flex items-center px-3.5 py-1.5',
+                        'border-2 border-transparent text-base font-semibold',
+                        'transition-colors duration-300',
+                        'text-red-500/70 hover:text-red-500 active:hover:text-red-500'
+                      )}
+                      onClick={signOut}
+                    >
+                      <ArrowLeftOnRectangleIcon className={'w-5 h-5 mr-2'} />
+                      Sign out
+                    </button>
+                  </div>
                   <button
                     // Dialog close button
                     className={classNames(

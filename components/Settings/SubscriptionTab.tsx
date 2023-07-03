@@ -177,7 +177,7 @@ const Subscription = memo(() => {
         // TODO: Add link to Stripe
       >
         <p className={'inline whitespace-pre-line'}>
-          Manage subscription in{' '}
+          Manage subscription on{' '}
           <span className={'whitespace-nowrap'}>
             Stripe
             <ArrowLongRightIcon className="w-6 h-6 ml-1.5 inline" />

@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, Fragment } from 'react';
+import React, { Dispatch, SetStateAction, Fragment } from 'react';
 import classNames from 'classnames';
 import { CreditCardIcon } from '@heroicons/react/24/solid';
 import { Tabs } from './SettingsDialog';
@@ -6,6 +6,10 @@ import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import ProfileIcon from '@/components/icons/ProfileIcon';
 import PasswordIcon from '@/components/icons/PasswordIcon';
+import * as Separator from '@radix-ui/react-separator';
+import { ArrowLeftOnRectangleIcon } from '@heroicons/react/24/outline';
+import { signoutUser } from '@/utils/app/userSettings';
+import { useRouter } from 'next/router';
 
 const getTabName = (tab: Tabs) => {
   switch (tab) {
@@ -26,11 +30,18 @@ export default function SideOptions({
   currentTab: Tabs;
   setCurrentTab: Dispatch<SetStateAction<Tabs>>;
 }) {
-  // ==== Tailwind Classes ====
+  // ==== Sign out ====
+  const router = useRouter();
+  const signOut = async () => {
+    await signoutUser();
+    router.reload();
+  };
+
+  // ==== Styling ====
   const ButtonClasses = (tab: Tabs) =>
     classNames(
       'group flex items-center w-full px-3.5 py-1.5',
-      'rounded-full border-2 base2 font-semibold transition-colors',
+      'rounded-full border-2 font-semibold transition-colors',
       'bg-neutral1 dark:bg-transparent dark:hover:text-neutral1',
       currentTab === tab
         ? 'text-neutral7 dark:text-neutral1 border-teal-400'
@@ -43,6 +54,12 @@ export default function SideOptions({
         : 'fill-neutral4 dark:group-hover:fill-neutral1',
       'inline-block w-4 h-4 mr-3 transition-colors'
     );
+  const separatorStyle = classNames(
+    'bg-neutral3 dark:bg-neutral6 data-[orientation=horizontal]:h-[1px]',
+    'data-[orientation=horizontal]:w-[90%]',
+    'data-[orientation=horizontal]:min-h-[1px]',
+    'mx-auto mt-4 mb-3.5'
+  );
 
   const ListboxButtonIcon = (selected: boolean) =>
     classNames(
@@ -205,8 +222,24 @@ export default function SideOptions({
           className={ButtonClasses('subscription')}
           onClick={() => setCurrentTab('subscription')}
         >
-          <CreditCardIcon className="inline-block w-4 h-4 mr-3 transition-colors fill-n-7 dark:fill-n-1 dark:group-hover:fill-n-1" />
+          <CreditCardIcon className="inline-block w-4 h-4 mr-3 transition-colors" />
           Subscription
+        </button>
+        <Separator.Root
+          className={classNames(separatorStyle)}
+          orientation={'horizontal'}
+        />
+        <button
+          className={classNames(
+            'group flex items-center w-full px-3.5 py-1.5',
+            'border-2 border-transparent text-base font-semibold',
+            'transition-colors duration-300',
+            'text-red-500/70 hover:text-red-500'
+          )}
+          onClick={signOut}
+        >
+          <ArrowLeftOnRectangleIcon className={'w-5 h-5 mr-2'} />
+          Sign out
         </button>
       </div>
     </>
