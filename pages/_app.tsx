@@ -12,45 +12,46 @@ import 'styles/chrome-bug.css';
 import TopLoader from '@/components/ui/TopLoader';
 import { useRouter } from 'next/router';
 
-export const static_page = ['/faq','/signin']
+export const staticPages = ['/signin'];
 
 export default function MyApp({ Component, ...rest }: AppProps) {
   const { store, props } = wrapper.useWrappedStore(rest);
   const [supabaseClient] = useState(() =>
     createBrowserSupabaseClient<Database>()
   );
+
+  // Update body class based on route
+  const router = useRouter();
   useEffect(() => {
     document.body.classList?.remove('loading');
-  }, []);
-
-  const router = useRouter();
-  if(static_page.includes(router.pathname)) {
-    return(
-      <div className="h-full w-full flex flex-row">
-      <SessionContextProvider supabaseClient={supabaseClient}>
-        <MyUserContextProvider>
-          <Provider store={store}>
-              <Component {...props.pageProps} />
-          </Provider>
-        </MyUserContextProvider>
-      </SessionContextProvider>
-    </div>
-    )
-  }
+    if (router.pathname.includes('signin')) {
+      document.body.classList?.add('bg-white', 'text-zinc-900');
+      document.body.classList?.remove('bg-zinc-900', 'text-white');
+    } else {
+      document.body.classList?.remove('bg-white', 'text-zinc-900');
+      document.body.classList?.add('bg-zinc-900', 'text-white');
+    }
+  }, [router]);
 
   return (
     <div className="h-full w-full flex flex-row">
       <SessionContextProvider supabaseClient={supabaseClient}>
         <MyUserContextProvider>
           <Provider store={store}>
-            <TopLoader
-              showSpinner={false}
-              color={'#5eead4'}
-              shadow={'0 0 10px #5eead4,0 0 5px #5eead4'}
-            />
-            <Layout>
+            {staticPages.includes(router.pathname) ? (
               <Component {...props.pageProps} />
-            </Layout>
+            ) : (
+              <>
+                <TopLoader
+                  showSpinner={false}
+                  color={'#5eead4'}
+                  shadow={'0 0 10px #5eead4,0 0 5px #5eead4'}
+                />
+                <Layout>
+                  <Component {...props.pageProps} />
+                </Layout>
+              </>
+            )}
           </Provider>
         </MyUserContextProvider>
       </SessionContextProvider>
