@@ -222,7 +222,7 @@ export default function SideOptions({
           className={ButtonClasses('subscription')}
           onClick={() => setCurrentTab('subscription')}
         >
-          <CreditCardIcon className="inline-block w-4 h-4 mr-3 transition-colors" />
+          <CreditCardIcon className={IconClasses('subscription')} />
           Subscription
         </button>
         <Separator.Root
