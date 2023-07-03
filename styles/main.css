@@ -95,6 +95,12 @@ input:-webkit-autofill:focus {
     background-color: transparent !important;
 }
 
+.supabase-auth-ui_ui-input:-webkit-autofill,
+.supabase-auth-ui_ui-input:-webkit-autofill:focus {
+    transition: background-color 600000s 0s, color 600000s 0s !important;
+}
+
+
 .supabase-auth-ui_ui-container {
     @apply !gap-1 w-full;
 }
