@@ -50,6 +50,14 @@ a {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
+.page {
+    @apply bg-zinc-900 text-white;
+}
+
+.signInPage {
+    @apply bg-white dark:bg-zinc-900 text-neutral7 dark:text-white;
+}
+
 .animated {
     -webkit-animation-duration: 1s;
     animation-duration: 1s;
@@ -99,7 +107,6 @@ input:-webkit-autofill:focus {
 .supabase-auth-ui_ui-input:-webkit-autofill:focus {
     transition: background-color 600000s 0s, color 600000s 0s !important;
 }
-
 
 .supabase-auth-ui_ui-container {
     @apply !gap-1 w-full;

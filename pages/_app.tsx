@@ -24,7 +24,15 @@ export default function MyApp({ Component, ...rest }: AppProps) {
 
   useEffect(() => {
     document.body.classList?.remove('loading');
-  }, []);
+
+    if (router.pathname === '/signin') {
+      document.body.classList?.remove('page');
+      document.body.classList?.add('signInPage');
+    } else {
+      document.body.classList?.remove('signInPage');
+      document.body.classList?.add('page');
+    }
+  }, [router.pathname]);
 
   return (
     <div className="h-full w-full flex flex-row">

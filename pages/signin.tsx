@@ -9,37 +9,16 @@ import { RotatingLines } from 'react-loader-spinner';
 import classNames from 'classnames';
 import useThemeDetector from '../hooks/useThemeDetector';
 
-const signInPageClasses = [
-  'bg-white',
-  'text-zinc-900',
-  'dark:bg-zinc-900',
-  'dark:text-white'
-];
-const otherPagesClasses = ['bg-zinc-900', 'text-white'];
-
 const SignIn = () => {
   const router = useRouter();
   const user = useUser();
   const supabaseClient = useSupabaseClient();
 
   useEffect(() => {
-    if (user) {
-      router.replace('/');
-    }
+    if (user) router.replace('/');
   }, [user]);
 
   useThemeDetector();
-
-  // Update body class based on route
-  useEffect(() => {
-    document.body.classList?.remove(...otherPagesClasses);
-    document.body.classList?.add(...signInPageClasses);
-
-    return () => {
-      document.body.classList?.remove(...signInPageClasses);
-      document.body.classList?.add(...otherPagesClasses);
-    };
-  }, []);
 
   return (
     <div className="flex min-h-screen min-w-[100vw] justify-center align-middle">
