@@ -65,3 +65,41 @@ input:-webkit-autofill,
 input:-webkit-autofill:focus {
     transition: background-color 600000s 0s, color 600000s 0s;
 }
+
+/* Authentication component styling */
+.supabase-auth-ui_ui-button {
+    @apply font-semibold leading-6 mt-2 !border-2 !border-neutral3 dark:!border-neutral5;
+    @apply hover:!bg-neutral3 active:!bg-neutral3 dark:hover:!bg-neutral5 dark:active:!bg-neutral5;
+    @apply !bg-transparent !text-neutral7 dark:!text-white;
+}
+
+.supabase-auth-ui_ui-divider {
+    @apply !bg-neutral3 dark:!bg-neutral5;
+}
+
+.supabase-auth-ui_ui-button[type='submit'] {
+    @apply font-medium !border-transparent !my-4;
+    @apply !transition-all !duration-300;
+    @apply !text-white !bg-gray-400 dark:!bg-zinc-700;
+    @apply !opacity-75 hover:!opacity-100 active:!opacity-100;
+}
+
+.supabase-auth-ui_ui-input {
+    @apply !text-neutral7 dark:!text-white !outline-none !transition-all !duration-300 placeholder:!text-neutral4/50;
+    @apply !bg-neutral2 dark:!bg-neutral5 focus:!bg-transparent dark:focus:!bg-transparent;
+    @apply focus:!ring-0 focus:!outline-0;
+    @apply !border-2 !border-neutral2 dark:!border-neutral5;
+}
+
+.supabase-auth-ui_ui-input:not([value=""]):not(:focus) {
+    background-color: transparent !important;
+}
+
+.supabase-auth-ui_ui-container {
+    @apply !gap-1 w-full;
+}
+
+.supabase-auth-ui_ui-anchor {
+    @apply !text-zinc-500 hover:!text-zinc-900 active:!text-zinc-900 !transition-all !duration-300;
+    @apply dark:hover:!text-zinc-100 dark:active:!text-zinc-100;
+}

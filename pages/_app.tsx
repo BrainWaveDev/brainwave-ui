@@ -20,18 +20,11 @@ export default function MyApp({ Component, ...rest }: AppProps) {
     createBrowserSupabaseClient<Database>()
   );
 
-  // Update body class based on route
   const router = useRouter();
+
   useEffect(() => {
     document.body.classList?.remove('loading');
-    if (router.pathname.includes('signin')) {
-      document.body.classList?.add('bg-white', 'text-zinc-900');
-      document.body.classList?.remove('bg-zinc-900', 'text-white');
-    } else {
-      document.body.classList?.remove('bg-white', 'text-zinc-900');
-      document.body.classList?.add('bg-zinc-900', 'text-white');
-    }
-  }, [router]);
+  }, []);
 
   return (
     <div className="h-full w-full flex flex-row">
@@ -39,7 +32,9 @@ export default function MyApp({ Component, ...rest }: AppProps) {
         <MyUserContextProvider>
           <Provider store={store}>
             {staticPages.includes(router.pathname) ? (
-              <Component {...props.pageProps} />
+              <>
+                <Component {...props.pageProps} />
+              </>
             ) : (
               <>
                 <TopLoader
