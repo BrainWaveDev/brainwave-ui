@@ -68,8 +68,15 @@ const ProfileTab = ({
 
   // ==== Input State ====
   const usernameValid =
-    newUsername && username !== newUsername && !usernameError;
-  const emailValid = newEmail && userEmail !== newEmail && !emailUpdate;
+    newUsername &&
+    username !== undefined &&
+    username !== newUsername &&
+    !usernameError;
+  const emailValid =
+    newEmail &&
+    userEmail !== undefined &&
+    userEmail !== newEmail &&
+    !emailUpdate;
   const validInput = usernameValid || emailValid;
 
   // Display update status
@@ -157,7 +164,10 @@ const ProfileTab = ({
     'border-2'
   );
   const NameInputActive =
-    newUsername && newUsername.length > 0 && username !== newUsername;
+    newUsername &&
+    newUsername.length > 0 &&
+    username !== undefined &&
+    username !== newUsername;
   const NameInputClasses = classNames(
     NameInputActive
       ? 'bg-transparent text-neutral7 dark:text-neutral3'
@@ -167,7 +177,10 @@ const ProfileTab = ({
       : 'border-neutral2 dark:border-neutral6 focus:border-transparent'
   );
   const EmailInputActive =
-    newEmail && newEmail.length > 0 && userEmail !== newEmail;
+    newEmail &&
+    newEmail.length > 0 &&
+    userEmail !== undefined &&
+    userEmail !== newEmail;
   const EmailInputClasses = classNames(
     EmailInputActive
       ? 'bg-transparent text-neutral7 dark:text-neutral3'
