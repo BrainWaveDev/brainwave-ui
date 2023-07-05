@@ -1,5 +1,5 @@
 import { Message, RequestBody, RequestMatchDocumentChunks } from '@/types/chat';
-import { qaPrompt } from '@/utils/app/prompts';
+import { formatPrompt, defaultPrompt, fetchPrompts } from '@/utils/app/prompts';
 import { OpenAIError, OpenAIStream } from '@/utils/server';
 import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json';
 import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
@@ -7,11 +7,14 @@ import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
 import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module';
 import GPT3Tokenizer from 'gpt3-tokenizer';
 import { createClient } from '@supabase/supabase-js';
+import { Prompt } from '@/types/prompt';
+import { Database } from '@/types/supabase';
 
 export const config = {
   runtime: 'edge'
 };
 
+// ==== API keys ====
 const openAIApiKey = process.env.OPENAI_API_KEY;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -25,14 +28,14 @@ const handler = async (req: Request): Promise<Response> => {
     if (!supabaseServiceKey)
       throw new Error('Missing environment variable SUPABASE_SERVICE_ROLE_KEY');
 
-    const { jwt, model, messages, search_space } =
+    const { jwt, model, messages, search_space, promptId } =
       (await req.json()) as RequestBody;
     const userQuestion = messages.at(messages.length - 1);
 
     if (!jwt) throw new Error('Missing access token in request data');
     if (!userQuestion) throw new Error('Missing query in request data');
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey);
 
     const {
       data: { user }
@@ -83,6 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { error: matchError, data: documentChunks } = await supabase.rpc(
       'match_document_chunks',
+      // @ts-ignore
       search_req
     );
 
@@ -144,7 +148,24 @@ const handler = async (req: Request): Promise<Response> => {
       tiktokenModel.pat_str
     );
 
-    let promptToSend = qaPrompt(contextText);
+    // Use default prompt as a fallback
+    let prompt = defaultPrompt;
+    // Try to fetch prompts from database
+    try {
+      let prompts = await fetchPrompts(supabase);
+      let requestedPrompt = prompts.find((p) => p.id === promptId) as Prompt;
+      if (requestedPrompt) prompt = requestedPrompt;
+    } catch (error: any) {
+      console.error(
+        'Failed to fetch prompts withe following error message:',
+        error.message
+      );
+    }
+    // Default prompt content
+    let promptToSend = formatPrompt(
+      prompt && prompt.content ? prompt.content : defaultPrompt.content!,
+      contextText
+    );
 
     let messagesToSend: Message[] = [];
     for (let i = messages.length - 1; i >= 0; i--) {

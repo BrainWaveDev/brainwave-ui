@@ -1,399 +1,256 @@
-import { Dispatch, SetStateAction, useEffect, useState, memo } from 'react';
-import { Dialog } from '@headlessui/react';
-import {
-  ArrowRightIcon,
-  CheckCircleIcon,
-  UserCircleIcon,
-  WalletIcon
-} from '@heroicons/react/24/solid';
-import { LockClosedIcon, UserIcon } from '@heroicons/react/24/outline';
-import { useAppDispatch } from 'context/redux/store';
-import {
-  getModalStateFromStorage,
-  toggleSettingDialog
-} from '../../context/redux/modalSlice';
+import React, { useCallback, useEffect, useState, Fragment, memo } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
 import {
   getProfile,
   signoutUser,
-  updatePassword,
-  updateProfileName,
-  validatePassword
+  updateProfileName
 } from '@/utils/app/userSettings';
-import Link from 'next/link';
-import { useSessionContext, useUser } from '@supabase/auth-helpers-react';
+import { useUser } from '@supabase/auth-helpers-react';
+import classNames from 'classnames';
+import ProfileTab from '@/components/Settings/ProfileTab';
+import TriangleIcon from '@/components/icons/TraingleIcon';
+// @ts-ignore
+import { motion, AnimatePresence } from 'framer-motion';
+import TabSwitcher from '@/components/Settings/TabSwitcher';
+import PasswordTab from '@/components/Settings/PasswordTab';
+import SubscriptionTab from '@/components/Settings/SubscriptionTab';
+import {
+  ArrowLeftOnRectangleIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline';
+import { useRouter } from 'next/router';
+import * as Separator from '@radix-ui/react-separator';
 
-type Tabs = 'profile' | 'password' | 'subscription';
+export type Tabs = 'profile' | 'password' | 'subscription';
 
-export default function SettingsDialog() {
-  const [currentTab, setCurrentTab] = useState<Tabs>('profile');
-  const { settingDialogOpen } = getModalStateFromStorage();
-  const dispatch = useAppDispatch();
+export type UpdateAlert = {
+  message: string;
+  type: 'error' | 'success';
+};
 
-  return (
-    <Dialog
-      open={settingDialogOpen}
-      onClose={() => {
-        dispatch(toggleSettingDialog());
-      }}
-      className="fixed z-20 inset-0 overflow-y-auto "
-    >
-      <div className="flex items-center justify-center min-h-screen text-black">
-        <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
-        <Dialog.Panel className="relative z-10 w-full m-auto bg-n-1 rounded-3xl dark:bg-n-7 undefined max-w-[48rem] md:min-h-screen-ios md:rounded-none opacity-100 scale-100">
-          <div className="flex md:block bg-white w-[720px] h-[712px] rounded-lg p-12 lg:px-8 md:px-5 md:pb-8">
-            <div className="grid grid-cols-3 min-w-full min-h-full">
-              {SideOptions(setCurrentTab)}
-              <div className="col-span-2 ">
-                {currentTab === 'profile' && <Profile />}
-                {currentTab === 'password' && <Password />}
-                {currentTab === 'subscription' && <Subscription />}
-              </div>
-            </div>
-          </div>
-        </Dialog.Panel>
-      </div>
-    </Dialog>
-  );
-}
+const SettingsDialog = memo(
+  ({
+    settingDialogOpen,
+    closeSettingDialog
+  }: {
+    settingDialogOpen: boolean;
+    closeSettingDialog: () => void;
+  }) => {
+    // ==== Local State ====
+    const [currentTab, setCurrentTab] = useState<Tabs>('profile');
+    const [updateAlert, setUpdateAlert] = useState<UpdateAlert | null>(null);
+    const onChangeUpdateAlert = useCallback(
+      (message: UpdateAlert | null) => setUpdateAlert(message),
+      [setUpdateAlert]
+    );
 
-const Profile = memo(() => {
-  const [profileName, setProfileName] = useState<string>('');
-  const user = useUser();
+    // ==== User Information ====
+    const user = useUser();
+    const [username, setUsername] = useState<string>('');
+    useEffect(() => {
+      if (user) {
+        getProfile(user.id)
+          .then((profile) =>
+            setUsername(profile.user_name ? profile.user_name : '')
+          )
+          .catch(() =>
+            setUpdateAlert({
+              message: "Couldn't fetch profile information",
+              type: 'error'
+            })
+          );
+      }
+    }, [user]);
 
-  useEffect(() => {
-    if (user) {
-      getProfile(user.id)
-        .then((profile) =>
-          setProfileName(profile.user_name ? profile.user_name : '')
-        )
-        .catch((error) => console.error(error));
-    }
-  }, [user]);
+    // ==== Page Refresh ====
+    const router = useRouter();
 
-  const onUpdateProfile = async () => {
-    if (user) {
-      updateProfileName(user.id, profileName)
-        .then(() => {
-          window.location.reload();
-        })
-        .catch((error) => console.error(error));
-    }
-  };
-
-  const sessionContext = useSessionContext();
-  const handleLogout = async () => {
-    await sessionContext.supabaseClient.auth.signOut();
-    window.location.reload();
-  };
-
-  return (
-    <div className="w-full h-full">
-      <h1 className="mb-8 text-4xl md:mb-6 font-semibold">Profile</h1>
-      <div className="">
-        <div className="font-medium mb-1 text-lg">User Name</div>
-        <div className="border-2 border-n-2 rounded-xl relative ">
-          <input
-            type="text"
-            className="w-full h-13 px-3.5 bg-n-2 border-2 border-n-2 rounded-xl base2 text-n-7 outline-none transition-colors placeholder:text-n-4/50 focus:bg-transparent dark:bg-n-6 dark:border-n-6 dark:text-n-3 dark:focus:bg-transparent pl-[3.125rem] false undefined"
-            placeholder={'Enter Your New User Name'}
-            value={profileName}
-            onChange={(e) => setProfileName(e.target.value)}
-          />
-          <UserIcon className="inline-block h-[30px] left-2 top-1.5 opacity-50 absolute fill-n-4/50 pointer-events-none transition-colors false" />
-        </div>
-
-        <button
-          className="mt-4 ml-1 bg-blue-500 text-white active:bg-blue-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1"
-          type="button"
-          style={{ transition: 'all .15s ease' }}
-          onClick={onUpdateProfile}
-        >
-          Update User Name
-        </button>
-      </div>
-      <div className='inline-flex flex-col justify-around align-top'>
-
-
-      <div className="font-medium mt-10 mb-2 text-lg rounded-3xl border-spacing-3 border-4 border-blackA10 inline-flex relative px-4 hover:border-blue-600">
-        <Link href={'/subscription'}>Go To Subscription</Link>
-        <div className="flex flex-col justify-center align-middle h-[28px] ml-[5px] ">
-          <ArrowRightIcon className="w-6 h-6" />
-        </div>
-      </div>
-
-      <div className="font-medium mt-5 mb-2 text-lg rounded-3xl border-spacing-1 border-4 max-w-fit border-blackA10 px-4 hover:border-blue-600 ">
-        <button onClick={handleLogout}>
-          Logout
-        </button>
-      </div>
-      </div>
-    </div>
-  );
-});
-
-function Password() {
-  const [currentPassword, setCurrentPassword] = useState<string>('');
-  const [newPassword, setNewPassword] = useState<string>('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState<string>('');
-  const [passwordnotMatch, setPasswordnotMatch] = useState<boolean>(false);
-
-  const user = useUser();
-  const dispatch = useAppDispatch();
-
-  const onUpdatePassword = async () => {
-    if (!user) {
-      console.error('User not logged in');
-      return;
-    }
-
-    if (!user?.email) {
-      console.error('User email not found, not a email user');
-      return;
-    }
-
-    if (newPassword !== confirmNewPassword) {
-      setPasswordnotMatch(true);
-      return;
-    } else {
-      setPasswordnotMatch(false);
-    }
-
-    try {
-      await validatePassword(user.email, currentPassword);
-      await updatePassword(newPassword);
+    // ==== Sign out ====
+    const signOut = async () => {
       await signoutUser();
-      dispatch(toggleSettingDialog());
-      window.location.reload();
-    } catch (e) {
-      console.error(e);
-    }
-  };
+      router.reload();
+    };
 
-  return (
-    <div className="w-full h-full">
-      <h1 className="mb-8 text-4xl md:mb-6 font-semibold">Password</h1>
-      <div className="">
-        <div className="font-medium mb-2 text-lg">Current Password</div>
+    // ==== Profile Update ====
+    const onUpdateProfile = useCallback(
+      async (newUsername: string) => {
+        if (user) {
+          try {
+            await updateProfileName(user.id, newUsername);
+            setUsername(newUsername);
+          } catch (e) {
+            setUpdateAlert({
+              message: "Couldn't update profile",
+              type: 'error'
+            });
+          }
+        } else {
+          setUpdateAlert({
+            message: "Couldn't get profile information",
+            type: 'error'
+          });
+        }
+      },
+      [user, router, setUpdateAlert]
+    );
 
-        <div className="border-2 border-n-2 rounded-xl relative ">
-          <input
-            type="password"
-            className="w-full h-13 px-3.5 bg-n-2 border-2 border-n-2 rounded-xl base2 text-n-7 outline-none transition-colors placeholder:text-n-4/50 focus:bg-transparent dark:bg-n-6 dark:border-n-6 dark:text-n-3 dark:focus:bg-transparent pl-[3.125rem] false undefined"
-            placeholder={'Enter Your Current Password'}
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-          />
-          <LockClosedIcon className="inline-block h-[66%] left-2 top-1.5 opacity-50 absolute fill-n-4/50 pointer-events-none transition-colors false" />
-        </div>
+    const separatorStyle = classNames(
+      'md:hidden',
+      'bg-neutral3 dark:bg-neutral6 data-[orientation=horizontal]:h-[1px]',
+      'data-[orientation=horizontal]:w-[75%]',
+      'data-[orientation=horizontal]:min-h-[1px]',
+      'mx-auto mt-4 mb-3'
+    );
 
-        <div className="font-medium mt-5 mb-2 text-lg">New Password</div>
-
-        <div className="border-2 border-n-2 rounded-xl relative ">
-          <input
-            type="password"
-            className="w-full h-13 px-3.5 bg-n-2 border-2 border-n-2 rounded-xl base2 text-n-7 outline-none transition-colors placeholder:text-n-4/50 focus:bg-transparent dark:bg-n-6 dark:border-n-6 dark:text-n-3 dark:focus:bg-transparent pl-[3.125rem] false undefined"
-            placeholder={'Enter Your New Password'}
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-          />
-          <LockClosedIcon className="inline-block h-[66%] left-2 top-1.5 opacity-50 absolute fill-n-4/50 pointer-events-none transition-colors false" />
-        </div>
-
-        <div className="font-medium mt-5 mb-2 text-lg">
-          Confirm New Password
-        </div>
-
-        <div className="border-2 border-n-2 rounded-xl relative ">
-          <input
-            type="password"
-            className={`w-full h-13 px-3.5 bg-n-2 border-2 border-n-2 rounded-xl base2 text-n-7 outline-none transition-colors 
-            placeholder:text-n-4/50 focus:bg-transparent dark:bg-n-6 dark:border-n-6 dark:text-n-3 dark:focus:bg-transparent pl-[3.125rem] false undefined
-            ${passwordnotMatch ? 'border-red-500' : ''}`}
-            placeholder={'Confirm Your New Password'}
-            value={confirmNewPassword}
-            onChange={(e) => setConfirmNewPassword(e.target.value)}
-          />
-
-          <LockClosedIcon className="inline-block h-[66%] left-2 top-1.5 opacity-50 absolute fill-n-4/50 pointer-events-none transition-colors false" />
-        </div>
-        {passwordnotMatch && (
-          <p className="text-red-500 text-sm mt-1">Password not match</p>
-        )}
-
-        <button
-          className="mt-8 bg-blue-500 text-white active:bg-blue-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1"
-          type="button"
-          style={{ transition: 'all .15s ease' }}
-          onClick={onUpdatePassword}
+    return (
+      <Transition show={settingDialogOpen} as={Fragment}>
+        <Dialog
+          onClose={closeSettingDialog}
+          className="fixed z-40 inset-0 overflow-y-auto"
         >
-          Update Password
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function Subscription() {
-  const [subscriptionType, setSubscriptionType] = useState('Free');
-  const [currentPlan, setCurrentPlan] = useState<'Free' | 'Pro'>('Free');
-
-  const handleSubscriptionChange = (subscription: string) => {
-    setSubscriptionType(subscription);
-    // You can also add logic here to update the user's subscription plan in your database
-  };
-
-  return (
-    <div className="w-full h-full">
-      <h1 className="mb-8 text-4xl md:mb-6 font-semibold">Subscription</h1>
-      <div className="">
-        <div className="font-medium mb-1 text-lg">Choose Your Plan</div>
-        <div className="grid grid-cols-2 px-6 justify-around mt-6 w-full h-[320px] gap-x-[10%]">
-          <div className="bg-white col-span-1 border-2 border-slate-400 rounded-lg hover:border-blue-200">
-            <h2 className="text-center font-semibold text-3xl mt-4">Free</h2>
-            <p className="text-center font-normal text-base  mt-4">
-              Basic chat features
-            </p>
-
-            <div className="my-4 text-center">
-              <span className="mr-2 text-3xl">$0</span>
-              <span className="h4 text-sm text-slate-400">/mo</span>
-            </div>
-
-            <div className="flex align-middle justify-center pt-3">
-              <div className="">
-                <div className="flex mt-1">
-                  <div className="w-[20px] h-[20px]">
-                    <CheckCircleIcon className="object-fill" />
-                  </div>
-                  <p className="ml-1 text-xs">Unlimited Messages</p>
-                </div>
-                <div className="flex mt-1">
-                  <div className="w-[20px] h-[20px]">
-                    <CheckCircleIcon className="object-fill" />
-                  </div>
-                  <p className="ml-1 text-xs">Unlimited Messages</p>
-                </div>
-                <div className="flex mt-1">
-                  <div className="w-[20px] h-[20px]">
-                    <CheckCircleIcon className="object-fill" />
-                  </div>
-                  <p className="ml-1 text-xs">Unlimited Messages</p>
-                </div>
-              </div>
-            </div>
-            <div className="w-full flex justify-center align-middle mt-5">
-              <button
-                className="rounded-full border w-full mx-3 bg-blue-500 text-white disabled:bg-gray-500"
-                disabled={currentPlan === 'Free'}
+          <div className="flex items-center justify-center min-h-screen text-black">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <Dialog.Overlay className="fixed inset-0 bg-black bg-neutral7/75 dark:bg-neutral6/80" />
+            </Transition.Child>
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <Dialog.Panel
+                className={classNames(
+                  'relative z-10 w-screen h-screen max-w-screen lg:max-w-[48rem] md:py-6 flex items-center justify-center'
+                )}
               >
-                <div className="flex justify-center align-middle">
-                  {currentPlan === 'Free' ? (
-                    <p className="text-sm font-semibold py-2">Current Plan</p>
-                  ) : (
-                    <p className="text-sm font-semibold py-2">Change Plan</p>
+                <div
+                  className={classNames(
+                    'flex md:block bg-white w-full max -w-full md:max-w-[48rem]',
+                    'min-h-full md:min-h-[44rem] md:h-fit md:rounded-[1.5rem] p-12',
+                    'lg:px-8 md:px-5 md:pb-8 relative',
+                    'bg-neutral1 dark:bg-neutral7'
                   )}
+                >
+                  <div
+                    className={classNames(
+                      'flex flex-grow flex-col px-1 mx-auto md:mx-0 md:grid',
+                      'md:grid-cols-3 max-w-full sm:max-w-[35rem] md:min-w-full'
+                    )}
+                  >
+                    <TabSwitcher
+                      currentTab={currentTab}
+                      setCurrentTab={setCurrentTab}
+                    />
+                    <div className="px-1 md:px-0 md:col-span-2">
+                      {currentTab === 'profile' && (
+                        <ProfileTab
+                          username={username}
+                          setUsername={setUsername}
+                          userEmail={user?.email}
+                          userId={user?.id}
+                          updateUsername={onUpdateProfile}
+                          setUpdateAlert={onChangeUpdateAlert}
+                        />
+                      )}
+                      {currentTab === 'password' && (
+                        <PasswordTab
+                          userEmail={user?.email}
+                          setUpdateAlert={onChangeUpdateAlert}
+                        />
+                      )}
+                      {currentTab === 'subscription' && <SubscriptionTab />}
+                    </div>
+                  </div>
+                  <div
+                    className={
+                      'left-0 right-0 absolute bottom-4 flex flex-col items-center justify-center w-full'
+                    }
+                  >
+                    <AnimatePresence>
+                      {updateAlert && (
+                        <motion.div
+                          // Error updateAlert displayed at the bottom of the dialog
+                          className={classNames(
+                            'flex items-center justify-center'
+                          )}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          <div className="flex items-center justify-center gap-x-1.5 -ml-6">
+                            {updateAlert.type === 'error' && (
+                              <TriangleIcon
+                                className={'w-6 h-6 mt-0.5 stroke-red-500'}
+                                strokeWidth={1.5}
+                              />
+                            )}
+                            <span
+                              className={classNames(
+                                'font-semibold',
+                                updateAlert.type === 'success'
+                                  ? 'text-teal-400'
+                                  : 'text-red-500'
+                              )}
+                            >
+                              {updateAlert.message}
+                            </span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    <Separator.Root
+                      className={classNames(separatorStyle)}
+                      orientation={'horizontal'}
+                    />
+                    <button
+                      className={classNames(
+                        'md:hidden self-center -ml-2',
+                        'group flex items-center px-3.5 py-1.5',
+                        'border-2 border-transparent text-base font-semibold',
+                        'transition-colors duration-300',
+                        'text-red-500/70 hover:text-red-500 active:hover:text-red-500'
+                      )}
+                      onClick={signOut}
+                    >
+                      <ArrowLeftOnRectangleIcon className={'w-5 h-5 mr-2'} />
+                      Sign out
+                    </button>
+                  </div>
+                  <button
+                    // Dialog close button
+                    className={classNames(
+                      'absolute top-5 right-6 rounded-full group'
+                    )}
+                    onClick={closeSettingDialog}
+                  >
+                    <XMarkIcon
+                      className={classNames(
+                        'w-6 h-6 stroke-neutral7/50',
+                        'dark:stroke-neutral4 transition-colors duration-300',
+                        'group-hover:stroke-teal-300 group-active:stroke-teal-300'
+                      )}
+                      strokeWidth={1.5}
+                    />
+                  </button>
                 </div>
-              </button>
-            </div>
+              </Dialog.Panel>
+            </Transition.Child>
           </div>
-          <div className="bg-white col-span-1 border-4 border-blue-400 rounded-lg hover:border-blue-600 ">
-            <h2 className="text-center font-semibold text-3xl mt-4">Pro</h2>
-            <p className="text-center font-normal text-base  mt-4">
-              Unlimited Storages
-            </p>
+        </Dialog>
+      </Transition>
+    );
+  }
+);
 
-            <div className="my-4 text-center">
-              <span className="mr-2 text-3xl">$0</span>
-              <span className="h4 text-sm text-slate-400">/mo</span>
-            </div>
-
-            <div className="flex align-middle justify-center pt-3">
-              <div className="">
-                <div className="flex mt-1">
-                  <div className="w-[20px] h-[20px]">
-                    <CheckCircleIcon className="object-fill" />
-                  </div>
-                  <p className="ml-1 text-xs">Unlimited Storages</p>
-                </div>
-                <div className="flex mt-1">
-                  <div className="w-[20px] h-[20px]">
-                    <CheckCircleIcon className="object-fill" />
-                  </div>
-                  <p className="ml-1 text-xs">Unlimited Storages</p>
-                </div>
-                <div className="flex mt-1">
-                  <div className="w-[20px] h-[20px]">
-                    <CheckCircleIcon className="object-fill" />
-                  </div>
-                  <p className="ml-1 text-xs">Unlimited Storages</p>
-                </div>
-              </div>
-            </div>
-            <div className="w-full flex justify-center align-middle mt-5">
-              <button
-                className="rounded-full border w-full mx-3 bg-blue-500 text-white disabled:bg-gray-500 "
-                disabled={currentPlan === 'Pro'}
-              >
-                <div className="flex justify-center align-middle">
-                  {currentPlan === 'Pro' ? (
-                    <p className="text-sm font-semibold py-2">Current Plan</p>
-                  ) : (
-                    <p className="text-sm font-semibold py-2">Upgrade</p>
-                  )}
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="font-medium mt-10 mb-2 text-lg rounded-3xl border-spacing-3 border-4 border-blackA10 inline-flex relative px-4 hover:border-blue-600">
-        <Link href={'/profile'}>Go To Profile</Link>
-        <div className="flex flex-col justify-center align-middle h-[28px] ml-[5px] ">
-          <ArrowRightIcon className="w-6 h-6" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SideOptions(setCurrentTab: Dispatch<SetStateAction<Tabs>>) {
-  return (
-    <div className="col-span-1 flex flex-col mr-5">
-      <button
-        className="group flex items-center w-full px-3.5 py-1.5 rounded-full border-2 border-transparent base2 font-semibold transition-colors hover:bg-blue-200"
-        onClick={() => setCurrentTab('profile')}
-      >
-        <div className="w-8 h-8 ">
-          <UserCircleIcon className="object-fill" />
-        </div>
-        <h3 className="ml-3.5 text-base font-semibold text-n-7 dark:text-n-1">
-          Profile
-        </h3>
-      </button>
-
-      <button
-        className="group flex items-center w-full px-3.5 py-1.5 rounded-full border-2 border-transparent base2 font-semibold transition-colors hover:bg-blue-200"
-        onClick={() => setCurrentTab('password')}
-      >
-        <div className="w-8 h-8 ">
-          <LockClosedIcon className="object-fill" />
-        </div>
-        <h3 className="ml-3.5 text-base font-semibold text-n-7 dark:text-n-1">
-          Password
-        </h3>
-      </button>
-
-      <button
-        className="group flex items-center w-full px-3.5 py-1.5 rounded-full border-2 border-transparent base2 font-semibold transition-colors hover:bg-blue-200"
-        onClick={() => setCurrentTab('subscription')}
-      >
-        <div className="w-8 h-8 ">
-          <WalletIcon className="object-fill" />
-        </div>
-        <h3 className="ml-3.5 text-base font-semibold text-n-7 dark:text-n-1">
-          Subscription
-        </h3>
-      </button>
-    </div>
-  );
-}
+export default SettingsDialog;

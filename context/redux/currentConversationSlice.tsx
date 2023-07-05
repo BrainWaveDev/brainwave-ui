@@ -1,5 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Conversation, ConversationSummary, Message } from '@/types/chat';
+import {
+  Conversation,
+  ConversationSummary,
+  Message,
+  RequestBody
+} from '@/types/chat';
 import { AppThunk, useAppSelector } from './store';
 import {
   createConversation,
@@ -10,6 +15,8 @@ import {
 import { Session } from '@supabase/auth-helpers-react';
 import { addConversation, deleteConversation } from './conversationsSlice';
 import { randomPlaceholderConversation } from '@/utils/app/conversation';
+import { optimisticErrorActions } from './errorSlice';
+import { defaultPrompt } from '@/utils/app/prompts';
 
 interface SelectedConversationState {
   conversation: Conversation | undefined;
@@ -48,19 +55,24 @@ const currentConversationSlice = createSlice({
     userSent(state, action: PayloadAction<Message>) {
       const { conversation } = state;
       if (!conversation) {
-        console.error('No conversation found');
-        return;
+        throw Error('No conversation found');
       }
       conversation.messages.push(action.payload);
       state.conversation = conversation;
     },
     appendLastAssistantMessage: (state, action: PayloadAction<string>) => {
       const { conversation } = state;
-      if (!conversation) return;
+      if (!conversation) {
+        throw Error('No conversation found');
+      }
       const messages = conversation.messages;
-      if (!messages) return;
+      if (!messages) {
+        throw Error('No messages found');
+      }
       const lastMessage = messages[messages.length - 1];
-      if (!lastMessage) return;
+      if (!lastMessage) {
+        throw Error('No last message found');
+      }
       if (lastMessage.role !== 'assistant') {
         messages.push({
           content: action.payload,
@@ -73,11 +85,17 @@ const currentConversationSlice = createSlice({
     },
     removeLastAssistantMessage: (state) => {
       const { conversation } = state;
-      if (!conversation) return;
+      if (!conversation) {
+        throw Error('No conversation found');
+      }
       const messages = conversation.messages;
-      if (!messages) return;
+      if (!messages) {
+        throw Error('No messages found');
+      }
       const lastMessage = messages[messages.length - 1];
-      if (!lastMessage) return;
+      if (!lastMessage) {
+        throw Error('No last message found');
+      }
       if (lastMessage.role === 'assistant') {
         messages.pop();
         state.conversation = {
@@ -88,9 +106,13 @@ const currentConversationSlice = createSlice({
     },
     clearLastAssistantMessage: (state) => {
       const { conversation } = state;
-      if (!conversation) return;
+      if (!conversation) {
+        throw Error('No conversation found');
+      }
       const messages = conversation.messages;
-      if (!messages) return;
+      if (!messages) {
+        throw Error('No messages found');
+      }
       const lastMessage = messages[messages.length - 1];
       if (lastMessage === undefined || lastMessage.role !== 'assistant') return;
       messages.pop();
@@ -109,9 +131,13 @@ const currentConversationSlice = createSlice({
     },
     clearSource: (state) => {
       const { conversation } = state;
-      if (!conversation) return;
+      if (!conversation) {
+        throw Error('No conversation found');
+      }
       const messages = conversation?.messages;
-      if (!messages) return;
+      if (!messages) {
+        throw Error('No messages found');
+      }
       const updatedMessage = messages.map((message) => {
         if (message.role === 'assistant') {
           // Find place in the string where the source is mentioned
@@ -127,6 +153,11 @@ const currentConversationSlice = createSlice({
         ...conversation,
         messages: updatedMessage
       };
+    },
+    selectPrompt: (state, action: PayloadAction<number>) => {
+      const { conversation } = state;
+      if (!conversation) throw Error('No conversation found');
+      else conversation.promptId = action.payload;
     }
   }
 });
@@ -143,10 +174,31 @@ const thunkRetrieveConversationDetails =
       const conversation = await retrieveConversation(tempConversation.id);
       dispatch(selectCurrentConversation(conversation));
     } catch (e) {
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          'Failed to retrieve conversation details'
+        )
+      );
       dispatch(clearSelectedConversation());
     } finally {
       dispatch(setFetchingConversation(false));
     }
+  };
+
+const thunkSelectPrompt =
+  (promptId: number): AppThunk =>
+  async (dispatch, getState) => {
+    const { currentConversation, prompts } = getState();
+    if (!currentConversation.conversation) {
+      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
+      return;
+    }
+    const prompt = prompts.prompts.find((p) => p.id === promptId);
+    dispatch(
+      currentConversationSlice.actions.selectPrompt(
+        prompt ? prompt.id : defaultPrompt.id
+      )
+    );
   };
 
 const thunkUserSent =
@@ -182,7 +234,11 @@ const thunkUserSent =
         dispatch(setLoading(false));
         dispatch(clearSelectedConversation());
         dispatch(deleteConversation(conversation!));
-        console.error('Failed to create conversation in database');
+        dispatch(
+          optimisticErrorActions.addErrorWithTimeout(
+            'Failed to create conversation'
+          )
+        );
         return;
       }
     }
@@ -195,8 +251,11 @@ const thunkUserSent =
       dispatch(setLoading(false));
       // Clear last two messages in the conversation
       dispatch(setMessagesInCurrentConversations(messages.slice(0, -2)));
-      // TODO: ERROR: Failed to sync message history with database
-      console.error('Failed to sync message history with database');
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          'Failed to update conversation messages'
+        )
+      );
     }
   };
 
@@ -207,14 +266,13 @@ export const thunkStreamingResponse =
 
     const { conversation } = getState().currentConversation;
     if (!conversation) {
-      console.error(`there is no conversation, this should never happen`);
+      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
       return;
     }
     const messages = [...conversation.messages];
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) {
-      //something went wrong, gotta fix
-      console.error('There is no last message');
+      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
       return;
     } else if (lastMessage.content === '' && lastMessage.role === 'assistant') {
       // Remove empty assistant message
@@ -239,9 +297,11 @@ export const thunkStreamingResponse =
     if (!response.ok || !response.body) {
       dispatch(setLoading(false));
       dispatch(setIsStreaming(false));
-
-      // TODO: Implement proper error handling
-      console.error(`response is not ok or there is no body`);
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          'Failed to get response from the server'
+        )
+      );
       return;
     }
 
@@ -280,9 +340,7 @@ export const thunkStreamingResponse =
     const updatedLastMessage =
       updatedConversation?.messages[updatedConversation?.messages.length - 1];
     if (updatedLastMessage?.role != 'assistant') {
-      console.error(
-        `something went wrong, last message is not assistant message`
-      );
+      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
       return;
     }
     if (getState().currentConversation.stopConversation) {
@@ -296,11 +354,19 @@ export const thunkStreamingResponse =
       }
     }
 
-    await insertMessage(
-      updatedLastMessage,
-      updatedConversation.id,
-      session.user?.id
-    );
+    try {
+      await insertMessage(
+        updatedLastMessage,
+        updatedConversation.id,
+        session.user?.id
+      );
+    } catch (e) {
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          'Failed to update conversation messages'
+        )
+      );
+    }
   };
 
 export const thunkRegenerateResponse =
@@ -312,22 +378,20 @@ export const thunkRegenerateResponse =
     const { conversation } = getState().currentConversation;
 
     if (!conversation) {
-      console.error(`there is no conversation, this should never happen`);
+      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
       return;
     }
     const messages = getState().currentConversation.conversation?.messages;
     if (!messages) {
-      console.error(`there is no messages, this should never happen`);
+      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
       return;
     }
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage || lastMessage.role === 'assistant') {
-      //something went wrong, gotta fix
-      console.error(
-        `${lastMessage} is not a user message or there is no last message`
-      );
+      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
       return;
     }
+
     dispatch(currentConversationSlice.actions.removeLastAssistantMessage());
 
     const response = await fetch('/api/chat', {
@@ -340,12 +404,11 @@ export const thunkRegenerateResponse =
         messages: messages,
         model: conversation.model,
         search_space: search_space
-      })
+      } as RequestBody)
     });
 
     if (!response.ok || !response.body) {
-      // TODO: Implement proper error handling
-      console.error(`response is not ok or there is no body`);
+      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
       return;
     }
 
@@ -354,7 +417,7 @@ export const thunkRegenerateResponse =
     const data = response.body;
 
     if (!data) {
-      console.error(`there is no data`);
+      dispatch(optimisticErrorActions.addErrorWithTimeout('Server error'));
       return;
     }
 
@@ -375,23 +438,26 @@ export const thunkRegenerateResponse =
     const updatedLastMessage =
       updatedConversation?.messages[updatedConversation?.messages.length - 1];
     if (updatedLastMessage?.role != 'assistant') {
-      console.error(
-        `something went wrong, last message is not assistant message`
-      );
+      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
       return;
     }
-    await replaceLastMessage(
-      updatedLastMessage,
-      updatedConversation.messages.length - 1,
-      updatedConversation.id
-    );
+    try {
+      await replaceLastMessage(
+        updatedLastMessage,
+        updatedConversation.messages.length - 1,
+        updatedConversation.id
+      );
+    } catch (e) {
+      dispatch(optimisticErrorActions.addErrorWithTimeout('Server error'));
+    }
   };
 
 export const optimisticCurrentConversationAction = {
   retrieveAndSelectConversation: thunkRetrieveConversationDetails,
   userSent: thunkUserSent,
   startStreaming: thunkStreamingResponse,
-  regenerateResponse: thunkRegenerateResponse
+  regenerateResponse: thunkRegenerateResponse,
+  selectConversationPrompt: thunkSelectPrompt
 };
 
 export const {
@@ -403,7 +469,8 @@ export const {
   selectCurrentConversation,
   setMessagesInCurrentConversations,
   clearLastAssistantMessage,
-  setFetchingConversation
+  setFetchingConversation,
+  selectPrompt
 } = currentConversationSlice.actions;
 
 export const getCurrentConversationFromStore = () =>

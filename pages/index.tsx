@@ -1,27 +1,64 @@
-import FileInput from '@/components/ui/FileInput/FileInput';
-import FilesList from '@/components/ui/FilesList';
-import { initStore } from 'context/redux/store';
-import { useErrorContext } from '../context/ErrorContext';
+import Chat from '@/components/Chat/Chat';
+import Head from 'next/head';
+import { useEffect } from 'react';
+import { initStore, useAppDispatch } from 'context/redux/store';
+import { Conversation } from '@/types/chat';
+import { cleanConversationHistory } from '@/utils/app/clean';
+import { setConversations } from 'context/redux/conversationsSlice';
+import { removeAll } from '@/utils/app/localcache';
+import PromptSelector from '@/components/ui/PromptSelector';
+import {
+  clearSelectedConversation,
+  getCurrentConversationFromStore
+} from 'context/redux/currentConversationSlice';
 
-export default function HomePage({ error }: { error: string | null }) {
-  const { errorDispatch } = useErrorContext();
+const ChatUI = () => {
+  // ========= Redux State =========
+  const dispatch = useAppDispatch();
+  const { conversation: currentConversation } =
+    getCurrentConversationFromStore();
+
+  // ========= Initialize Conversations in the Local Storage =========
+  // TODO: Use Redux Persist to store conversations state in the local storage
+  useEffect(() => {
+    const conversationHistory = localStorage.getItem('conversationHistory');
+    if (conversationHistory) {
+      const parsedConversationHistory: Conversation[] =
+        JSON.parse(conversationHistory);
+      const cleanedConversationHistory = cleanConversationHistory(
+        parsedConversationHistory
+      );
+      setConversations(cleanedConversationHistory);
+    }
+
+    // Clear conversations from local storage on page load
+    removeAll('conversation');
+
+    // Clear currently selected conversation on component unmount
+    return () => {
+      dispatch(clearSelectedConversation());
+    };
+  }, [dispatch]);
+
+  // ===== Render prompt selector if no conversation is selected =====
+  const renderPromptSelector =
+    !currentConversation || !currentConversation.promptId;
+
   return (
     <>
-      <header className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            File Manager
-          </h1>
-        </div>
-      </header>
-      <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <FileInput />
-      </div>
-      <div className="mx-auto max-w-7xl pt-2 pb-6 sm:px-6 lg:px-8">
-        <FilesList />
-      </div>
+      <Head>
+        <title>BrainBot</title>
+        <meta name="description" content="ChatGPT but better." />
+        <meta
+          name="viewport"
+          content="height=device-height ,width=device-width, initial-scale=1, user-scalable=no"
+        />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      {renderPromptSelector ? <PromptSelector /> : <Chat />}
     </>
   );
-}
+};
 
+export default ChatUI;
 export const getServerSideProps = initStore;

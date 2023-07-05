@@ -11,7 +11,7 @@ import {
 } from '@/utils/app/folders';
 import { AppThunk, useAppSelector } from './store';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { useSessionContext } from '@supabase/auth-helpers-react';
+import { optimisticErrorActions } from './errorSlice';
 
 type FoldersState = Folder[];
 
@@ -35,8 +35,7 @@ const folderSlice = createSlice({
       if (folder) {
         folder.name = action.payload.newName;
       } else {
-        // TODO: Show error to user
-        console.error('Failed to find folder with ID: ', action.payload.id);
+        throw Error('Failed to find folder with ID: ' + action.payload.id);
       }
     },
     setFolders(state, action: PayloadAction<Folder[]>) {
@@ -50,38 +49,39 @@ const folderSlice = createSlice({
       if (folder) {
         folder.id = action.payload.newId;
       } else {
-        // TODO: Show error to user
-        console.error('Failed to find folder with ID: ', action.payload.id);
+        throw Error('Failed to find folder with ID: ' + action.payload.id);
       }
     }
   }
 });
 
-const thunkCreateNewFolder = (userId:string): AppThunk => async (dispatch) => {
+const thunkCreateNewFolder =
+  (userId: string): AppThunk =>
+  async (dispatch) => {
+    const tempFolder: Folder = {
+      id: randomNumberId(),
+      name: 'New Folder',
+      user_id: userId
+    };
+    dispatch(addFolder(tempFolder));
 
-  const tempFolder: Folder = {
-    id: randomNumberId(),
-    name: 'New Folder',
-    user_id: userId
+    try {
+      const folder = await saveFolder(tempFolder);
+      dispatch(
+        folderSlice.actions.updateFolderId({
+          id: tempFolder.id,
+          newId: folder.id
+        })
+      );
+    } catch (e: any) {
+      dispatch(deleteFolder(tempFolder));
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          'Failed to create new folder'
+        )
+      );
+    }
   };
-  dispatch(addFolder(tempFolder));
-
-  try {
-    const folder = await saveFolder(tempFolder);
-    dispatch(
-      folderSlice.actions.updateFolderId({
-        id: tempFolder.id,
-        newId: folder.id
-      })
-    );
-  } catch (e: any) {
-    dispatch(deleteFolder(tempFolder));
-    console.error(
-      'Failed to create new folder with the following error: ',
-      e.message
-    );
-  }
-};
 
 const thunkDeleteFolder =
   (folderId: number): AppThunk =>
@@ -93,7 +93,9 @@ const thunkDeleteFolder =
       dispatch(deleteFolder({ id: folderId }));
       await deleteFolderFromDB(folderId);
     } catch (e) {
-      console.error('Failed to delete folder', e);
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout('Failed to delete folder')
+      );
       dispatch(addFolder(folder));
     }
   };
@@ -108,7 +110,11 @@ const thunkUpdateFolderName =
       dispatch(updateFolderName({ id: folderId, newName: newName }));
       await renameFolderInDB(folderId, newName);
     } catch (e) {
-      console.error('Failed to update folder name', e);
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          'Failed to update folder name'
+        )
+      );
       dispatch(updateFolderName({ id: folderId, newName: folder.name }));
     }
   };
@@ -116,8 +122,16 @@ const thunkUpdateFolderName =
 const thunkFetchAllFolders =
   (supabaseClient?: SupabaseClient): AppThunk =>
   async (dispatch) => {
-    const folders = await fetchAllFolders(supabaseClient);
-    dispatch(setFolders(folders));
+    try {
+      const folders = await fetchAllFolders(supabaseClient);
+      dispatch(setFolders(folders));
+    } catch (e) {
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          'Failed to get a list of folders'
+        )
+      );
+    }
   };
 
 export const optimisticFoldersAction = {

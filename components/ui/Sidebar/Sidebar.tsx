@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import classNames from 'classnames';
 import classes from './Sidebar.module.css';
 import SideBarOpenIcon from '@/components/icons/SidebarOpen';
@@ -28,8 +28,9 @@ import {
   getModalStateFromStorage,
   initSidebar,
   setSidebar,
-  toggleSettingDialog,
-  toggleSidebar
+  toggleSidebar,
+  openSettingDialog,
+  closeSettingDialog
 } from '../../../context/redux/modalSlice';
 import { optimisticConversationsActions } from 'context/redux/conversationsSlice';
 import { optimisticFoldersAction } from 'context/redux/folderSlice';
@@ -42,26 +43,6 @@ import useRouteChange from '../../../hooks/useRouteChange';
 import { RotatingLines } from 'react-loader-spinner';
 import SettingsDialog from '@/components/Settings/SettingsDialog';
 import { use100vh } from 'react-div-100vh';
-
-const NavLinks = [
-  {
-    name: 'Chat',
-    href: '/chat',
-    icon: ChatBubbleLeftIcon
-  },
-  {
-    name: 'Files',
-    href: '/files',
-    icon: FolderIcon
-  },
-  {
-    name: 'Settings',
-    icon: Cog8ToothIcon,
-    onClick: (dispatch: ReturnType<typeof useAppDispatch>) => {
-      dispatch(toggleSettingDialog());
-    }
-  }
-];
 
 type LinkType =
   | {
@@ -97,13 +78,35 @@ export default function Sidebar() {
       dispatch(window.innerWidth > 640 ? initSidebar() : setSidebar(false));
     }
   }, []);
-  const { sideBarOpen } = getModalStateFromStorage();
+  const { sideBarOpen, settingDialogOpen } = getModalStateFromStorage();
   const onToggleSidebar = () => dispatch(toggleSidebar());
   const theme = getThemeFromStorage();
   const isDarkTheme = theme === 'dark';
   const deletingConversations = getLoadingStateFromStore(
     LoadingTrigger.DeletingConversations
   );
+
+  const closeSettingsDialog = () => dispatch(closeSettingDialog());
+
+  const NavLinks = useMemo(() => {
+    return [
+      {
+        name: 'Chat',
+        href: '/',
+        icon: ChatBubbleLeftIcon
+      },
+      {
+        name: 'Files',
+        href: '/files',
+        icon: FolderIcon
+      },
+      {
+        name: 'Settings',
+        icon: Cog8ToothIcon,
+        onClick: () => dispatch(openSettingDialog())
+      }
+    ];
+  }, [dispatch]);
 
   // ============== Detect Page Changes ==============
   const [pageLoading] = useRouteChange();
@@ -119,7 +122,7 @@ export default function Sidebar() {
   const handleCreateConversation = async () => {
     if (!sideBarOpen) onToggleSidebar();
     // Switch to chat page
-    if (router.pathname !== '/chat') router.push('/chat');
+    if (router.pathname !== '/') router.push('/');
     // Create a new conversation
     dispatch(optimisticConversationsActions.createConversation());
     // Open the chat list
@@ -151,7 +154,7 @@ export default function Sidebar() {
   // Tailwind Classes
   // ============================================================
   const sidebarDisplay = sideBarOpen
-    ? 'z-30 opacity-100 sm:z-30 sm:w-[20rem] sm:min-w-[20rem]'
+    ? 'z-40 opacity-100 sm:w-[20rem] sm:min-w-[20rem]'
     : '-z-20 opacity-0 sm:opacity-100 sm:z-30 sm:w-24 sm:min-w-24';
 
   const sideBarToggleSVGStyle = classNames(
@@ -166,7 +169,10 @@ export default function Sidebar() {
   return (
     // TODO: Add animation for sidebar sideBarOpen and close
     <>
-      <SettingsDialog />
+      <SettingsDialog
+        settingDialogOpen={settingDialogOpen}
+        closeSettingDialog={closeSettingsDialog}
+      />
       <aside
         className={classNames(classes.sidebar, sidebarDisplay)}
         style={{
@@ -270,7 +276,7 @@ export default function Sidebar() {
                       {(pageLoading || deletingConversations) && (
                         <div
                           className={classNames(
-                            'absolute top-0 left-0 right-0 bottom-0 z-20',
+                            'absolute top-0 left-0 right-0 bottom-0 z-40',
                             'flex items-center justify-center bg-zinc-900'
                           )}
                         >

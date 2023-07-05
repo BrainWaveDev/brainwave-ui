@@ -44,6 +44,12 @@ const modalSlice = createSlice({
         };
       }
     },
+    openSettingDialog: (state) => {
+      state.settingDialogOpen = true;
+    },
+    closeSettingDialog: (state) => {
+      state.settingDialogOpen = false;
+    },
     toggleSettingDialog: (state) => {
       state.settingDialogOpen = !state.settingDialogOpen;
     },
@@ -58,7 +64,9 @@ export const {
   setSidebar,
   initSidebar,
   toggleSettingDialog,
-  toggleDocumentFilter
+  toggleDocumentFilter,
+  openSettingDialog,
+  closeSettingDialog
 } = modalSlice.actions;
 
 export const getModalStateFromStorage = () =>

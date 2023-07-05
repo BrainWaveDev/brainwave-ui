@@ -1,4 +1,4 @@
-import React, { PropsWithChildren } from 'react';
+import React, { PropsWithChildren, useEffect } from 'react';
 import Head from 'next/head';
 import classes from './Layout.module.css';
 import { PageMeta } from '@/types/index';
@@ -13,12 +13,13 @@ import { getModalStateFromStorage } from '../../../context/redux/modalSlice';
 import DocumentFilter from '@/components/Chat/DocumentFilter';
 import { useRouter } from 'next/router';
 import {
+  getErrorsFromLocalStorage,
+  optimisticErrorActions,
   removeError
 } from '../../../context/redux/errorSlice';
 import { AnimatePresence } from 'framer-motion';
 import { useAppDispatch } from '../../../context/redux/store';
 import ErrorAlert from '@/components/ui/ErrorAlert';
-import { getErrorsFromLocalStorage } from 'context/ErrorContext';
 
 interface Props extends PropsWithChildren {
   meta?: PageMeta;
@@ -53,25 +54,33 @@ export default function Layout({ children, meta: pageMeta }: Props) {
   const [pageLoading] = useRouteChange();
 
   // ==============================
-  // Tailwind Classes
+  // Styling
   // ==============================
   const height = use100vh();
 
   const mainClasses = classNames(
     'scrollbar-hide',
     'sm:!h-[calc(100vh_-_3rem)]',
-    router.pathname === '/chat' &&
+    router.pathname === '/' &&
       documentFilterOpen &&
       'pr-0 lg:pr-[20rem] xl:pr-[22.5rem]'
   );
 
   const mainContentClasses = classNames(
     'min-h-[calc(100%_-_4.5rem)]',
-    'h-[calc(100%_-_4.5rem)]',
-    'max-h-[calc(100%_-_4.5rem)]',
+    'h-[calc(100%_-_4.5rem)] max-h-[calc(100%_-_4.5rem)]',
     'overflow-y-scroll overflow-x-clip',
     'scrollbar-hide'
   );
+
+  // ===== Remove any errors that appear on the first page load =====
+  useEffect(() => {
+    if (errors.length > 0) {
+      setTimeout(() => {
+        dispatch(optimisticErrorActions.clearErrorsWithTimeout());
+      }, 3000);
+    }
+  }, []);
 
   return (
     <>
@@ -105,18 +114,22 @@ export default function Layout({ children, meta: pageMeta }: Props) {
             <div className={mainContentClasses}>{children}</div>
           </>
         )}
-        {router.pathname === '/chat' && documentFilterOpen && (
+        {!pageLoading && router.pathname === '/' && documentFilterOpen && (
           <DocumentFilter />
         )}
       </main>
       <div
         // Display list of errors
         className={classNames(
-          'fixed top-[7.5vh] flex',
-          'flex-col gap-y-3 justify-start z-20',
+          'fixed top-[5.25rem] sm:top-[6rem] flex z-20',
+          'flex-col gap-y-3 justify-start ',
           'right-1/2 translate-x-1/2',
-          'xs:translate-x-0 xs:right-3 sm:right-6 md:right-12',
-          'min-w-[300px] xs:min-w-fit items-center'
+          'xs:translate-x-0 xs:right-3 sm:right-8 md:right-12',
+          'min-w-[300px] xs:min-w-fit items-center',
+          'max-h-[calc(100vh_-_5.5rem)]',
+          'sm:max-h-[calc(100vh_-_8rem)]',
+          'overflow-y-scroll overflow-x-visible',
+          'scrollbar-hide'
         )}
       >
         <AnimatePresence>

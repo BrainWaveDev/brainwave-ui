@@ -10,16 +10,12 @@ import { FileInfo, UploadState } from '../../../lib/classes';
 import { AnimatePresence, isDragActive, motion } from 'framer-motion';
 import { supabase } from '@/utils/supabase-client';
 import { wait } from '@/utils/helpers';
-import {
-  createError,
-  addError,
-  removeError
-} from '../../../context/redux/errorSlice';
+import { optimisticErrorActions } from '../../../context/redux/errorSlice';
 import AlertModal, {
+  ModalActionButton,
   ModalState,
   setModalOpen
 } from '@/components/ui/AlertModal';
-import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { useAppDispatch } from 'context/redux/store';
 import { optimisticDocumentActions } from 'context/redux/documentSlice';
 import { useDropzone } from 'react-dropzone';
@@ -52,20 +48,9 @@ export default function FileInput() {
   const [modalState, setModalState] = useState<ModalState | null>(null);
 
   // ==============================
-  // Modal Buttons
+  // Modal Action Buttons
   // ==============================
-  const ModalActionButtons = (
-    <>
-      <AlertDialog.Action
-        asChild
-        onClick={() => setModalState(setModalOpen(false))}
-      >
-        <button className="text-mauve11 bg-mauve4 hover:bg-mauve5 focus:shadow-mauve7 inline-flex h-[35px] items-center justify-center rounded-[4px] px-[15px] font-medium leading-none outline-none focus:shadow-[0_0_0_2px]">
-          OK
-        </button>
-      </AlertDialog.Action>
-    </>
-  );
+  const closeModal = () => setModalState(setModalOpen(false));
 
   // ==============================
   // File Handlers
@@ -93,18 +78,20 @@ export default function FileInput() {
         if (!existingFileNames.includes(selectedFiles[i].name)) {
           newFiles.push(new FileInfo(selectedFiles[i]));
         } else {
-          const duplicateFileError = createError(
-            'You cannot upload the same file(s) twice!'
-          );
-          dispatch(addError(duplicateFileError));
+          setModalState({
+            open: true,
+            title: 'Duplicate file',
+            description: 'You cannot upload the same file twice!'
+          });
         }
       }
 
       if (invalidFileType) {
-        const fileTypeError = createError(
-          'You can only upload TXT, PDF, DOC, DOCX and HTML files.'
-        );
-        dispatch(addError(fileTypeError));
+        setModalState({
+          open: true,
+          title: 'Unsupported file type',
+          description: 'You can only upload TXT, PDF, DOC, DOCX and HTML files.'
+        });
       }
 
       setFiles(newFiles);
@@ -187,13 +174,7 @@ export default function FileInput() {
         updatedFiles.push(file);
 
         if (errorMessage) {
-          const fileUploadError = createError(errorMessage);
-          addError(fileUploadError);
-
-          // Automatically clear error alert
-          setTimeout(() => {
-            removeError(fileUploadError.id);
-          }, 3000);
+          dispatch(optimisticErrorActions.addErrorWithTimeout(errorMessage));
         }
       });
 
@@ -217,7 +198,13 @@ export default function FileInput() {
         <AlertModal
           modalState={modalState}
           setModalState={setModalState}
-          actionButtons={ModalActionButtons}
+          actionButtons={
+            <ModalActionButton
+              text={'OK'}
+              type={'Regular'}
+              onClick={closeModal}
+            />
+          }
         />
       )}
       <div className="flex items-center justify-center flex-col w-full">

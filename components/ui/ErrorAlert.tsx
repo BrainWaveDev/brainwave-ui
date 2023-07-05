@@ -16,9 +16,9 @@ const ErrorAlert = memo(
     return (
       <motion.div
         className={classNames(
-          'flex min-w-sm max-w-sm md:max-w-md bg-white dark:bg-neutral5',
+          'flex min-w-[300px] max-w-sm md:max-w-md bg-white dark:bg-neutral5',
           'rounded-lg shadow border border-gray-100 dark:border-zinc-700 group',
-          'relative'
+          'relative mr-1.5 mt-1.5'
         )}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1, transition: { duration: 0.2 } }}
@@ -49,17 +49,24 @@ const ErrorAlert = memo(
         <div>
           <button
             className={classNames(
-              'opacity-0 group-hover:opacity-100 transition border-none duration-150 outline-0 ring-0 focus:ring-0 active:ring-0',
-              'absolute -top-1.5 -right-1.5'
+              'opacity-100 sm:opacity-0 sm:group-hover:opacity-100',
+              'transition border-none duration-150 outline-0',
+              'ring-0 focus:ring-0 active:ring-0',
+              'absolute -top-1.5 -right-1.5',
+              ''
             )}
             aria-label="Clear error message"
             onClick={onRemove}
           >
             <XMarkIcon
               strokeWidth={1}
-              className={
-                'stroke-white rounded-full w-6 h-6 p-0.5 shadow transition duration-150 bg-zinc-700 hover:bg-zinc-500'
-              }
+              className={classNames(
+                'stroke-white rounded-full w-6 h-6 p-0.5 shadow',
+                'bg-zinc-400 hover:bg-zinc-300',
+                'dark:bg-zinc-700 dark:hover:bg-zinc-600',
+                'transition duration-150',
+                'hover:stroke-teal-400'
+              )}
             />
           </button>
         </div>
