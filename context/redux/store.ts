@@ -9,6 +9,7 @@ import thunkMiddleware, { ThunkAction } from 'redux-thunk';
 import documentSlice, { optimisticDocumentActions } from './documentSlice';
 import currentConversationSlice from './currentConversationSlice';
 import searchSpaceSlice, { selectAllSearchSpace } from './searchSpaceSlice';
+import promptSlice, { optimisticPromptActions } from './promptSlice';
 import modalSlice from './modalSlice';
 import { createWrapper, HYDRATE } from 'next-redux-wrapper';
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
@@ -16,6 +17,7 @@ import { Database } from '@/types/supabase';
 import themeSlice from './themeSlice';
 import loadingSlice from './loadingSlice';
 import errorSlice from './errorSlice';
+import { createClient } from '@supabase/supabase-js';
 
 const { serialize, deserialize } = require('json-immutable');
 
@@ -26,6 +28,7 @@ const combinedReducer = combineReducers({
   theme: themeSlice,
   currentConversation: currentConversationSlice,
   searchSpace: searchSpaceSlice,
+  prompts: promptSlice,
   modal: modalSlice,
   loading: loadingSlice,
   errors: errorSlice
@@ -41,7 +44,6 @@ const reducer = (state: any, action: any): CombinedReducerState => {
       currentConversation: state.currentConversation,
       modal: state.modal,
       loading: state.loading
-      // errors: state.errors
     };
   } else {
     return combinedReducer(state, action);
@@ -93,6 +95,12 @@ export const initStore = wrapper.getServerSideProps(
         }
       };
 
+    // Create server client with service role key to fetch prompts
+    const supabaseAdmin = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+    );
+
     let error: string | null = null;
 
     try {
@@ -102,7 +110,8 @@ export const initStore = wrapper.getServerSideProps(
         store.dispatch(optimisticFoldersAction.fetchAllFolders(supabase)),
         store.dispatch(
           optimisticConversationsActions.fetchAllConversations(supabase)
-        )
+        ),
+        store.dispatch(optimisticPromptActions.initializePrompts(supabaseAdmin))
       ];
       await Promise.all(promises);
 

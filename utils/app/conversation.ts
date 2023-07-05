@@ -2,7 +2,7 @@ import { Conversation, ConversationSummary, Message } from '@/types/chat';
 import { supabase } from '../supabase-client';
 import { isGeneratedId, randomNumberId } from './createDBOperation';
 import { OpenAIModels } from 'types/openai';
-import { DEFAULT_SYSTEM_PROMPT } from './prompts';
+import { defaultPrompt } from './prompts';
 import { get, remove, removeAll, set } from './localcache';
 import { SupabaseClient } from '@supabase/supabase-js';
 
@@ -11,7 +11,7 @@ export const randomPlaceholderConversation = () => {
     id: randomNumberId(),
     name: 'New conversation',
     model: OpenAIModels['gpt-3.5-turbo'],
-    prompt: DEFAULT_SYSTEM_PROMPT,
+    promptId: defaultPrompt.id,
     messages: [],
     folderId: null
   } as Conversation;
@@ -81,6 +81,7 @@ export const createConversation = async (conversation: Conversation) => {
       .insert({
         id: conversation.id,
         name: conversation.name,
+        prompt_id: conversation.promptId,
         model: OpenAIModels['gpt-3.5-turbo'].name
       })
       .select()
@@ -111,6 +112,7 @@ export const retrieveConversation = async (conversationId: number) => {
     name,
     created_at,
     folder_id,
+    prompt_id,
     messages ( id,role, content, user_id, index)
   `
     )
@@ -128,7 +130,8 @@ export const retrieveConversation = async (conversationId: number) => {
     id: data?.id, // no error
     name: data?.name,
     model: OpenAIModels['gpt-3.5-turbo'],
-    prompt: DEFAULT_SYSTEM_PROMPT,
+    promptId: data.prompt_id ?? defaultPrompt.id,
+    folderId: data.folder_id ?? null,
     messages: data?.messages.map(
       (m: any) =>
         ({
@@ -156,16 +159,14 @@ export const fetchAllConversations = async (
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   return data.map((c) => {
     return {
       id: c.id,
       name: c.name,
       model: OpenAIModels['gpt-3.5-turbo'],
-      prompt: DEFAULT_SYSTEM_PROMPT,
+      promptId: c.prompt_id,
       folderId: c.folder_id
     } as ConversationSummary;
   });
@@ -227,7 +228,7 @@ export const saveConversation = async (
     id: data?.id,
     name: data?.name,
     model: OpenAIModels['gpt-3.5-turbo'],
-    prompt: DEFAULT_SYSTEM_PROMPT,
+    promptId: defaultPrompt.id,
     folderId: data?.folder_id,
     messages: messages_res.data?.map((m) => {
       return {
@@ -285,7 +286,7 @@ export const insertMessage = async (
 export const replaceLastMessage = async (
   message: Message,
   conversation_id: number,
-  index: number,
+  index: number
 ) => {
   const { data } = await supabase
     .from('messages')
@@ -312,4 +313,4 @@ export const replaceLastMessage = async (
   }
 
   return data;
-}
+};

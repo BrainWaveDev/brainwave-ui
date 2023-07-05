@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import classNames from 'classnames';
 import classes from './Sidebar.module.css';
 import SideBarOpenIcon from '@/components/icons/SidebarOpen';
@@ -86,27 +86,27 @@ export default function Sidebar() {
     LoadingTrigger.DeletingConversations
   );
 
-  // const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
-  const openSettingsDialog = () => dispatch(openSettingDialog());
   const closeSettingsDialog = () => dispatch(closeSettingDialog());
 
-  const NavLinks = [
-    {
-      name: 'Chat',
-      href: '/chat',
-      icon: ChatBubbleLeftIcon
-    },
-    {
-      name: 'Files',
-      href: '/files',
-      icon: FolderIcon
-    },
-    {
-      name: 'Settings',
-      icon: Cog8ToothIcon,
-      onClick: openSettingsDialog
-    }
-  ];
+  const NavLinks = useMemo(() => {
+    return [
+      {
+        name: 'Chat',
+        href: '/',
+        icon: ChatBubbleLeftIcon
+      },
+      {
+        name: 'Files',
+        href: '/files',
+        icon: FolderIcon
+      },
+      {
+        name: 'Settings',
+        icon: Cog8ToothIcon,
+        onClick: () => dispatch(openSettingDialog())
+      }
+    ];
+  }, [dispatch]);
 
   // ============== Detect Page Changes ==============
   const [pageLoading] = useRouteChange();
@@ -122,7 +122,7 @@ export default function Sidebar() {
   const handleCreateConversation = async () => {
     if (!sideBarOpen) onToggleSidebar();
     // Switch to chat page
-    if (router.pathname !== '/chat') router.push('/chat');
+    if (router.pathname !== '/') router.push('/');
     // Create a new conversation
     dispatch(optimisticConversationsActions.createConversation());
     // Open the chat list

@@ -14,6 +14,7 @@ export interface RequestBody {
   model: OpenAIModel;
   messages: Message[];
   search_space?: number[];
+  promptId: number;
 }
 
 export interface RequestMatchDocumentChunks {
@@ -32,7 +33,7 @@ export interface ConversationIdentifiable {
 
 export interface ConversationSummary extends ConversationIdentifiable {
   model: OpenAIModel;
-  prompt: string;
+  promptId?: number;
   folderId: number | null;
 }
 

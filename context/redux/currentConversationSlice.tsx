@@ -1,5 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Conversation, ConversationSummary, Message } from '@/types/chat';
+import {
+  Conversation,
+  ConversationSummary,
+  Message,
+  RequestBody
+} from '@/types/chat';
 import { AppThunk, useAppSelector } from './store';
 import {
   createConversation,
@@ -11,6 +16,7 @@ import { Session } from '@supabase/auth-helpers-react';
 import { addConversation, deleteConversation } from './conversationsSlice';
 import { randomPlaceholderConversation } from '@/utils/app/conversation';
 import { optimisticErrorActions } from './errorSlice';
+import { defaultPrompt } from '@/utils/app/prompts';
 
 interface SelectedConversationState {
   conversation: Conversation | undefined;
@@ -147,6 +153,11 @@ const currentConversationSlice = createSlice({
         ...conversation,
         messages: updatedMessage
       };
+    },
+    selectPrompt: (state, action: PayloadAction<number>) => {
+      const { conversation } = state;
+      if (!conversation) throw Error('No conversation found');
+      else conversation.promptId = action.payload;
     }
   }
 });
@@ -172,6 +183,22 @@ const thunkRetrieveConversationDetails =
     } finally {
       dispatch(setFetchingConversation(false));
     }
+  };
+
+const thunkSelectPrompt =
+  (promptId: number): AppThunk =>
+  async (dispatch, getState) => {
+    const { currentConversation, prompts } = getState();
+    if (!currentConversation.conversation) {
+      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
+      return;
+    }
+    const prompt = prompts.prompts.find((p) => p.id === promptId);
+    dispatch(
+      currentConversationSlice.actions.selectPrompt(
+        prompt ? prompt.id : defaultPrompt.id
+      )
+    );
   };
 
 const thunkUserSent =
@@ -377,7 +404,7 @@ export const thunkRegenerateResponse =
         messages: messages,
         model: conversation.model,
         search_space: search_space
-      })
+      } as RequestBody)
     });
 
     if (!response.ok || !response.body) {
@@ -429,7 +456,8 @@ export const optimisticCurrentConversationAction = {
   retrieveAndSelectConversation: thunkRetrieveConversationDetails,
   userSent: thunkUserSent,
   startStreaming: thunkStreamingResponse,
-  regenerateResponse: thunkRegenerateResponse
+  regenerateResponse: thunkRegenerateResponse,
+  selectConversationPrompt: thunkSelectPrompt
 };
 
 export const {
@@ -441,7 +469,8 @@ export const {
   selectCurrentConversation,
   setMessagesInCurrentConversations,
   clearLastAssistantMessage,
-  setFetchingConversation
+  setFetchingConversation,
+  selectPrompt
 } = currentConversationSlice.actions;
 
 export const getCurrentConversationFromStore = () =>

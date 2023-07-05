@@ -1,10 +1,7 @@
-import { OpenAIModel } from './openai';
-
 export interface Prompt {
-  id: string;
+  id: number;
   name: string;
-  description: string;
-  content: string;
-  model: OpenAIModel;
-  folderId: number | null;
+  description?: string;
+  // Define prompt content on the server to avoid exposing it to the client
+  content?: string;
 }

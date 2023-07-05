@@ -54,22 +54,21 @@ export default function Layout({ children, meta: pageMeta }: Props) {
   const [pageLoading] = useRouteChange();
 
   // ==============================
-  // Tailwind Classes
+  // Styling
   // ==============================
   const height = use100vh();
 
   const mainClasses = classNames(
     'scrollbar-hide',
     'sm:!h-[calc(100vh_-_3rem)]',
-    router.pathname === '/chat' &&
+    router.pathname === '/' &&
       documentFilterOpen &&
       'pr-0 lg:pr-[20rem] xl:pr-[22.5rem]'
   );
 
   const mainContentClasses = classNames(
     'min-h-[calc(100%_-_4.5rem)]',
-    'h-[calc(100%_-_4.5rem)]',
-    'max-h-[calc(100%_-_4.5rem)]',
+    'h-[calc(100%_-_4.5rem)] max-h-[calc(100%_-_4.5rem)]',
     'overflow-y-scroll overflow-x-clip',
     'scrollbar-hide'
   );
@@ -115,7 +114,7 @@ export default function Layout({ children, meta: pageMeta }: Props) {
             <div className={mainContentClasses}>{children}</div>
           </>
         )}
-        {router.pathname === '/chat' && documentFilterOpen && (
+        {!pageLoading && router.pathname === '/' && documentFilterOpen && (
           <DocumentFilter />
         )}
       </main>

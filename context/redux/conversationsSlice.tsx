@@ -9,7 +9,6 @@ import {
 import { AppThunk, useAppSelector } from './store';
 import { randomNumberId } from '@/utils/app/createDBOperation';
 import { OpenAIModels } from 'types/openai';
-import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/prompts';
 import {
   clearAllConversations,
   createConversation,
@@ -90,36 +89,38 @@ function updateConversationProperty<K extends keyof ConversationSummary>(
   conversation[key] = value;
 }
 
-const thunkCreateNewConversation = (): AppThunk => async (dispatch) => {
-  const tempConversation: Conversation = {
-    id: randomNumberId(),
-    name: 'New Conversation',
-    model: OpenAIModels['gpt-3.5-turbo'],
-    folderId: null,
-    prompt: DEFAULT_SYSTEM_PROMPT,
-    messages: []
-  };
+const thunkCreateNewConversation =
+  (promptId?: number): AppThunk =>
+  async (dispatch) => {
+    const tempConversation: Conversation = {
+      id: randomNumberId(),
+      name: 'New Conversation',
+      model: OpenAIModels['gpt-3.5-turbo'],
+      promptId,
+      folderId: null,
+      messages: []
+    };
 
-  dispatch(addConversation(tempConversation));
-  dispatch(selectCurrentConversation(tempConversation));
-  try {
-    const conversation = await createConversation(tempConversation);
-    dispatch(
-      conversationsSlice.actions.replaceWithDBConversation({
-        tempConversation,
-        dbConversation: conversation
-      })
-    );
-    dispatch(selectCurrentConversation(conversation));
-  } catch (e) {
-    dispatch(
-      optimisticErrorActions.addErrorWithTimeout(
-        "Couldn't create new conversation"
-      )
-    );
-    dispatch(deleteConversation({ id: tempConversation.id }));
-  }
-};
+    dispatch(addConversation(tempConversation));
+    dispatch(selectCurrentConversation(tempConversation));
+    try {
+      const conversation = await createConversation(tempConversation);
+      dispatch(
+        conversationsSlice.actions.replaceWithDBConversation({
+          tempConversation,
+          dbConversation: conversation
+        })
+      );
+      dispatch(selectCurrentConversation(conversation));
+    } catch (e) {
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          "Couldn't create new conversation"
+        )
+      );
+      dispatch(deleteConversation({ id: tempConversation.id }));
+    }
+  };
 
 const thunkDeleteConversation =
   (conversation: ConversationSummary): AppThunk =>
