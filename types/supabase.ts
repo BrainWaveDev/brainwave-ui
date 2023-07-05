@@ -16,7 +16,7 @@ export interface Database {
           id: number
           model: string | null
           name: string
-          prompt_id: string | null
+          prompt_id: number | null
           updated_at: string | null
           user_id: string
         }
@@ -26,7 +26,7 @@ export interface Database {
           id?: number
           model?: string | null
           name?: string
-          prompt_id?: string | null
+          prompt_id?: number | null
           updated_at?: string | null
           user_id?: string
         }
@@ -36,7 +36,7 @@ export interface Database {
           id?: number
           model?: string | null
           name?: string
-          prompt_id?: string | null
+          prompt_id?: number | null
           updated_at?: string | null
           user_id?: string
         }
@@ -45,6 +45,12 @@ export interface Database {
             foreignKeyName: "conversation_folder_id_fkey"
             columns: ["folder_id"]
             referencedRelation: "folder"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_prompt_id_fkey"
+            columns: ["prompt_id"]
+            referencedRelation: "prompt"
             referencedColumns: ["id"]
           },
           {
@@ -233,6 +239,27 @@ export interface Database {
             referencedColumns: ["id"]
           }
         ]
+      }
+      prompt: {
+        Row: {
+          content: string
+          description: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          content: string
+          description?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          content?: string
+          description?: string | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
       }
       system_config: {
         Row: {
