@@ -9,7 +9,8 @@ import {
   FolderIcon,
   FolderPlusIcon,
   PlusCircleIcon,
-  Cog8ToothIcon
+  Cog8ToothIcon,
+  LightBulbIcon
 } from '@heroicons/react/24/solid';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -101,6 +102,11 @@ export default function Sidebar() {
         icon: FolderIcon
       },
       {
+        name: 'FAQ',
+        href: '/faq',
+        icon: LightBulbIcon
+      },
+      {
         name: 'Settings',
         icon: Cog8ToothIcon,
         onClick: () => dispatch(openSettingDialog())
@@ -187,7 +193,7 @@ export default function Sidebar() {
           {sideBarOpen && (
             <div className={classNames('flex flex-row items-center gap-x-3')}>
               <Logo className={'h-16 w-16'} />
-              <h3 className={'text-2xl font-bold'}>BrainWave</h3>
+              <h3 className={'text-2xl font-bold text-white'}>BrainWave</h3>
             </div>
           )}
           <button

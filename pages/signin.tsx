@@ -10,18 +10,19 @@ import classNames from 'classnames';
 import useThemeDetector from '../hooks/useThemeDetector';
 
 const SignIn = () => {
+  // Redirect to main page if user is already signed in
   const router = useRouter();
   const user = useUser();
   const supabaseClient = useSupabaseClient();
-
   useEffect(() => {
     if (user) router.replace('/');
   }, [user]);
 
+  // === Detect theme ===
   useThemeDetector();
 
   return (
-    <div className="flex min-h-screen min-w-[100vw] justify-center align-middle">
+    <div className="flex h-fit min-w-[100vw] justify-center align-middle self-center">
       <div className="flex justify-center md:height-screen-helper min-w-full">
         <div
           className={classNames(

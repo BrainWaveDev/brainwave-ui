@@ -24,7 +24,7 @@ export default memo(function Chatbar() {
   const dispatch = useAppDispatch();
   const folders = getFoldersFromStorage();
   const conversations = getConversationsFromStorage();
-  const sidebarOpen = getModalStateFromStorage();
+  const { sideBarOpen } = getModalStateFromStorage();
 
   // ======= Filtering Conversations =======
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,7 +88,7 @@ export default memo(function Chatbar() {
         'flex flex-col w-full mt-2 relative',
         'transition-all duration-150 transform-gpu max-h-full'
       )}
-      animate={sidebarOpen ? 'open' : 'closed'}
+      animate={sideBarOpen ? 'open' : 'closed'}
     >
       {/* ========== Conversations Search Bar ========== */}
       {conversations.length > 1 && (
@@ -132,7 +132,7 @@ export default memo(function Chatbar() {
             )}
           >
             <IconMessagesOff />
-            No conversations.
+            {sideBarOpen && 'No conversations.'}
           </div>
         </>
       )}
