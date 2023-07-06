@@ -18,6 +18,7 @@ const SignIn = () => {
     if (user) router.replace('/');
   }, [user]);
 
+  // === Detect theme ===
   useThemeDetector();
 
   return (

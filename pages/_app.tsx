@@ -33,6 +33,14 @@ export default function MyApp({ Component, ...rest }: AppProps) {
   // ====== Apply styling to the sign in page ======
   useEffect(() => {
     document.body.classList?.remove('loading');
+
+    if (router.pathname === '/signin') {
+      document.body.classList?.remove('page');
+      document.body.classList?.add('signInPage');
+    } else {
+      document.body.classList?.remove('signInPage');
+      document.body.classList?.add('page');
+    }
   }, [router.pathname]);
 
   return (
