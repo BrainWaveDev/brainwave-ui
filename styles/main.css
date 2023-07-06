@@ -51,7 +51,7 @@ a {
 }
 
 .page {
-    @apply bg-white dark:bg-zinc-900 text-neutral7 dark:text-white;
+    @apply bg-white sm:bg-zinc-900 dark:bg-zinc-900 text-neutral7 dark:text-white;
 }
 
 .animated {
