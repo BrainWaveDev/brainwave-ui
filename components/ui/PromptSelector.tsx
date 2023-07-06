@@ -68,7 +68,7 @@ function PromptSelector() {
         >
           Explore your knowledge base
         </h1>
-        <h2 className="text-xl sm:text-2xl text-neutral4">
+        <h2 className="text-xl sm:text-2xl text-neutral4 font-light">
           Ask questions, summarize and analyze content of your documents
         </h2>
       </div>
