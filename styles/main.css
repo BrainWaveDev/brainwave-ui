@@ -51,10 +51,6 @@ a {
 }
 
 .page {
-    @apply bg-zinc-900 text-white;
-}
-
-.signInPage {
     @apply bg-white dark:bg-zinc-900 text-neutral7 dark:text-white;
 }
 
