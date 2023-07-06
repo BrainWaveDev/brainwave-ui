@@ -187,7 +187,7 @@ export default function Sidebar() {
           {sideBarOpen && (
             <div className={classNames('flex flex-row items-center gap-x-3')}>
               <Logo className={'h-16 w-16'} />
-              <h3 className={'text-2xl font-bold'}>BrainWave</h3>
+              <h3 className={'text-2xl font-bold text-white'}>BrainWave</h3>
             </div>
           )}
           <button
