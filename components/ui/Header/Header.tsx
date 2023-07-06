@@ -44,7 +44,10 @@ export default memo(function Header() {
   // Styling
   // ==============================
   const applyChatStyling =
-    router.pathname !== '/' || currentConversation?.promptId;
+    (router.pathname !== '/' && router.pathname !== '/faq') ||
+    currentConversation?.promptId !== undefined;
+  const renderDocumentFilter =
+    router.pathname === '/' && currentConversation?.promptId !== undefined;
   const sideBarSpanClass = classNames(
     'w-5 h-0.5 my-0.5 bg-neutral7 dark:bg-neutral4',
     'rounded-full transition-all',
@@ -106,7 +109,7 @@ export default memo(function Header() {
             )}
           />
         </button>
-        {applyChatStyling && (
+        {renderDocumentFilter && (
           <button
             // Document Filter Button
             className={classNames(
