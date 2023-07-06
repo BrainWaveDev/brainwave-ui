@@ -9,7 +9,8 @@ import {
   FolderIcon,
   FolderPlusIcon,
   PlusCircleIcon,
-  Cog8ToothIcon
+  Cog8ToothIcon,
+  LightBulbIcon
 } from '@heroicons/react/24/solid';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -99,6 +100,11 @@ export default function Sidebar() {
         name: 'Files',
         href: '/files',
         icon: FolderIcon
+      },
+      {
+        name: 'FAQ',
+        href: '/faq',
+        icon: LightBulbIcon
       },
       {
         name: 'Settings',
