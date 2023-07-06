@@ -26,9 +26,6 @@ export default memo(function Chatbar() {
   const conversations = getConversationsFromStorage();
   const { sideBarOpen } = getModalStateFromStorage();
 
-  // TODO: Remove this
-  console.log('sidebarOpen', sideBarOpen);
-
   // ======= Filtering Conversations =======
   const [searchTerm, setSearchTerm] = useState('');
   const filteredConversations = useMemo(
