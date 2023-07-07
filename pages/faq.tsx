@@ -22,7 +22,12 @@ const FAQ = () => {
       <div className="max-w-[58.5rem] mx-auto">
         <div className="flex flex-col w-full">
           <div className="mb-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-left mb-4 md:pr-16">
+            <h1
+              className={classNames(
+                'text-4xl md:text-5xl font-bold',
+                'text-left mb-4 md:pr-16 text-neutral7 dark:text-neutral1'
+              )}
+            >
               FAQ
             </h1>
             <h3 className={'text-2xl mb-12 text-neutral4 md:mb-6 font-light'}>
