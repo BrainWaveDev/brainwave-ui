@@ -120,25 +120,30 @@ const handler = async (req: Request): Promise<Response> => {
     const iterator = contentByDocument.keys();
     for (const documentName of iterator) {
       const documentContent = contentByDocument.get(documentName);
-      if (!documentContent || documentContent.length === 0) {
-        continue;
+      if (!documentContent || documentContent.length === 0) continue;
+
+      // Track whether we have reached token limit
+      let reachedTokenLimit = false;
+
+      // Count tokens after each piece of content is added
+      for (let i = 0; i < documentContent.length; i++) {
+        const piece = documentContent[i];
+        const encoded = tokenizer.encode(piece);
+        tokenCount += encoded.text.length;
+
+        if (tokenCount >= 1500) {
+          reachedTokenLimit = true;
+          break;
+        } else {
+          // Append source key to first piece of content
+          if (i === 0)
+            contextText += `Source key: \`${sourceKey}\`\n ` + `Content:\n\``;
+          contextText += `${piece}\n`;
+        }
       }
 
-      const content =
-        `Source key: \`${sourceKey}\`\n ` +
-        `Content:\n\`` +
-        `${documentContent.join('\n')}\`\n---\n`;
-
-      const encoded = tokenizer.encode(content);
-      tokenCount += encoded.text.length;
-
-      if (tokenCount >= 1500) {
-        break;
-      } else {
-        contextText += content;
-        sources += `${sourceKey}. ${documentName}<br/>`;
-        ++sourceKey;
-      }
+      // Stop adding context if we have reached token limit
+      if (reachedTokenLimit) break;
     }
 
     await init((imports) => WebAssembly.instantiate(wasm, imports));
@@ -187,8 +192,8 @@ const handler = async (req: Request): Promise<Response> => {
     const stream = await OpenAIStream(
       model,
       promptToSend,
-      messagesToSend,
-      sources
+      messagesToSend
+      // sources
     );
 
     return new Response(stream);

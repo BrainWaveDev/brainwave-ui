@@ -80,11 +80,13 @@ export const OpenAIStream = async (
           const data = event.data;
 
           if (data === '[DONE]') {
+            /* TODO: Implement new and better way to return document sources
             if (sources) {
               // Add system prompt at the final parser message
               const queue = encoder.encode(sources);
               controller.enqueue(queue);
             }
+             */
             controller.close();
             return;
           }
