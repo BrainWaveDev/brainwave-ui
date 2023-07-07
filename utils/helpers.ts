@@ -71,3 +71,28 @@ export function throttle<T extends (...args: any[]) => any>(
     }
   }) as T;
 }
+
+
+export function isPathIncluded(path: string, pathArray: string[]): boolean {
+  for (let i = 0; i < pathArray.length; i++) {
+      let pathElement = pathArray[i];
+
+      // Attempt to create a RegExp object from the string
+      try {
+          let regex = new RegExp(pathElement);
+
+          // If the creation succeeds, test the path against the regex
+          if (regex.test(path)) {
+              return true;
+          }
+      } catch (e) {
+          // If the creation fails, the string is not a regex, so compare it to the path
+          if (pathElement === path) {
+              return true;
+          }
+      }
+  }
+
+  // If no match was found, return false
+  return false;
+}
