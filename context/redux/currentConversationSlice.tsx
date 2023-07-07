@@ -290,8 +290,9 @@ export const thunkStreamingResponse =
         jwt: session?.access_token,
         messages: messages,
         model: conversation.model,
-        search_space: search_space
-      })
+        search_space: search_space,
+        promptId: conversation.promptId
+      } as RequestBody)
     });
 
     if (!response.ok || !response.body) {

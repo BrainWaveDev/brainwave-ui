@@ -20,6 +20,7 @@ import {
 import { AnimatePresence } from 'framer-motion';
 import { useAppDispatch } from '../../../context/redux/store';
 import ErrorAlert from '@/components/ui/ErrorAlert';
+import { getCurrentConversationFromStore } from '../../../context/redux/currentConversationSlice';
 
 interface Props extends PropsWithChildren {
   meta?: PageMeta;
@@ -38,6 +39,7 @@ export default function Layout({ children, meta: pageMeta }: Props) {
   };
 
   // ======= Redux State =======
+  const { conversation } = getCurrentConversationFromStore();
   const { documentFilterOpen } = getModalStateFromStorage();
   const { errors } = getErrorsFromLocalStorage();
   const dispatch = useAppDispatch();
@@ -72,6 +74,11 @@ export default function Layout({ children, meta: pageMeta }: Props) {
     'overflow-y-scroll overflow-x-clip',
     'scrollbar-hide'
   );
+
+  const displayDocumentFilter =
+    router.pathname === '/' &&
+    conversation?.promptId !== undefined &&
+    documentFilterOpen;
 
   // ===== Remove any errors that appear on the first page load =====
   useEffect(() => {
@@ -114,9 +121,7 @@ export default function Layout({ children, meta: pageMeta }: Props) {
             <div className={mainContentClasses}>{children}</div>
           </>
         )}
-        {!pageLoading && router.pathname === '/' && documentFilterOpen && (
-          <DocumentFilter />
-        )}
+        {!pageLoading && displayDocumentFilter && <DocumentFilter />}
       </main>
       <div
         // Display list of errors
