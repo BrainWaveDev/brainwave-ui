@@ -9,29 +9,31 @@ export const inDevEnv = process.env.ENVIRONMENT
 
 const withAllowTestUser: MiddlewareFactory = (next: NextMiddleware, context:MiddlewareContext) => {
   return async (req: NextRequest, _next: NextFetchEvent) => {
-    if(!context.supabase) throw new Error("supabase client not initialized");
-    const supabase = context.supabase;
+    if(!context.supabaseMiddelwareClient) throw new Error("supabase client not initialized");
+    const supabase = context.supabaseMiddelwareClient;
     const {
       data: { session }
     } = await supabase.auth.getSession();
-
-    // Check auth condition
-    if (inDevEnv && session && testUsers.includes(session.user.id)) {
-      // Allow sign in for test users
-      return next(req, _next);
+    // Redirect URL
+    const redirectUrl = req.nextUrl.clone();
+    redirectUrl.pathname = '/signin';
+  
+    // TODO: Remove this
+    console.log('session', session);
+  
+    if (inDevEnv) {
+      if (session) return next(req, _next);
+      else return NextResponse.redirect(redirectUrl);
     } else {
-      // Not a test, sign out a user redirect to sign in page
-      // await supabase.auth.signOut();
-      const redirectUrl = req.nextUrl.clone();
-      redirectUrl.pathname = '/signin';
-      return NextResponse.redirect(redirectUrl);
+      if (session && testUsers.includes(session.user.id)) return next(req, _next);
+      else return NextResponse.redirect(redirectUrl);
     }
   };
 };
 
 const allowTestUserMiddleware = {
   middleware: withAllowTestUser,
-  path: ['/','/chat']
+  path: ['/((?!|terms-of-service|_next/static|_next/image|favicon.ico).*)']
 };
 
 export default allowTestUserMiddleware;

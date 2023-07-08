@@ -1,9 +1,9 @@
 import { NextMiddleware, NextRequest, NextResponse } from "next/server";
-import { Middleware, MiddlewareContext, MiddlewareFactory } from "./types";
+import { Middleware, MiddlewareContext } from "./types";
 import { createMiddlewareSupabaseClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/types/supabase";
 import { isPathIncluded } from "@/utils/helpers";
-
+import { HTTPError } from "@/utils/server/error";
 
 
 
@@ -12,7 +12,7 @@ export function stackMiddlewares(
   postfunctions: Middleware[] = [],
 ): NextMiddleware {
   const context: MiddlewareContext = {
-    supabase: null,
+    supabaseMiddelwareClient: null,
     res: null,
   }
 
@@ -30,6 +30,8 @@ export function stackMiddlewares(
 
   return async (req, event) => {
 
+    try {
+
     // pre-responses middleware
     const pre = stackMiddlewareHelper(prefunctions,req);
     const preRes = await pre(req, event)
@@ -38,12 +40,21 @@ export function stackMiddlewares(
     // response from actual endpoint
     const res = await NextResponse.next();
     context.res = res;
-    context.supabase = createMiddlewareSupabaseClient<Database>({ req, res });
+    context.supabaseMiddelwareClient = createMiddlewareSupabaseClient<Database>({ req, res });
 
     // post-responses middleware
     const post = stackMiddlewareHelper(postfunctions,req);
     const postRes = await post(req, event)
     if (postRes) return postRes;
     return res;
+    } catch (error) {
+      if(typeof error === "string") {
+        return NextResponse.error();
+      }
+      if(error instanceof HTTPError) {
+        return NextResponse.json(error.message, { status: error.status });
+      }
+      throw error;
+    }
   };
 }

@@ -1,14 +1,14 @@
+import { Session } from '@supabase/auth-helpers-react';
 import { Message, RequestBody, RequestMatchDocumentChunks } from '@/types/chat';
 import { formatPrompt, defaultPrompt, fetchPrompts } from '@/utils/app/prompts';
-import { OpenAIError, OpenAIStream } from '@/utils/server';
+import { OpenAIError, OpenAIStream, supabaseServerclient } from '@/utils/server';
 import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json';
 import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
 // @ts-expect-error
 import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module';
 import GPT3Tokenizer from 'gpt3-tokenizer';
-import { createClient } from '@supabase/supabase-js';
 import { Prompt } from '@/types/prompt';
-import { Database } from '@/types/supabase';
+import { ratelimitWrapper } from '@/utils/server/apiwrapper/ratelimiter';
 
 export const config = {
   runtime: 'edge'
@@ -35,11 +35,12 @@ const handler = async (req: Request): Promise<Response> => {
     if (!jwt) throw new Error('Missing access token in request data');
     if (!userQuestion) throw new Error('Missing query in request data');
 
-    const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey);
+    const supabase = supabaseServerclient;
 
     const {
       data: { user }
     } = await supabase.auth.getUser(jwt);
+
     if (!user)
       return new Response('Error', {
         status: 401,
@@ -114,8 +115,6 @@ const handler = async (req: Request): Promise<Response> => {
     let tokenCount = 0;
     let contextText = '';
     let sourceKey = 1;
-    let sources =
-      documentChunks.length > 0 ? `\n\n<h3>Sources</h3>` : undefined;
 
     const iterator = contentByDocument.keys();
     for (const documentName of iterator) {
@@ -210,4 +209,4 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-export default handler;
+export default ratelimitWrapper(handler);
