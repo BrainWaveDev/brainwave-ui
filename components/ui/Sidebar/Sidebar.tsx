@@ -93,7 +93,7 @@ export default function Sidebar() {
     return [
       {
         name: 'Chat',
-        href: '/',
+        href: '/chat',
         icon: ChatBubbleLeftIcon
       },
       {
@@ -128,7 +128,7 @@ export default function Sidebar() {
   const handleCreateConversation = async () => {
     if (!sideBarOpen) onToggleSidebar();
     // Switch to chat page
-    if (router.pathname !== '/') router.push('/');
+    if (router.pathname !== '/chat') router.push('/chat');
     // Create a new conversation
     dispatch(optimisticConversationsActions.createConversation());
     // Open the chat list

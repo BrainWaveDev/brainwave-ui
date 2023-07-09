@@ -15,7 +15,7 @@ const SignIn = () => {
   const user = useUser();
   const supabaseClient = useSupabaseClient();
   useEffect(() => {
-    if (user) router.replace('/');
+    if (user) router.replace('/chat');
   }, [user]);
 
   // === Detect theme ===
