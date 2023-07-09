@@ -1,4 +1,3 @@
-import { Session } from '@supabase/auth-helpers-react';
 import { Message, RequestBody, RequestMatchDocumentChunks } from '@/types/chat';
 import { formatPrompt, defaultPrompt, fetchPrompts } from '@/utils/app/prompts';
 import { OpenAIError, OpenAIStream, supabaseServerclient } from '@/utils/server';
@@ -8,7 +7,6 @@ import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
 import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module';
 import GPT3Tokenizer from 'gpt3-tokenizer';
 import { Prompt } from '@/types/prompt';
-import { ratelimitWrapper } from '@/utils/server/apiwrapper/ratelimiter';
 
 export const config = {
   runtime: 'edge'
@@ -209,4 +207,4 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-export default ratelimitWrapper(handler);
+export default handler;

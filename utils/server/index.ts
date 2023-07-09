@@ -8,7 +8,6 @@ import {
 import { OPENAI_API_HOST } from '../app/prompts';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
-import {createClient as createRedisClient} from 'redis';
 
 export class OpenAIError extends Error {
   type: string;
@@ -122,20 +121,3 @@ export const supabaseServerclient = createClient<Database>(
 if (!supabaseServerclient) {
   throw new Error('No Supabase server client');
 }
-
-export const redis = createRedisClient({
-  password: process.env.REDIS_PASSWORD,
-  socket: {
-      host: process.env.REDIS_HOST,
-      port: parseInt(process.env.REDIS_PORT || '12155')
-  }
-});
-
-if (!redis) {
-  console.log("No Redis client");
-  throw new Error('No Redis client');
-}
-
-redis.connect().catch((err) => {
-  console.log("Redis connection error: " + err);
-});
