@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import React, { memo } from 'react';
 import { Disclosure, Transition } from '@headlessui/react';
 
-// TODO: Add real FAQs
 const FAQs = [
   {
     question: 'What is BrainWave?',
@@ -106,9 +105,13 @@ const Item = memo(({ title, content }: { title: string; content: string }) => {
             )}
           >
             <div className={classNames(PlusIcon, open && 'after:rotate-90')} />
-            <div className={'text-neutral7 dark:text-white font-semibold'}>
+            <p
+              className={
+                'text-neutral7 dark:text-white font-semibold text-left'
+              }
+            >
               {title}
-            </div>
+            </p>
           </Disclosure.Button>
           <Transition
             enter="transition duration-100 ease-out"
