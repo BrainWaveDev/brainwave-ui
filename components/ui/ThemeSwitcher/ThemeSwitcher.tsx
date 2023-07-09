@@ -1,4 +1,3 @@
-'use client';
 import classNames from 'classnames';
 import Sun from '@/components/icons/Sun';
 import HalfMoon from '@/components/icons/HalfMoon';
