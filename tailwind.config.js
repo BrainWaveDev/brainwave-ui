@@ -22,8 +22,7 @@ module.exports = {
     'components/ui/**/*.{ts,tsx}',
     'pages/**/*.{ts,tsx}',
     './public/**/*.html',
-    './node_modules/flowbite-react/**/*.js',
-    './App.jsx'
+    './node_modules/flowbite-react/**/*.js'
   ],
   theme: {
     extend: {
