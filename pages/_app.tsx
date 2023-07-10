@@ -12,8 +12,9 @@ import 'styles/chrome-bug.css';
 import TopLoader from '@/components/ui/TopLoader';
 import { useRouter } from 'next/router';
 import { use100vh } from 'react-div-100vh';
+import classNames from 'classnames';
 
-export const staticPages = ['/signin'];
+export const pagesWithLayout = ['/chat', '/files', '/faq'];
 
 export default function MyApp({ Component, ...rest }: AppProps) {
   const { store, props } = wrapper.useWrappedStore(rest);
@@ -24,8 +25,8 @@ export default function MyApp({ Component, ...rest }: AppProps) {
   // ======= Router =======
   const router = useRouter();
 
-  // ====== Determine if the page is static ======
-  const isStaticPage = staticPages.includes(router.pathname);
+  // ====== Determine if the page needs layout ======
+  const renderLayout = pagesWithLayout.includes(router.pathname);
 
   // ==== Adjust the page height ====
   const height = use100vh();
@@ -33,29 +34,41 @@ export default function MyApp({ Component, ...rest }: AppProps) {
   // ====== Apply styling to the sign in page ======
   useEffect(() => {
     document.body.classList?.remove('loading');
-
-    if (router.pathname === '/signin') {
+    // Render page layout
+    if (pagesWithLayout.includes(router.pathname)) {
+      document.body.classList?.add('page');
+    } else {
       document.body.classList?.remove('page');
+    }
+    // Render layout for sign in page
+    if (router.pathname === '/signin') {
       document.body.classList?.add('signInPage');
     } else {
       document.body.classList?.remove('signInPage');
-      document.body.classList?.add('page');
     }
   }, [router.pathname]);
 
   return (
     <div
-      className={'w-full flex flex-row'}
+      className={classNames(
+        'w-full flex flex-row',
+        !renderLayout && 'justify-center items-center'
+      )}
       style={{
         height: `${height}px`
       }}
     >
+      {!pagesWithLayout.includes(router.pathname) &&
+        router.pathname !== '/signin' && (
+          <style
+          // Use inline styles to override the global styles for the error page
+          >{`body{background:rgb(24 24 27) !important;}`}</style>
+        )}
+
       <SessionContextProvider supabaseClient={supabaseClient}>
         <MyUserContextProvider>
           <Provider store={store}>
-            {isStaticPage ? (
-              <Component {...props.pageProps} />
-            ) : (
+            {renderLayout ? (
               <>
                 <TopLoader
                   showSpinner={false}
@@ -66,6 +79,8 @@ export default function MyApp({ Component, ...rest }: AppProps) {
                   <Component {...props.pageProps} />
                 </Layout>
               </>
+            ) : (
+              <Component {...props.pageProps} />
             )}
           </Provider>
         </MyUserContextProvider>
