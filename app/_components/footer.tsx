@@ -23,13 +23,13 @@ export default function Footer() {
         </p>
         <div className="mt-16 flex items-center justify-center space-x-4 text-sm font-semibold leading-6 text-neutral4">
           <Link
-            href="/terms-of-use"
+            href="/terms-of-service"
             className={classNames(
               'hover:text-neutral1 active:text-neutral1',
               'transition-all duration-300'
             )}
           >
-            Terms of Use
+            Terms of Service
           </Link>
           <div className="h-4 w-px bg-neutral1/10"></div>
           <Link
