@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import conversationsSlice, {
   optimisticConversationsActions
 } from './conversationsSlice';
-import thunkMiddleware, { ThunkAction } from 'redux-thunk';
+import { ThunkAction } from 'redux-thunk';
 import documentSlice, { optimisticDocumentActions } from './documentSlice';
 import currentConversationSlice from './currentConversationSlice';
 import searchSpaceSlice, { selectAllSearchSpace } from './searchSpaceSlice';
@@ -52,9 +52,7 @@ const reducer = (state: any, action: any): CombinedReducerState => {
 
 export const store = () =>
   configureStore({
-    reducer,
-    middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(thunkMiddleware)
+    reducer
   });
 
 export type AppStore = ReturnType<typeof store>;

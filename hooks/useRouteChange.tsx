@@ -17,7 +17,7 @@ export default function useRouteChange() {
       setLoadingPage(true);
       // Clear current selected conversation
       // if switching away from main page
-      if (!url.includes('/')) {
+      if (!url.includes('/chat')) {
         dispatch(clearSelectedConversation());
       }
     };

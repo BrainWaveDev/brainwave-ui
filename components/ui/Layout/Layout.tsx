@@ -63,7 +63,7 @@ export default function Layout({ children, meta: pageMeta }: Props) {
   const mainClasses = classNames(
     'scrollbar-hide',
     'sm:!h-[calc(100vh_-_3rem)]',
-    router.pathname === '/' &&
+    router.pathname === '/chat' &&
       documentFilterOpen &&
       'pr-0 lg:pr-[20rem] xl:pr-[22.5rem]'
   );
@@ -76,7 +76,7 @@ export default function Layout({ children, meta: pageMeta }: Props) {
   );
 
   const displayDocumentFilter =
-    router.pathname === '/' &&
+    router.pathname === '/chat' &&
     conversation?.promptId !== undefined &&
     documentFilterOpen;
 

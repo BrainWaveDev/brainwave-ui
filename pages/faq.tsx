@@ -2,17 +2,48 @@ import classNames from 'classnames';
 import React, { memo } from 'react';
 import { Disclosure, Transition } from '@headlessui/react';
 
-// TODO: Add real FAQs
 const FAQs = [
   {
-    question: 'What is Brainwave?',
+    question: 'What is BrainWave?',
     answer:
-      'Brainwave is a platform that allows you to connect with other people and share your thoughts and ideas with them. You can also create your own groups and invite people to join them.'
+      "BrainWave is a platform that utilizes cutting-edge AI technology known as retrieval augmented generation (RAG) to generate content based on user's knowledge base."
   },
   {
-    question: 'How do I create a group?',
+    question: 'Are the files I upload to BrainWave safe?',
     answer:
-      'To create a group, you need to go to the Groups page and click on the Create Group button. You will then be asked to enter the name of your group and a description for it. After that, you will be able to invite people to join your group.'
+      'Yes, BrainWave stores your files in a secure cloud storage that is not shared with anyone and relies on secure services provided by OpenAI to generate responses.'
+  },
+  {
+    question: 'What is BrainBot?',
+    answer:
+      "BrainBot is a chatbot that utilizes BrainWave's AI technology to answer questions based on your knowledge base."
+  },
+  {
+    question: 'How does BrainBot work?',
+    answer:
+      'BrainBot creates a semantic search index of your uploaded files and uses that to retrieve information from your documents most relevant to the question. It then utilizes OpenAI ChatGPT model to generate a response based on the retrieved information.'
+  },
+  {
+    question: 'Can I ask questions about multiple documents at once?',
+    answer:
+      'Yes, you can ask questions about multiple documents at once. BrainBot will retrieve information from the selected documents and generate a response based on the retrieved information.'
+  },
+  {
+    question: 'What document formats does BrainWave support?',
+    answer:
+      'BrainWave can accept and parse TXT, PDF, DOCX and HTML files. We are working on adding support for more file formats.'
+  },
+  {
+    question: 'How does BrainBot read information from my documents?',
+    answer:
+      'After uploading your files, BrainWave parses file content by reading the textual content of the file and then breaks it down into chunks of text.' +
+      'These chunks are then converted into vectors and uploaded to the cloud storage. ' +
+      'Once the file is fully parsed, BrainBot is able to retrieve most relevant chunks to generate a response.'
+  },
+  {
+    question: 'Does BrainWave support data sources other than files?',
+    answer:
+      'Currently, BrainWave only supports files as data sources. We are working on adding support for more data sources like Google Docs, Notion, YouTube, and Web Pages.'
   }
 ];
 
@@ -22,7 +53,12 @@ const FAQ = () => {
       <div className="max-w-[58.5rem] mx-auto">
         <div className="flex flex-col w-full">
           <div className="mb-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-left mb-4 md:pr-16">
+            <h1
+              className={classNames(
+                'text-4xl md:text-5xl font-bold',
+                'text-left mb-4 md:pr-16 text-neutral7 dark:text-neutral1'
+              )}
+            >
               FAQ
             </h1>
             <h3 className={'text-2xl mb-12 text-neutral4 md:mb-6 font-light'}>
@@ -69,9 +105,13 @@ const Item = memo(({ title, content }: { title: string; content: string }) => {
             )}
           >
             <div className={classNames(PlusIcon, open && 'after:rotate-90')} />
-            <div className={'text-neutral7 dark:text-white font-semibold'}>
+            <p
+              className={
+                'text-neutral7 dark:text-white font-semibold text-left'
+              }
+            >
               {title}
-            </div>
+            </p>
           </Disclosure.Button>
           <Transition
             enter="transition duration-100 ease-out"

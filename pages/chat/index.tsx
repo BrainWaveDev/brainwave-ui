@@ -1,13 +1,23 @@
 import Chat from '@/components/Chat/Chat';
 import Head from 'next/head';
 import { useEffect } from 'react';
-import { initStore } from 'context/redux/store';
+import { initStore, useAppDispatch } from 'context/redux/store';
 import { Conversation } from '@/types/chat';
 import { cleanConversationHistory } from '@/utils/app/clean';
 import { setConversations } from 'context/redux/conversationsSlice';
 import { removeAll } from '@/utils/app/localcache';
+import PromptSelector from '@/components/ui/PromptSelector';
+import {
+  clearSelectedConversation,
+  getCurrentConversationFromStore
+} from 'context/redux/currentConversationSlice';
 
 const ChatUI = () => {
+  // ========= Redux State =========
+  const dispatch = useAppDispatch();
+  const { conversation: currentConversation } =
+    getCurrentConversationFromStore();
+
   // ========= Initialize Conversations in the Local Storage =========
   // TODO: Use Redux Persist to store conversations state in the local storage
   useEffect(() => {
@@ -23,7 +33,16 @@ const ChatUI = () => {
 
     // Clear conversations from local storage on page load
     removeAll('conversation');
-  }, []);
+
+    // Clear currently selected conversation on component unmount
+    return () => {
+      dispatch(clearSelectedConversation());
+    };
+  }, [dispatch]);
+
+  // ===== Render prompt selector if no conversation is selected =====
+  const renderPromptSelector =
+    !currentConversation || !currentConversation.promptId;
 
   return (
     <>
@@ -36,7 +55,7 @@ const ChatUI = () => {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Chat />
+      {renderPromptSelector ? <PromptSelector /> : <Chat />}
     </>
   );
 };

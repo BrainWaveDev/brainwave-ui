@@ -8,7 +8,7 @@ interface ModalState {
 }
 
 const initialState: ModalState = {
-  sideBarOpen: true,
+  sideBarOpen: false,
   settingDialogOpen: false,
   documentFilterOpen: false
 };
@@ -29,19 +29,12 @@ const modalSlice = createSlice({
     initSidebar: (state) => {
       // Extra check to make sure that we don't run this code on the server
       if (typeof window === 'undefined') return state;
-
-      const sidebarOpen = localStorage.getItem('sidebarOpen');
-      if (sidebarOpen !== null) {
-        return {
-          ...initialState,
-          open: sidebarOpen === 'true'
-        };
-      } else {
-        localStorage.setItem('sidebarOpen', 'true');
-        return {
-          ...initialState,
-          open: true
-        };
+      else {
+        if (window.innerWidth >= 640)
+          return {
+            ...initialState,
+            sideBarOpen: true
+          };
       }
     },
     openSettingDialog: (state) => {

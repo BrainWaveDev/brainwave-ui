@@ -13,7 +13,7 @@ import { getCurrentConversationFromStore } from '../../../context/redux/currentC
 // Selects appropriate header tag based on the page
 const HeaderTag = (pathname: string) => {
   switch (pathname) {
-    case '/':
+    case '/chat':
       return 'Chat';
     case '/files':
       return 'Files';
@@ -43,11 +43,12 @@ export default memo(function Header() {
   // ==============================
   // Styling
   // ==============================
-  const applyChatStyling =
-    (router.pathname !== '/' && router.pathname !== '/faq') ||
-    currentConversation?.promptId !== undefined;
+  const renderHeader =
+    (router.pathname === '/chat' &&
+      currentConversation?.promptId !== undefined) ||
+    router.pathname === '/files';
   const renderDocumentFilter =
-    router.pathname === '/' && currentConversation?.promptId !== undefined;
+    router.pathname === '/chat' && currentConversation?.promptId !== undefined;
   const sideBarSpanClass = classNames(
     'w-5 h-0.5 my-0.5 bg-neutral7 dark:bg-neutral4',
     'rounded-full transition-all',
@@ -73,8 +74,8 @@ export default memo(function Header() {
       <header
         className={classNames(
           'flex flex-row items-center justify-between min-h-[4.5rem] h-[4.5rem] py-3',
-          applyChatStyling && `${!sideBarOpen && 'border-b'} sm:border-b`,
-          !sideBarOpen && applyChatStyling && 'border-b',
+          renderHeader && `${!sideBarOpen && 'border-b'} sm:border-b`,
+          !sideBarOpen && renderHeader && 'border-b',
           'border-gray-200 dark:border-zinc-700',
           // Apply bottom shadow only on the files page
           router.pathname === '/files' && headerShadow,
@@ -84,13 +85,13 @@ export default memo(function Header() {
           'sm:z-20'
         )}
       >
-        {applyChatStyling && (
+        {renderHeader && (
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             {HeaderTag(router.pathname)}
           </h1>
         )}
-        {/* Sidebar opening button on mobile screens*/}
         <button
+          // Sidebar opening button on mobile screens
           className={`flex sm:hidden absolute shrink-0 flex-col items-start justify-center w-9 h-9 overflow-visible ${
             sideBarOpen ? 'right-[calc((100vw_-_22rem)/2)]' : 'right-4'
           } xs:right-6 transition-all duration-300 focus:outline-0 focus:!ring-0 group`}

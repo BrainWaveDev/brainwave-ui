@@ -35,7 +35,7 @@ export const ConversationComponent: FC<Props> = memo(
 
     // ===== Conversation Highlighting =====
     const router = useRouter();
-    const isSelected = current && router.pathname === '/';
+    const isSelected = current && router.pathname === '/chat';
 
     // =======================
     // Local state
@@ -55,7 +55,7 @@ export const ConversationComponent: FC<Props> = memo(
     // Handlers
     // =======================
     const handleSelectConversation = async () => {
-      if (router.pathname !== '/') await router.push('/');
+      if (router.pathname !== '/chat') await router.push('/chat');
       if (!sideBarOpen) openSidebar();
       await dispatch(
         optimisticCurrentConversationAction.retrieveAndSelectConversation(

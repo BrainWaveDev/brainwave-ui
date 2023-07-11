@@ -28,6 +28,7 @@ html {
     box-sizing: border-box;
     touch-action: manipulation;
     font-feature-settings: 'case' 1, 'rlig' 1, 'calt' 0;
+    scroll-behavior: smooth;
 }
 
 html,
@@ -46,8 +47,10 @@ body {
     margin: 0;
 }
 
-a {
+a, button {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    /* Disable default link highlights on click */
+    @apply outline-none ring-0;
 }
 
 .page {
@@ -72,6 +75,11 @@ a {
 input:-webkit-autofill,
 input:-webkit-autofill:focus {
     transition: background-color 600000s 0s, color 600000s 0s;
+}
+
+/* Special class for apply branded text gradient */
+.text-main-gradient {
+   @apply bg-clip-text text-transparent bg-main-gradient;
 }
 
 /* Authentication component styling */
@@ -115,4 +123,227 @@ input:-webkit-autofill:focus {
 .supabase-auth-ui_ui-anchor {
     @apply !text-zinc-500 hover:!text-zinc-900 active:!text-zinc-900 !transition-all !duration-300;
     @apply dark:hover:!text-zinc-100 dark:active:!text-zinc-100;
+}
+
+/* Additional classes for the pages in the App directory */
+.aiu {
+    --tw-bg-opacity: 1;
+    /*background-color: rgb(52, 69, 138);*/
+    @apply bg-zinc-900;
+/*  / var(--tw-bg-opacity)  */
+}
+
+.bew {
+    -webkit-mask-image: radial-gradient(100% 100% at top right, white, transparent);
+    mask-image: radial-gradient(100% 100% at top right, white, transparent);
+}
+
+.ct {
+    left: calc(50% - 4rem);
+}
+
+.dl {
+    top: 2.5rem;
+}
+
+.dy {
+    z-index: -10;
+}
+
+.xd {
+    transform: translate3d(var(--tw-translate-x), var(--tw-translate-y), 0) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.bdu {
+    --tw-blur: blur(64px);
+    filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+
+.btb {
+    left: calc(50% - 18rem);
+}
+
+.cqr {
+    left: 12rem;
+}
+
+.crh {
+    top: calc(50% - 30rem);
+}
+
+.dgs {
+    left: calc(50% - 24rem);
+}
+
+.mb {
+    aspect-ratio: 1108/632;
+}
+
+.sx {
+    width: 69.25rem;
+}
+
+.ami {
+    background-image: linear-gradient(to right, var(--tw-gradient-stops));
+}
+
+.amm {
+    --tw-gradient-from: #5B76FF var(--tw-gradient-from-position);
+    --tw-gradient-from-position:  ;
+    --tw-gradient-to: #00E96B var(--tw-gradient-from-position);
+    --tw-gradient-to-position:  ;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.anl {
+    --tw-gradient-to: #00E96B var(--tw-gradient-to-position);
+}
+
+.bau {
+    opacity: 0.2;
+}
+
+.gs {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.tv {
+    max-width: 80rem;
+}
+
+.arf {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+.auj {
+    padding-top: 2.5rem;
+}
+
+.cfv {
+    padding-bottom: 8rem;
+}
+
+.cut {
+    display: flex;
+}
+
+.ddc {
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+.ddk {
+    padding-top: 10rem;
+    padding-bottom: 10rem;
+}
+
+.alj {
+    --tw-bg-opacity: 1;
+    background-color: rgb(255 255 255 / var(--tw-bg-opacity));
+}
+
+.arf {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+.ars {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+
+.cff {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+}
+
+.ddc {
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+.asr {
+    padding-bottom: 1.5rem;
+}
+
+.avv {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.awk {
+    line-height: 1.5rem;
+}
+
+.bkw:hover {
+    --tw-text-opacity: 1;
+    color: rgb(17 24 39 / var(--tw-text-opacity));
+}
+
+.kr {
+    margin-top: 2.5rem;
+}
+
+.ls {
+    display: flex;
+}
+
+.yz {
+    justify-content: center;
+}
+
+.aaz > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-x-reverse: 0;
+    margin-right: calc(2.5rem * var(--tw-space-x-reverse));
+    margin-left: calc(2.5rem * calc(1 - var(--tw-space-x-reverse)));
+}
+
+.axk {
+    --tw-text-opacity: 1;
+    color: rgb(156 163 175 / var(--tw-text-opacity));
+}
+
+.bks:hover {
+    --tw-text-opacity: 1;
+    color: rgb(107 114 128 / var(--tw-text-opacity));
+}
+
+.nx {
+    height: 1.5rem;
+}
+
+.rz {
+    width: 1.5rem;
+}
+
+.t {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.avg {
+    text-align: center;
+}
+
+.avx {
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
+.awj {
+    line-height: 1.25rem;
+}
+
+.axm {
+    --tw-text-opacity: 1;
+    color: rgb(107 114 128 / var(--tw-text-opacity));
 }
