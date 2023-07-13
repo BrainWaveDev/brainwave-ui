@@ -18,6 +18,15 @@ import {
   SummaryOfKeyPoints
 } from '../../_lib/constants';
 import classNames from 'classnames';
+import { Metadata } from 'next';
+import { getURL } from '@/utils/helpers';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  alternates: {
+    canonical: `${getURL()}privacy-policy`
+  }
+};
 
 export default function PrivacyPolicy() {
   return (

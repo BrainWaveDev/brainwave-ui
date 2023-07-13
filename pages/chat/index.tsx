@@ -11,6 +11,8 @@ import {
   clearSelectedConversation,
   getCurrentConversationFromStore
 } from 'context/redux/currentConversationSlice';
+import { NextSeo } from 'next-seo';
+import { getURL } from '@/utils/helpers';
 
 const ChatUI = () => {
   // ========= Redux State =========
@@ -46,15 +48,7 @@ const ChatUI = () => {
 
   return (
     <>
-      <Head>
-        <title>BrainBot</title>
-        <meta name="description" content="ChatGPT but better." />
-        <meta
-          name="viewport"
-          content="height=device-height ,width=device-width, initial-scale=1, user-scalable=no"
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      <NextSeo canonical={`${getURL()}chat`} />
       {renderPromptSelector ? <PromptSelector /> : <Chat />}
     </>
   );

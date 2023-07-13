@@ -26,9 +26,18 @@ class MyDocument extends Document {
           <link rel="manifest" href="/site.webmanifest" />
           <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5" />
           <meta name="msapplication-TileColor" content="#da532c" />
-          <meta name="theme-color" content="#ffffff" />
+          <meta
+            name="theme-color"
+            media="(prefers-color-scheme: light)"
+            content="#FFFFFF"
+          />
+          <meta
+            name="theme-color"
+            media="(prefers-color-scheme: dark)"
+            content="#141718"
+          />
         </Head>
-        <body className="loading h-full page">
+        <body className="loading h-full">
           <Main />
           <NextScript />
         </body>

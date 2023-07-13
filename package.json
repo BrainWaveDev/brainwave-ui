@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next",
     "build": "next build",
+    "postbuild": "next-sitemap",
     "start": "next start -H 0.0.0.0 -p ${PORT:-8080}",
     "stripe:listen": "stripe listen --forward-to=localhost:3000/api/webhooks --project-name=saas-starter"
   },
@@ -47,6 +48,8 @@
     "next": "^13.4.9",
     "next-i18next": "^13.2.2",
     "next-redux-wrapper": "^8.1.0",
+    "next-seo": "^6.1.0",
+    "next-sitemap": "^4.1.8",
     "npm": "^9.6.6",
     "nprogress": "^0.2.0",
     "openai": "^3.2.1",
