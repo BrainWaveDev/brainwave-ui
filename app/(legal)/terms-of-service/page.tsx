@@ -1,4 +1,4 @@
-import ListSection from './listSection';
+import ListSection from '../../_components/listSection';
 import {
   ServiceAvailabilityAndQuality,
   AgeRequirements,
