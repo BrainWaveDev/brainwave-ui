@@ -46,7 +46,7 @@ const SignIn = () => {
                 <Auth
                   supabaseClient={supabaseClient}
                   providers={['google', 'github']}
-                  redirectTo={getURL()}
+                  redirectTo={`${getURL()}/chat`}
                   magicLink={true}
                   appearance={{
                     theme: ThemeSupa,
