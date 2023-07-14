@@ -5,7 +5,7 @@ import classNames from 'classnames';
 import React, { useState, useCallback } from 'react';
 import FilePreview from '@/components/ui/FileInput/FilePreview';
 import classes from './FileInput.module.css';
-import { FileInfo, UploadState } from '../../../lib/classes';
+import { FileInfo, UploadState } from '@/types/files';
 // @ts-ignore
 import { AnimatePresence, isDragActive, motion } from 'framer-motion';
 import { supabase } from '@/utils/supabase-client';
