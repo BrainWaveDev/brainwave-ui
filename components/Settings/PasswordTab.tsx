@@ -81,14 +81,17 @@ const PasswordTab = memo(
     };
 
     // ==== Tailwind Classes ====
-    const InputClasses = (field: string) =>
+    const InputClasses = (field: string, passwordMismatch: boolean = false) =>
       classNames(
-        'w-full h-13 px-3.5 border-0 text-base',
+        'w-full h-13 px-3.5 border-2 text-base',
         'text-neutral7 outline-none transition-all duration-300 placeholder:text-neutral4/50',
         field.length > 0 ? 'bg-transparent' : 'bg-neutral2 dark:bg-neutral6',
-        'focus:bg-transparent dark:text-neutral3 overflow-hidden rounded-lg',
+        'focus:bg-transparent dark:text-neutral3 overflow-hidden rounded-[0.625rem]',
         'pl-[3.125rem] font-semibold focus:ring-0 focus:outline-0',
-        'border-2 border-neutral2 dark:border-neutral6 focus:border-transparent'
+        passwordMismatch
+          ? 'border-red-500'
+          : 'border-neutral2 dark:border-neutral6',
+        'focus:border-transparent dark:focus:border-transparent'
       );
 
     const IconClasses = (field: string) =>
@@ -158,7 +161,7 @@ const PasswordTab = memo(
           </p>
           <div
             className={classNames(
-              'border rounded-xl relative mb-2',
+              'border rounded-xl relative mb-2 overflow-hidden',
               passwordMismatch
                 ? 'border-red-500'
                 : 'border-neutral2 dark:border-neutral6'
@@ -166,7 +169,7 @@ const PasswordTab = memo(
           >
             <input
               type="password"
-              className={InputClasses(confirmNewPassword)}
+              className={InputClasses(confirmNewPassword, passwordMismatch)}
               placeholder={'New password'}
               value={confirmNewPassword}
               onChange={(e) => {
