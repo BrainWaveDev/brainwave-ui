@@ -147,7 +147,7 @@ const ProfileTab = ({
     }
     if (emailUpdateSuccess && emailValid) {
       setEmailUpdate({
-        message: 'Confirmation email sent to new email address',
+        message: 'Confirmation email sent to old and new email address',
         error: false
       });
       await wait(4000);
