@@ -33,13 +33,13 @@ export default function Footer() {
           </Link>
           <div className="h-4 w-px bg-neutral1/10"></div>
           <Link
-            href="#"
+            href="/privacy-policy"
             className={classNames(
               'hover:text-neutral1 active:text-neutral1',
               'transition-all duration-300'
             )}
           >
-            Privacy policy
+            Privacy Policy
           </Link>
         </div>
       </div>

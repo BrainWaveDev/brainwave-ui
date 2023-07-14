@@ -1,12 +1,12 @@
 import { memo } from 'react';
 import classNames from 'classnames';
-import { SectionInfo } from '../../_lib/constants';
+import { SectionInfo } from '../_lib/constants';
 
 const ListSection = ({ info }: { info: SectionInfo }) => {
   const { header, items } = info;
   return (
-    <div className="lg:pr-4">
-      <h2 className="mt-4 text-2xl font-bold tracking-tight text-neutral1">
+    <div className="lg:pr-4" id={info.id ?? ''}>
+      <h2 className="mt-4 text-2xl font-bold tracking-tight text-gray-300">
         {header}
       </h2>
       {Array.isArray(items) ? (
@@ -24,19 +24,19 @@ const ListSection = ({ info }: { info: SectionInfo }) => {
         ) : (
           <>
             {items.map((item, index) => (
-              <p
+              <div
                 key={index}
                 className={`${
                   index === 0 ? 'mt-3' : 'mt-6'
                 } text-md leading-6 text-gray-400`}
               >
                 {item}
-              </p>
+              </div>
             ))}
           </>
         )
       ) : (
-        <p className="mt-3 text-md leading-6 text-gray-400">{items}</p>
+        <div className="mt-3 text-md leading-6 text-gray-400">{items}</div>
       )}
     </div>
   );

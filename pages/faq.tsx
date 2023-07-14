@@ -1,6 +1,8 @@
 import classNames from 'classnames';
 import React, { memo } from 'react';
 import { Disclosure, Transition } from '@headlessui/react';
+import { NextSeo } from 'next-seo';
+import { getURL } from '@/utils/helpers';
 
 const FAQs = [
   {
@@ -49,30 +51,37 @@ const FAQs = [
 
 const FAQ = () => {
   return (
-    <div className="px-10 sm:px-20 pb-20 md:pb-10">
-      <div className="max-w-[58.5rem] mx-auto">
-        <div className="flex flex-col w-full">
-          <div className="mb-4">
-            <h1
-              className={classNames(
-                'text-4xl md:text-5xl font-bold',
-                'text-left mb-4 md:pr-16 text-neutral7 dark:text-neutral1'
-              )}
-            >
-              FAQ
-            </h1>
-            <h3 className={'text-2xl mb-12 text-neutral4 md:mb-6 font-light'}>
-              Answers to most commonly asked questions.
-            </h3>
-          </div>
-          <div className="mx-auto w-full">
-            {FAQs.map((faq, index) => (
-              <Item key={index} title={faq.question} content={faq.answer} />
-            ))}
+    <>
+      <NextSeo
+        title="FAQ"
+        description="Answers to most commonly asked questions about BrainBot, how it works, and how to use it."
+        canonical={`${getURL()}faq`}
+      />
+      <div className="px-10 sm:px-20 pb-20 md:pb-10">
+        <div className="max-w-[58.5rem] mx-auto">
+          <div className="flex flex-col w-full">
+            <div className="mb-4">
+              <h1
+                className={classNames(
+                  'text-4xl md:text-5xl font-bold',
+                  'text-left mb-4 md:pr-16 text-neutral7 dark:text-neutral1'
+                )}
+              >
+                FAQ
+              </h1>
+              <h3 className={'text-2xl mb-12 text-neutral4 md:mb-6 font-light'}>
+                Answers to most commonly asked questions.
+              </h3>
+            </div>
+            <div className="mx-auto w-full">
+              {FAQs.map((faq, index) => (
+                <Item key={index} title={faq.question} content={faq.answer} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

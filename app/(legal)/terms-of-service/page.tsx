@@ -1,4 +1,4 @@
-import ListSection from './listSection';
+import ListSection from '../../_components/listSection';
 import {
   ServiceAvailabilityAndQuality,
   AgeRequirements,
@@ -14,6 +14,15 @@ import {
   GoverningLawAndDisputeResolution,
   DisclaimerOfWarranties
 } from '../../_lib/constants';
+import { Metadata } from 'next';
+import { getURL } from '@/utils/helpers';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  alternates: {
+    canonical: `${getURL()}terms-of-service`
+  }
+};
 
 export default function Page() {
   return (

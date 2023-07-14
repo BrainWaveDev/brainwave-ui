@@ -13,6 +13,9 @@ import TopLoader from '@/components/ui/TopLoader';
 import { useRouter } from 'next/router';
 import { use100vh } from 'react-div-100vh';
 import classNames from 'classnames';
+import SEO from '../next-seo.config';
+import { DefaultSeo, LogoJsonLd } from 'next-seo';
+import { getURL } from '@/utils/helpers';
 
 export const pagesWithLayout = ['/chat', '/files', '/faq'];
 
@@ -30,6 +33,9 @@ export default function MyApp({ Component, ...rest }: AppProps) {
 
   // ==== Adjust the page height ====
   const height = use100vh();
+
+  // ==== Base URL ====
+  const url = getURL();
 
   // ====== Apply styling to the sign in page ======
   useEffect(() => {
@@ -58,6 +64,8 @@ export default function MyApp({ Component, ...rest }: AppProps) {
         height: `${height}px`
       }}
     >
+      <DefaultSeo {...SEO} />
+      <LogoJsonLd logo={`${url}/brainwave_logo.svg`} url={url} />
       {!pagesWithLayout.includes(router.pathname) &&
         router.pathname !== '/signin' && (
           <style
