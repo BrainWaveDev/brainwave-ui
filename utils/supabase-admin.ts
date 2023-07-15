@@ -4,13 +4,13 @@ import { stripe } from './stripe';
 import { toDateTime } from './helpers';
 import type { Database } from 'types/supabase';
 import { GetServerSidePropsContext } from 'next';
-import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
+import { createPagesServerClient } from '@supabase/auth-helpers-nextjs';
 import { Price, Product } from '../types';
 
 // Note: supabaseAdmin uses the SERVICE_ROLE_KEY which you must only use in a secure server-side context
 // as it has admin privileges and overwrites RLS policies!
 const supabaseAdmin = createClient<Database>(
-  process.env.SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
@@ -182,7 +182,7 @@ const getDocumentListServerSideProps = async (
   context: GetServerSidePropsContext,
   additionalProps?: { [key: string]: any }
 ) => {
-  const supabase = createServerSupabaseClient<Database>(context);
+  const supabase = createPagesServerClient<Database>(context);
   const {
     data: { session }
   } = await supabase.auth.getSession();

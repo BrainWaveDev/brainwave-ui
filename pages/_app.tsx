@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AppProps } from 'next/app';
 import { Provider } from 'react-redux';
 import { SessionContextProvider } from '@supabase/auth-helpers-react';
-import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
+import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs';
 import Layout from '@/components/ui/Layout/Layout';
 import { MyUserContextProvider } from '@/utils/useUser';
 import type { Database } from 'types/supabase';
@@ -21,9 +21,7 @@ export const pagesWithLayout = ['/chat', '/files', '/faq'];
 
 export default function MyApp({ Component, ...rest }: AppProps) {
   const { store, props } = wrapper.useWrappedStore(rest);
-  const [supabaseClient] = useState(() =>
-    createBrowserSupabaseClient<Database>()
-  );
+  const [supabaseClient] = useState(() => createPagesBrowserClient<Database>());
 
   // ======= Router =======
   const router = useRouter();

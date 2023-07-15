@@ -5,7 +5,7 @@ const dev = process.env.NODE_ENV !== 'production';
 export const getURL = () => {
   let url = dev
     ? 'http://localhost:3000/'
-    : process?.env?.PUBLIC_SITE_URL ?? // Set this to your site URL in production env.
+    : process?.env?.NEXT_PUBLIC_SITE_URL ?? // Set this to your site URL in production env.
       'http://localhost:3000/';
   // Make sure to include `https://` when not localhost.
   url = url.includes('http') ? url : `https://${url}`;
