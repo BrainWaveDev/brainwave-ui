@@ -1,14 +1,11 @@
-import {
-  createBrowserSupabaseClient,
-  User
-} from '@supabase/auth-helpers-nextjs';
+import { createPagesBrowserClient, User } from '@supabase/auth-helpers-nextjs';
 
 import { ProductWithPrice } from '../types';
 import { Document } from '@/types/document';
 import type { Database } from 'types/supabase';
 
 // The client used in the browser that doesn't need service key
-export const supabase = createBrowserSupabaseClient<Database>();
+export const supabase = createPagesBrowserClient<Database>();
 
 export const getDocuments = async (): Promise<Document[]> => {
   const { data, error } = await supabase

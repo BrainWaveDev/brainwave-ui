@@ -12,7 +12,7 @@ import searchSpaceSlice, { selectAllSearchSpace } from './searchSpaceSlice';
 import promptSlice, { optimisticPromptActions } from './promptSlice';
 import modalSlice from './modalSlice';
 import { createWrapper, HYDRATE } from 'next-redux-wrapper';
-import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
+import { createPagesServerClient } from '@supabase/auth-helpers-nextjs';
 import { Database } from '@/types/supabase';
 import themeSlice from './themeSlice';
 import loadingSlice from './loadingSlice';
@@ -80,7 +80,7 @@ export const wrapper = createWrapper<AppStore>(store, {
  */
 export const initStore = wrapper.getServerSideProps(
   (store) => async (context) => {
-    const supabase = createServerSupabaseClient<Database>(context);
+    const supabase = createPagesServerClient<Database>(context);
     const {
       data: { session }
     } = await supabase.auth.getSession();

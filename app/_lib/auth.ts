@@ -1,11 +1,11 @@
-import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Database } from '@/types/supabase';
 import useSWR from 'swr';
 
 /**
  * Browser client that doesn't need service key.
  * */
-export const supabase = createBrowserSupabaseClient<Database>();
+export const supabase = createClientComponentClient<Database>();
 
 const fetchSession = async () => {
   const { data, error } = await supabase.auth.getSession();
