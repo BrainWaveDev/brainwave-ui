@@ -14,22 +14,22 @@ export async function middleware(req: NextRequest) {
   const {
     data: { session }
   } = await supabase.auth.getSession();
+  // Redirect URL
+  const redirectUrl = req.nextUrl.clone();
+  redirectUrl.pathname = '/signin';
 
-  // Check auth condition
-  if (inDevEnv && session && testUsers.includes(session.user.id)) {
-    // Allow sign in for test users
-    return res;
+  // TODO: Remove this
+  console.log('session', session);
+
+  if (inDevEnv) {
+    if (session) return res;
+    else return NextResponse.redirect(redirectUrl);
   } else {
-    // Not a test, sign out a user redirect to sign in page
-    // await supabase.auth.signOut();
-    const redirectUrl = req.nextUrl.clone();
-    redirectUrl.pathname = '/signin';
-    return NextResponse.redirect(redirectUrl);
+    if (session && testUsers.includes(session.user.id)) return res;
+    else return NextResponse.redirect(redirectUrl);
   }
 }
 
 export const config = {
-  matcher: [
-    '/((?!|signin|terms-of-service|_next/static|_next/image|favicon.ico).*)'
-  ]
+  matcher: ['/((?!|terms-of-service|_next/static|_next/image|favicon.ico).*)']
 };
