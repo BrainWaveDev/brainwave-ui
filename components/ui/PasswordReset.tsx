@@ -113,7 +113,7 @@ function PasswordReset() {
         )}
         {statusMessage && (
           <motion.p
-            className="text-sm text-neutral4/50 mt-0 mb-0"
+            className="text-sm text-neutral3 mt-0 mb-0"
             initial={{ opacity: 0, display: 'none' }}
             animate={{ opacity: 1, display: 'block' }}
             exit={{ opacity: 0, display: 'none' }}
