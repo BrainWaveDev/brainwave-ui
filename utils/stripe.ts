@@ -8,8 +8,7 @@ export const stripe = new Stripe(
     // Register this as an official Stripe plugin.
     // https://stripe.com/docs/building-plugins#setappinfo
     appInfo: {
-      name: 'Next.js Subscription Starter',
-      version: '0.1.0'
+      name: 'BrainBot'
     }
   }
 );
