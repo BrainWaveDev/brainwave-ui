@@ -1,18 +1,18 @@
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createPagesServerClient } from '@supabase/auth-helpers-nextjs';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { stripe } from '@/utils/stripe';
 import { createOrRetrieveCustomer } from '@/utils/supabase-admin';
 import { getURL } from '@/utils/helpers';
 import { Database } from '@/types/supabase';
 
-export async function POST(req: Request) {
+export async function POST(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     // 1. Destructure the price and quantity from the POST body
-    const { price, quantity = 1, metadata = {} } = await req.json();
+    const { price, quantity = 1, metadata = {} } = await req.body();
 
     try {
       // 2. Get the user from Supabase auth
-      const supabase = createRouteHandlerClient<Database>({ cookies });
+      const supabase = createPagesServerClient<Database>({ req, res });
       const {
         data: { user }
       } = await supabase.auth.getUser();
