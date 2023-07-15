@@ -95,7 +95,7 @@ export const initStore = wrapper.getServerSideProps(
 
     // Create server client with service role key to fetch prompts
     const supabaseAdmin = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.SUPABASE_URL || '',
       process.env.SUPABASE_SERVICE_ROLE_KEY || ''
     );
 
