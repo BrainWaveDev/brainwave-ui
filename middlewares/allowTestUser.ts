@@ -1,6 +1,7 @@
 // middlewares/withHeaders.ts
 import { NextFetchEvent, NextMiddleware, NextRequest, NextResponse } from "next/server";
-import { MiddlewareContext, MiddlewareFactory } from "./types";
+import {  MiddlewareFactory } from "./types";
+import { MiddlewareContext } from "./utils";
 
 const testUsers = process.env.TEST_USERS?.split(' ') ?? [];
 export const inDevEnv = process.env.ENVIRONMENT
@@ -9,8 +10,7 @@ export const inDevEnv = process.env.ENVIRONMENT
 
 const withAllowTestUser: MiddlewareFactory = (next: NextMiddleware, context:MiddlewareContext) => {
   return async (req: NextRequest, _next: NextFetchEvent) => {
-    if(!context.supabaseMiddelwareClient) throw new Error("supabase client not initialized");
-    const supabase = context.supabaseMiddelwareClient;
+    const supabase = context.getSupabaseClient();
     const {
       data: { session }
     } = await supabase.auth.getSession();

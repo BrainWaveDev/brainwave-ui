@@ -7,6 +7,8 @@ import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
 import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module';
 import GPT3Tokenizer from 'gpt3-tokenizer';
 import { Prompt } from '@/types/prompt';
+import { guard } from 'middlewares/utils';
+import { HTTPError } from '@/utils/server/error';
 
 export const config = {
   runtime: 'edge'
@@ -19,12 +21,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const handler = async (req: Request): Promise<Response> => {
   try {
-    if (!openAIApiKey)
-      throw new Error('Missing environment variable OPENAI_API_KEY');
-    if (!supabaseUrl)
-      throw new Error('Missing environment variable SUPABASE_URL');
-    if (!supabaseServiceKey)
-      throw new Error('Missing environment variable SUPABASE_SERVICE_ROLE_KEY');
+    guard(openAIApiKey).throw(new HTTPError('Missing environment variable OPENAI_API_KEY', 400));
+    guard(supabaseUrl).throw(new HTTPError('Missing environment variable SUPABASE_URL', 400));
+    guard(supabaseServiceKey).throw(new HTTPError('Missing environment variable SUPABASE_SERVICE_ROLE_KEY', 400));
+
 
     const { jwt, model, messages, search_space, promptId } =
       (await req.json()) as RequestBody;

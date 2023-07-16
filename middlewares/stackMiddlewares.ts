@@ -1,10 +1,11 @@
 import { NextMiddleware, NextRequest, NextResponse } from "next/server";
-import { Middleware, MiddlewareContext } from "./types";
+import { Middleware } from "./types";
 import { createMiddlewareSupabaseClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/types/supabase";
 import { isPathIncluded } from "@/utils/helpers";
 import { HTTPError } from "@/utils/server/error";
 import { Redis } from "@upstash/redis/nodejs";
+import { MiddlewareContext } from "./utils";
 
 
 export function stackMiddlewares(
@@ -12,8 +13,7 @@ export function stackMiddlewares(
   postfunctions: Middleware[] = [],
 ): NextMiddleware {
   
-
-  const context = initContext();
+  const context = new MiddlewareContext();
   const stackMiddlewareHelper = (functions: Middleware[], req:NextRequest,  index = 0): NextMiddleware => {
     const current = functions[index];
     if (current && req.nextUrl && isPathIncluded(req.nextUrl.pathname,current.path)) {
@@ -38,9 +38,9 @@ export function stackMiddlewares(
 
     // response from actual endpoint
     const res = await NextResponse.next();
+    context.req = req;
     context.res = res;
-    context.supabaseMiddelwareClient = createMiddlewareSupabaseClient<Database>({ req, res });
-    context.postReqest = true;
+    context.postRequest = true;
 
     // post-responses middleware
     const post = stackMiddlewareHelper(postfunctions,req);
@@ -59,22 +59,3 @@ export function stackMiddlewares(
   };
 }
 
-function initContext(): MiddlewareContext {
-
-  const context: MiddlewareContext = {
-    postReqest: false,
-    supabaseMiddelwareClient: null,
-    res: null,
-    redis: null,
-  }
-
-  const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL!,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN!
-  })
-
-  context.redis = redis;
-
-  return context;
-  
-}
