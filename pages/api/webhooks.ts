@@ -1,27 +1,17 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
-import { Readable } from 'node:stream';
-import { stripe } from '@/utils/stripe';
+import stripe from '@/utils/stripe';
 import {
   upsertProductRecord,
   upsertPriceRecord,
   manageSubscriptionStatusChange
 } from '@/utils/supabase-admin';
 
-// Stripe requires the raw body to construct the event.
-export const config = {
-  api: {
-    bodyParser: false
-  }
-};
-
-async function buffer(readable: Readable) {
-  const chunks = [];
-  for await (const chunk of readable) {
-    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
-  }
-  return Buffer.concat(chunks);
-}
+const inDevEnv = process.env.NODE_ENV === 'development';
+const webhookSecret =
+  (inDevEnv
+    ? process.env.STRIPE_WEBHOOK_SECRET
+    : process.env.STRIPE_WEBHOOK_SECRET_LIVE) ?? '';
 
 const relevantEvents = new Set([
   'product.created',
@@ -36,20 +26,20 @@ const relevantEvents = new Set([
 
 const webhookHandler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === 'POST') {
-    const buf = await buffer(req);
+    const body = await buffer(req);
     const sig = req.headers['stripe-signature'];
-    const webhookSecret =
-      process.env.STRIPE_WEBHOOK_SECRET_LIVE ??
-      process.env.STRIPE_WEBHOOK_SECRET;
     let event: Stripe.Event;
 
     try {
       if (!sig || !webhookSecret) return;
-      event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
+      event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
     } catch (err: any) {
       console.log(`❌ Error message: ${err.message}`);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
+
+    // Successfully constructed event
+    console.log('✅ Success:', event.id);
 
     if (relevantEvents.has(event.type)) {
       try {
@@ -100,6 +90,29 @@ const webhookHandler = async (req: NextApiRequest, res: NextApiResponse) => {
     res.setHeader('Allow', 'POST');
     res.status(405).end('Method Not Allowed');
   }
+};
+
+// Stripe requires the raw body to construct the event.
+export const config = {
+  api: {
+    bodyParser: false
+  }
+};
+
+const buffer = (req: NextApiRequest) => {
+  return new Promise<Buffer>((resolve, reject) => {
+    const chunks: Buffer[] = [];
+
+    req.on('data', (chunk: Buffer) => {
+      chunks.push(chunk);
+    });
+
+    req.on('end', () => {
+      resolve(Buffer.concat(chunks));
+    });
+
+    req.on('error', reject);
+  });
 };
 
 export default webhookHandler;
