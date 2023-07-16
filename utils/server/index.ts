@@ -113,11 +113,11 @@ export const OpenAIStream = async (
   });
 };
 
-export const supabaseServerclient = createClient<Database>(
+export const supabaseEdgeclient = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
-if (!supabaseServerclient) {
+if (!supabaseEdgeclient) {
   throw new Error('No Supabase server client');
 }

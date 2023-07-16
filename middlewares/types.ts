@@ -1,6 +1,6 @@
 import { SupabaseClient } from "@supabase/auth-helpers-nextjs";
 import { Redis } from "@upstash/redis/nodejs";
-import { NextMiddleware, NextRequest, NextResponse } from "next/server";
+import { NextMiddleware, NextResponse } from "next/server";
 export type MiddlewareContext = {
     postReqest: boolean
     supabaseMiddelwareClient: SupabaseClient | null

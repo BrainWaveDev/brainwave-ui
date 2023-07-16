@@ -1,6 +1,6 @@
 import { Message, RequestBody, RequestMatchDocumentChunks } from '@/types/chat';
 import { formatPrompt, defaultPrompt, fetchPrompts } from '@/utils/app/prompts';
-import { OpenAIError, OpenAIStream, supabaseServerclient } from '@/utils/server';
+import { OpenAIError, OpenAIStream, supabaseEdgeclient } from '@/utils/server';
 import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json';
 import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
 // @ts-expect-error
@@ -33,7 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!jwt) throw new Error('Missing access token in request data');
     if (!userQuestion) throw new Error('Missing query in request data');
 
-    const supabase = supabaseServerclient;
+    const supabase = supabaseEdgeclient;
 
     const {
       data: { user }
