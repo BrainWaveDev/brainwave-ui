@@ -1,11 +1,7 @@
 import React, { useCallback, useEffect, useState, Fragment, memo } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import {
-  getProfile,
-  signoutUser,
-  updateProfileName
-} from '@/utils/app/userSettings';
-import { useUser } from '@supabase/auth-helpers-react';
+import { signoutUser, updateProfileName } from '@/utils/app/userSettings';
+import { useUser } from '@/utils/useUser';
 import classNames from 'classnames';
 import ProfileTab from '@/components/Settings/ProfileTab';
 import TriangleIcon from '@/components/icons/TraingleIcon';
@@ -45,22 +41,22 @@ const SettingsDialog = memo(
     );
 
     // ==== User Information ====
-    const user = useUser();
-    const [username, setUsername] = useState<string>('');
+    const { user, userProfile, subscription } = useUser();
+    const [username, setUsername] = useState<string>(
+      userProfile?.user_name ?? ''
+    );
     useEffect(() => {
-      if (user) {
-        getProfile(user.id)
-          .then((profile) =>
-            setUsername(profile.user_name ? profile.user_name : '')
-          )
-          .catch(() =>
-            setUpdateAlert({
-              message: "Couldn't fetch profile information",
-              type: 'error'
-            })
-          );
+      if (!user || !userProfile) {
+        setUsername('');
+        setUpdateAlert({
+          message: "Couldn't fetch user information",
+          type: 'error'
+        });
+      } else {
+        setUsername(userProfile.user_name);
+        setUpdateAlert(null);
       }
-    }, [user]);
+    }, [user, userProfile]);
 
     // ==== Page Refresh ====
     const router = useRouter();

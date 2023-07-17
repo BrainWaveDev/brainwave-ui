@@ -37,7 +37,7 @@ const ProfileTab = ({
   setUpdateAlert: (message: UpdateAlert | null) => void;
 }) => {
   // ==== Username Update ====
-  const [newUsername, setNewUsername] = useState<string>(username || '');
+  const [newUsername, setNewUsername] = useState<string>(username ?? '');
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const onNewUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newUsername = e.target.value;
