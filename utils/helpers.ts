@@ -1,4 +1,4 @@
-import { Price } from '../types';
+import { Price } from '@/types/products';
 
 const dev = process.env.NODE_ENV !== 'production';
 
