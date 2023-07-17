@@ -16,7 +16,7 @@ export const config = {
 
 // ==== API keys ====
 const openAIApiKey = process.env.OPENAI_API_KEY;
-const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const handler = async (req: Request): Promise<Response> => {
@@ -24,7 +24,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!openAIApiKey)
       throw new Error('Missing environment variable OPENAI_API_KEY');
     if (!supabaseUrl)
-      throw new Error('Missing environment variable SUPABASE_URL');
+      throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_URL');
     if (!supabaseServiceKey)
       throw new Error('Missing environment variable SUPABASE_SERVICE_ROLE_KEY');
 
