@@ -6,7 +6,7 @@ import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
 // @ts-expect-error
 import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module';
 import GPT3Tokenizer from 'gpt3-tokenizer';
-import { createClient } from '@supabase/supabase-js';
+import { SupabaseClient, User, createClient } from '@supabase/supabase-js';
 import { Prompt } from '@/types/prompt';
 import { Database } from '@/types/supabase';
 
@@ -16,8 +16,36 @@ export const config = {
 
 // ==== API keys ====
 const openAIApiKey = process.env.OPENAI_API_KEY;
-const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const ratelimit_per_hour_free_user = parseInt(process.env.FREE_USER_MESSAGE_PER_HOUR!);
+const ratelimit_per_hour_pro_user = parseInt(process.env.PRO_USER_MESSAGE_PER_HOUR!);
+
+const allowRequest = async (user:User,supabase: SupabaseClient<Database>) => {
+  const now = new Date();
+  const one_hours_ago = new Date(now.getTime() - 60 * 60 * 1000);
+  const count_res_future =  supabase.rpc('count_messages', {
+    p_user_id: user.id,
+    p_target_time: one_hours_ago.toISOString()
+  })
+  
+  const user_profile_future = supabase.from('profile').select("*").eq('user_id',user.id).single();
+  
+  const [count_res,user_profile] = await Promise.all([count_res_future,user_profile_future]);
+  console.debug(count_res,user_profile);
+  if (count_res.error || !count_res.data) {
+    console.error(count_res.error);
+    throw new Error('Failed to count messages');
+  }
+
+  const count = count_res.data;
+  const tier = user_profile.data && user_profile.data.tier? user_profile.data.tier : 0;
+  if (tier === 0 && count >= ratelimit_per_hour_free_user) return false;
+  if (tier === 1 && count >= ratelimit_per_hour_pro_user) return false;
+
+
+  return true
+}
 
 const handler = async (req: Request): Promise<Response> => {
   try {
@@ -49,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const sanitizedQuery = userQuestion.content.trim();
 
-    const embeddingResponse = await fetch(
+    const embeddingFuture = await fetch(
       'https://api.openai.com/v1/embeddings',
       {
         method: 'POST',
@@ -63,6 +91,20 @@ const handler = async (req: Request): Promise<Response> => {
         })
       }
     );
+
+    const allowRequestFuture = await allowRequest(user,supabase);
+
+    const [ embeddingResponse,allowResult ] = await Promise.all([
+      embeddingFuture,
+      allowRequestFuture
+    ]);
+
+    if (!allowResult) {
+      return new Response('Error', {
+        status: 429,
+        statusText: 'Too many requests'
+      });
+    }
 
     if (embeddingResponse.status !== 200) {
       throw new Error('Failed to create embedding for question');
@@ -209,5 +251,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
   }
 };
+
+
 
 export default handler;

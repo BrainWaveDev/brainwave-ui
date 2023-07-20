@@ -409,6 +409,10 @@ export const thunkRegenerateResponse =
     });
 
     if (!response.ok || !response.body) {
+      if (response.status === 429) {
+        dispatch(optimisticErrorActions.addErrorWithTimeout('Too many requests, please try again later'))
+        return;
+      }
       dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
       return;
     }
