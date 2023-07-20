@@ -3,13 +3,16 @@ import Stripe from 'stripe';
 import { stripe } from './stripe';
 import { toDateTime } from './helpers';
 import type { Database } from 'types/supabase';
-import { GetServerSidePropsContext } from 'next';
-import { createPagesServerClient } from '@supabase/auth-helpers-nextjs';
 import { Price, Product } from '@/types/products';
 
 const supabaseAdmin = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  {
+    auth: {
+      persistSession: false
+    }
+  }
 );
 
 const upsertProductRecord = async (product: Stripe.Product) => {
@@ -176,49 +179,9 @@ const manageSubscriptionStatusChange = async (
     );
 };
 
-const getDocumentListServerSideProps = async (
-  context: GetServerSidePropsContext,
-  additionalProps?: { [key: string]: any }
-) => {
-  const supabase = createPagesServerClient<Database>(context);
-  const {
-    data: { session }
-  } = await supabase.auth.getSession();
-
-  if (!session)
-    return {
-      redirect: {
-        destination: '/signin',
-        permanent: false
-      }
-    };
-
-  let documents: Document[] = [];
-
-  try {
-    // documents = await retriveAll(supabase, session.user.id);
-    return {
-      props: {
-        error: null,
-        ...additionalProps
-      }
-    };
-  } catch (e: any) {
-    console.error(e.message);
-    return {
-      props: {
-        documents,
-        error: e.message,
-        ...additionalProps
-      }
-    };
-  }
-};
-
 export {
   upsertProductRecord,
   upsertPriceRecord,
   createOrRetrieveCustomer,
-  manageSubscriptionStatusChange,
-  getDocumentListServerSideProps
+  manageSubscriptionStatusChange
 };

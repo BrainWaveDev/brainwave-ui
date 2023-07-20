@@ -35,7 +35,11 @@ const handler = async (req: Request): Promise<Response> => {
     if (!jwt) throw new Error('Missing access token in request data');
     if (!userQuestion) throw new Error('Missing query in request data');
 
-    const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        persistSession: false
+      }
+    });
 
     const {
       data: { user }
