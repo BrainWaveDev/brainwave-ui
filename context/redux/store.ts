@@ -18,6 +18,9 @@ import themeSlice from './themeSlice';
 import loadingSlice from './loadingSlice';
 import errorSlice from './errorSlice';
 import { createClient } from '@supabase/supabase-js';
+import subscriptionSlice, {
+  optimisticSubscriptionActions
+} from './subscriptionSlice';
 
 const { serialize, deserialize } = require('json-immutable');
 
@@ -29,6 +32,7 @@ const combinedReducer = combineReducers({
   currentConversation: currentConversationSlice,
   searchSpace: searchSpaceSlice,
   prompts: promptSlice,
+  subscription: subscriptionSlice,
   modal: modalSlice,
   loading: loadingSlice,
   errors: errorSlice
@@ -93,10 +97,15 @@ export const initStore = wrapper.getServerSideProps(
         }
       };
 
-    // Create server client with service role key to fetch prompts
+    // Create server client with service role key to fetch prompts and products
     const supabaseAdmin = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+      process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+      {
+        auth: {
+          persistSession: false
+        }
+      }
     );
 
     let error: string | null = null;
@@ -109,7 +118,18 @@ export const initStore = wrapper.getServerSideProps(
         store.dispatch(
           optimisticConversationsActions.fetchAllConversations(supabase)
         ),
-        store.dispatch(optimisticPromptActions.initializePrompts(supabaseAdmin))
+        store.dispatch(
+          optimisticPromptActions.initializePrompts(supabaseAdmin)
+        ),
+        store.dispatch(
+          optimisticSubscriptionActions.fetchSubscriptions(supabaseAdmin)
+        ),
+        store.dispatch(
+          optimisticSubscriptionActions.fetchUserSubscription(
+            supabaseAdmin,
+            session.user.id
+          )
+        )
       ];
       await Promise.all(promises);
 
