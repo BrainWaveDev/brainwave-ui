@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/router';
 import * as Separator from '@radix-ui/react-separator';
+import { RotatingLines } from 'react-loader-spinner';
 
 export type Tabs = 'profile' | 'password' | 'subscription';
 
@@ -39,6 +40,7 @@ const SettingsDialog = memo(
       (message: UpdateAlert | null) => setUpdateAlert(message),
       [setUpdateAlert]
     );
+    const [loading, setLoading] = useState(false);
 
     // ==== User Information ====
     const { user, userProfile } = useUser();
@@ -166,7 +168,11 @@ const SettingsDialog = memo(
                         />
                       )}
                       {currentTab === 'subscription' && (
-                        <SubscriptionTab setUpdateAlert={onChangeUpdateAlert} />
+                        <SubscriptionTab
+                          setUpdateAlert={onChangeUpdateAlert}
+                          loading={loading}
+                          setLoading={setLoading}
+                        />
                       )}
                     </div>
                   </div>
@@ -176,6 +182,22 @@ const SettingsDialog = memo(
                     }
                   >
                     <AnimatePresence>
+                      {loading && !updateAlert && (
+                        <motion.div
+                          className={'text-teal-400'}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          <RotatingLines
+                            strokeColor="currentColor"
+                            strokeWidth="2"
+                            animationDuration="1"
+                            width="2rem"
+                            visible={true}
+                          />
+                        </motion.div>
+                      )}
                       {updateAlert && (
                         <motion.div
                           // Error updateAlert displayed at the bottom of the dialog

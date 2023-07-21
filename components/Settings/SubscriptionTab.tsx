@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { Dispatch, memo, SetStateAction } from 'react';
 import { CheckCircleIcon, CheckBadgeIcon } from '@heroicons/react/24/solid';
 import classNames from 'classnames';
 import { ArrowLongRightIcon } from '@heroicons/react/24/outline';
@@ -17,9 +17,13 @@ import { useRouter } from 'next/router';
 
 const Subscription = memo(
   ({
-    setUpdateAlert
+    setUpdateAlert,
+    loading,
+    setLoading
   }: {
     setUpdateAlert: (message: UpdateAlert | null) => void;
+    loading: boolean;
+    setLoading: Dispatch<SetStateAction<boolean>>;
   }) => {
     // ====== Router ======
     const router = useRouter();
@@ -78,6 +82,7 @@ const Subscription = memo(
     ) => {
       // TODO: Display loading animation
       try {
+        setLoading(true);
         // Redirecting to a checkout page for paid subscriptions
         if (product) {
           if (!product.monthlyPrice) throw Error('Internal error');
@@ -120,12 +125,14 @@ const Subscription = memo(
         }
       } catch (error: any) {
         dispatch(optimisticErrorActions.addErrorWithTimeout(error.message));
+      } finally {
+        setLoading(false);
       }
     };
 
     // ======= Redirect user to the user's portal =======
     const redirectToCustomerPortal = async () => {
-      // TODO: Display loading animation
+      setLoading(true);
       try {
         const { url, error } = await createPortalLink({
           url: '/api/create-portal-link'
@@ -136,6 +143,8 @@ const Subscription = memo(
         dispatch(
           optimisticErrorActions.addErrorWithTimeout((error as Error).message)
         );
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -222,7 +231,8 @@ const Subscription = memo(
                         subscriptionEndsAtBillingPeriod &&
                         '!opacity-0',
                       'transition-all duration-300',
-                      'disabled:opacity-75 disabled:cursor-not-allowed'
+                      'disabled:opacity-75 disabled:cursor-not-allowed',
+                      loading && 'pointer-events-none'
                     )}
                     disabled={
                       !customerIsOnAdvancedPlan ||
@@ -323,7 +333,8 @@ const Subscription = memo(
                       'rounded-full w-full mx-3 text-white group',
                       'transition-all duration-300',
                       'flex items-center justify-center align-middle p-[2px]',
-                      'disabled:opacity-75 disabled:cursor-not-allowed'
+                      'disabled:opacity-75 disabled:cursor-not-allowed',
+                      'loading && pointer-events-none'
                     )}
                     style={{
                       backgroundImage: 'var(--text-gradient)'
@@ -390,12 +401,13 @@ const Subscription = memo(
         </div>
         <button
           className={classNames(
-            'mt-5 w-full md:w-[90%] bg-transparent text-teal-400/60 font-bold',
+            'mt-0 w-full md:w-[90%] bg-transparent text-teal-400/60 font-bold',
             'hover:text-teal-400 active:text-teal-400',
             'text-base px-6 py-3 rounded-xl outline-none focus:outline-none sm:ml-3 mb-1',
             'transition-all duration-300 ease-in flex items-center justify-center',
             'cursor-pointer'
           )}
+          disabled={loading}
           onClick={redirectToCustomerPortal}
         >
           <p className={'inline whitespace-pre-line'}>
