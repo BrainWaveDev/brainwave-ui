@@ -1,5 +1,4 @@
 import Chat from '@/components/Chat/Chat';
-import Head from 'next/head';
 import { useEffect } from 'react';
 import { initStore, useAppDispatch } from 'context/redux/store';
 import { Conversation } from '@/types/chat';

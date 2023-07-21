@@ -1,4 +1,8 @@
-import { Price } from '../types';
+import {
+  CancelSubscriptionRequest,
+  CreateSubscriptionRequest
+} from '@/types/products';
+import { NextApiRequest } from 'next';
 
 const dev = process.env.NODE_ENV !== 'production';
 
@@ -14,25 +18,51 @@ export const getURL = () => {
   return url;
 };
 
-export const postData = async ({
+/** Parses request header to identify the URL origin. */
+export const getReturnOrigin = (
+  req: NextApiRequest,
+  fallbackPath: string = 'chat'
+) => {
+  return (req.headers['referer'] as string) ?? `${getURL()}/${fallbackPath}`;
+};
+
+export const postSubscriptionUpdate = async ({
   url,
-  data
+  data,
+  requestType
 }: {
   url: string;
-  data?: { price: Price };
+  data?: CreateSubscriptionRequest | CancelSubscriptionRequest;
+  requestType: 'create' | 'cancel';
 }) => {
   console.log('posting,', url, data);
 
   const res: Response = await fetch(url, {
     method: 'POST',
-    headers: new Headers({ 'Content-Type': 'application/json' }),
+    headers: new Headers({
+      'Content-Type': 'application/json',
+      Type: requestType
+    }),
     credentials: 'same-origin',
     body: JSON.stringify(data)
   });
 
   if (!res.ok) {
-    console.log('Error in postData', { url, data, res });
+    console.error('Error in postData', { url, data, res });
+    throw Error(res.statusText);
+  }
 
+  return res.json();
+};
+
+export const createPortalLink = async ({ url }: { url: string }) => {
+  const res: Response = await fetch(url, {
+    method: 'POST',
+    headers: new Headers({ 'Content-Type': 'application/json' }),
+    credentials: 'same-origin'
+  });
+
+  if (!res.ok) {
     throw Error(res.statusText);
   }
 

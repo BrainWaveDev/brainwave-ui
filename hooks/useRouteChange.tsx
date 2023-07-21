@@ -20,6 +20,15 @@ export default function useRouteChange() {
       if (!url.includes('/chat')) {
         dispatch(clearSelectedConversation());
       }
+
+      // Remove URL search params related to payment status
+      if (url.includes('?')) {
+        const urlParts = url.split('?');
+        const urlSearchParams = new URLSearchParams(urlParts[1]);
+        if (urlSearchParams.has('checkout')) {
+          router.replace(urlParts[0]);
+        }
+      }
     };
     const handleComplete = () => setLoadingPage(false);
 

@@ -1,11 +1,7 @@
 import React, { useCallback, useEffect, useState, Fragment, memo } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import {
-  getProfile,
-  signoutUser,
-  updateProfileName
-} from '@/utils/app/userSettings';
-import { useUser } from '@supabase/auth-helpers-react';
+import { signoutUser, updateProfileName } from '@/utils/app/userSettings';
+import { useUser } from '@/utils/useUser';
 import classNames from 'classnames';
 import ProfileTab from '@/components/Settings/ProfileTab';
 import TriangleIcon from '@/components/icons/TraingleIcon';
@@ -20,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/router';
 import * as Separator from '@radix-ui/react-separator';
+import { RotatingLines } from 'react-loader-spinner';
 
 export type Tabs = 'profile' | 'password' | 'subscription';
 
@@ -43,24 +40,25 @@ const SettingsDialog = memo(
       (message: UpdateAlert | null) => setUpdateAlert(message),
       [setUpdateAlert]
     );
+    const [loading, setLoading] = useState(false);
 
     // ==== User Information ====
-    const user = useUser();
-    const [username, setUsername] = useState<string>('');
+    const { user, userProfile } = useUser();
+    const [username, setUsername] = useState<string>(
+      userProfile?.user_name ?? ''
+    );
     useEffect(() => {
-      if (user) {
-        getProfile(user.id)
-          .then((profile) =>
-            setUsername(profile.user_name ? profile.user_name : '')
-          )
-          .catch(() =>
-            setUpdateAlert({
-              message: "Couldn't fetch profile information",
-              type: 'error'
-            })
-          );
+      if (!user || !userProfile) {
+        setUsername('');
+        setUpdateAlert({
+          message: "Couldn't fetch user information",
+          type: 'error'
+        });
+      } else {
+        setUsername(userProfile.user_name);
+        setUpdateAlert(null);
       }
-    }, [user]);
+    }, [user, userProfile]);
 
     // ==== Page Refresh ====
     const router = useRouter();
@@ -169,7 +167,13 @@ const SettingsDialog = memo(
                           setUpdateAlert={onChangeUpdateAlert}
                         />
                       )}
-                      {currentTab === 'subscription' && <SubscriptionTab />}
+                      {currentTab === 'subscription' && (
+                        <SubscriptionTab
+                          setUpdateAlert={onChangeUpdateAlert}
+                          loading={loading}
+                          setLoading={setLoading}
+                        />
+                      )}
                     </div>
                   </div>
                   <div
@@ -178,6 +182,22 @@ const SettingsDialog = memo(
                     }
                   >
                     <AnimatePresence>
+                      {loading && !updateAlert && (
+                        <motion.div
+                          className={'text-teal-400'}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          <RotatingLines
+                            strokeColor="currentColor"
+                            strokeWidth="2"
+                            animationDuration="1"
+                            width="2rem"
+                            visible={true}
+                          />
+                        </motion.div>
+                      )}
                       {updateAlert && (
                         <motion.div
                           // Error updateAlert displayed at the bottom of the dialog
