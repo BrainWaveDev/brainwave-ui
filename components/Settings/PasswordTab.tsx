@@ -38,6 +38,12 @@ const PasswordTab = memo(
     const [passwordMismatch, setPasswordMismatch] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [updateSuccess, setUpdateSuccess] = useState<boolean | null>(null);
+    const enablePasswordChangeButton =
+      currentPassword !== '' &&
+      newPassword !== '' &&
+      confirmNewPassword !== '' &&
+      !passwordMismatch &&
+      !loading;
 
     // Display update status
     const displayUpdateStatus = async (success: boolean) => {
@@ -213,11 +219,12 @@ const PasswordTab = memo(
               'hover:bg-teal-400/80 active:bg-teal-400/80',
               'text-sm px-6 py-2.5 rounded-xl outline-none focus:outline-none mr-1 mb-1',
               'transition-all duration-300 ease-in flex items-center justify-center',
-              loading ? 'cursor-wait' : 'cursor-pointer'
+              loading ? 'cursor-wait' : 'cursor-pointer',
+              'disabled:cursor-not-allowed disabled:opacity-75'
             )}
             type="button"
             onClick={onUpdatePassword}
-            disabled={loading}
+            disabled={!enablePasswordChangeButton}
           >
             {loading ? (
               <RotatingLines
