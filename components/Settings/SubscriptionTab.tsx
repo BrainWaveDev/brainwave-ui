@@ -175,8 +175,9 @@ const Subscription = memo(
               >
                 <h2
                   className={classNames(
-                    'text-center font-semibold text-3xl mt-4 ml-6',
-                    'flex flex-row items-center justify-center gap-x-0.5'
+                    'text-center font-semibold text-3xl mt-4',
+                    'flex flex-row items-center justify-center gap-x-0.5',
+                    !customerIsOnAdvancedPlan && 'ml-6'
                   )}
                 >
                   Free
@@ -276,14 +277,15 @@ const Subscription = memo(
                 <h2
                   className={classNames(
                     'text-center font-bold text-3xl md:text-3xl mt-4 text-transparent bg-clip-text',
-                    'flex flex-row items-center justify-center gap-x-0.5 ml-6'
+                    'flex flex-row items-center justify-center gap-x-0.5',
+                    customerIsOnAdvancedPlan && 'ml-6'
                   )}
                   style={{
                     backgroundImage: 'var(--text-gradient)'
                   }}
                 >
                   Advanced
-                  {!customerIsOnAdvancedPlan && (
+                  {customerIsOnAdvancedPlan && (
                     <CheckBadgeIconFilled
                       className={'h-6 w-6 stroke-[1.5] -mt-2'}
                       fill={'url(#main-gradient)'}
