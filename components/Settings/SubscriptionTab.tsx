@@ -4,13 +4,14 @@ import classNames from 'classnames';
 import { ArrowLongRightIcon } from '@heroicons/react/24/outline';
 import { ProductWithPrice } from '@/types/products';
 import { getSubscriptionStateFromStorage } from '../../context/redux/subscriptionSlice';
-import { postData } from '@/utils/helpers';
+import { createPortalLink, postSubscriptionUpdate } from '@/utils/helpers';
 import { getStripe } from '@/utils/stripe';
 import { UpdateAlert } from '@/components/Settings/SettingsDialog';
 import { useAppDispatch } from 'context/redux/store';
 import { optimisticErrorActions } from '../../context/redux/errorSlice';
 import { AnimatePresence, motion } from 'framer-motion';
 import CheckBadgeIconFilled from '@/components/icons/CheckBadgeIconFilled';
+import { useRouter } from 'next/router';
 
 // TODO: Define fallback information for the Advanced Plan
 
@@ -20,6 +21,9 @@ const Subscription = memo(
   }: {
     setUpdateAlert: (message: UpdateAlert | null) => void;
   }) => {
+    // ====== Router ======
+    const router = useRouter();
+
     // ====== Redux Store ======
     const dispatch = useAppDispatch();
     const { products, subscription: userSubscription } =
@@ -72,13 +76,14 @@ const Subscription = memo(
       product: ProductWithPrice | null,
       subscriptionEndsAtBillingPeriod: boolean = false
     ) => {
+      // TODO: Display loading animation
       try {
         // Redirecting to a checkout page for paid subscriptions
         if (product) {
           if (!product.monthlyPrice) throw Error('Internal error');
           if (customerIsOnAdvancedPlan) throw Error('Internal error');
 
-          const data = await postData({
+          const data = await postSubscriptionUpdate({
             url: '/api/create-checkout-session',
             data: {
               price: product.monthlyPrice
@@ -104,7 +109,7 @@ const Subscription = memo(
             throw Error('Internal error');
 
           // Cancel current subscription
-          const { subscription } = await postData({
+          const { subscription } = await postSubscriptionUpdate({
             url: '/api/create-checkout-session',
             data: {
               subscriptionId: userSubscription.id
@@ -115,6 +120,22 @@ const Subscription = memo(
         }
       } catch (error: any) {
         dispatch(optimisticErrorActions.addErrorWithTimeout(error.message));
+      }
+    };
+
+    // ======= Redirect user to the user's portal =======
+    const redirectToCustomerPortal = async () => {
+      // TODO: Display loading animation
+      try {
+        const { url, error } = await createPortalLink({
+          url: '/api/create-portal-link'
+        });
+        if (error) throw Error(error.message);
+        else router.push(url);
+      } catch (error) {
+        dispatch(
+          optimisticErrorActions.addErrorWithTimeout((error as Error).message)
+        );
       }
     };
 
@@ -375,7 +396,7 @@ const Subscription = memo(
             'transition-all duration-300 ease-in flex items-center justify-center',
             'cursor-pointer'
           )}
-          // TODO: Add link to Stripe portal
+          onClick={redirectToCustomerPortal}
         >
           <p className={'inline whitespace-pre-line'}>
             Manage subscription on{' '}
