@@ -405,7 +405,7 @@ const Subscription = memo(
             'hover:text-teal-400 active:text-teal-400',
             'text-base px-6 py-3 rounded-xl outline-none focus:outline-none sm:ml-3 mb-1',
             'transition-all duration-300 ease-in flex items-center justify-center',
-            'cursor-pointer'
+            'cursor-pointer disabled:pointer-events-none'
           )}
           disabled={loading}
           onClick={redirectToCustomerPortal}
