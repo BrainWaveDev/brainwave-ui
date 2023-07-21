@@ -2,7 +2,7 @@ import { NextApiHandler } from 'next';
 import { createPagesServerClient } from '@supabase/auth-helpers-nextjs';
 import { stripe } from '@/utils/stripe';
 import { createOrRetrieveCustomer } from '@/utils/supabase-admin';
-import { getURL } from '@/utils/helpers';
+import { getReturnOrigin } from '@/utils/helpers';
 import {
   CreateSubscriptionRequest,
   CancelSubscriptionRequest
@@ -41,12 +41,10 @@ const CreateCheckoutSession: NextApiHandler = async (req, res) => {
 
         // Return information about whether the checkout was successful in the URL query
         // Redirect user back to the page they were on
-        const baseUrl = new URL(
-          (req.headers['referer'] as string) ?? `${getURL()}/chat`
-        );
-        const successUrl = new URL(baseUrl);
+        const returnUrl = getReturnOrigin(req);
+        const successUrl = new URL(returnUrl);
         successUrl.searchParams.append('checkout', 'success');
-        const cancelUrl = new URL(baseUrl);
+        const cancelUrl = new URL(returnUrl);
         cancelUrl.searchParams.append('checkout', 'failure');
 
         // Check if the user already has a subscription that will be cancelled at the end of the billing period
