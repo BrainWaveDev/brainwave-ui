@@ -16,7 +16,8 @@ export interface Product {
 
 export interface ProductWithPrice extends Product {
   prices?: Price[];
-  price?: string; // Price that will be displayed
+  monthlyPrice?: Price; // Monthly price that is used by default
+  priceString?: string; // Formatted price string
 }
 
 export interface Price {
@@ -54,3 +55,13 @@ export interface Subscription {
   trial_end?: string;
   prices?: Price;
 }
+
+export interface CreateSubscriptionRequest {
+  price: Price;
+  quantity?: number;
+  metadata?: Stripe.Metadata & any;
+}
+
+export type CancelSubscriptionRequest = {
+  subscriptionId: string;
+};
