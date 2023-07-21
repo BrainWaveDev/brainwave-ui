@@ -35,6 +35,18 @@ export default function Layout({ children }: Props) {
   // ======= Router =======
   const router = useRouter();
 
+  // Check for errors on page load
+  useEffect(() => {
+    const { checkout } = router.query;
+    if (checkout && checkout === 'failed') {
+      dispatch(
+        optimisticErrorActions.addErrorWithTimeout(
+          'Checkout error. Please try again.'
+        )
+      );
+    }
+  }, [router.pathname]);
+
   // ==============================
   // Theme State
   // ==============================
