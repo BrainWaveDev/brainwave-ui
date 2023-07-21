@@ -41,7 +41,7 @@ const SettingsDialog = memo(
     );
 
     // ==== User Information ====
-    const { user, userProfile, subscription } = useUser();
+    const { user, userProfile } = useUser();
     const [username, setUsername] = useState<string>(
       userProfile?.user_name ?? ''
     );
@@ -165,7 +165,9 @@ const SettingsDialog = memo(
                           setUpdateAlert={onChangeUpdateAlert}
                         />
                       )}
-                      {currentTab === 'subscription' && <SubscriptionTab />}
+                      {currentTab === 'subscription' && (
+                        <SubscriptionTab setUpdateAlert={onChangeUpdateAlert} />
+                      )}
                     </div>
                   </div>
                   <div
