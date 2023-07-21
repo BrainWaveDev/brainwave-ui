@@ -1,4 +1,7 @@
-import { Price } from '@/types/products';
+import {
+  CancelSubscriptionRequest,
+  CreateSubscriptionRequest
+} from '@/types/products';
 
 const dev = process.env.NODE_ENV !== 'production';
 
@@ -16,23 +19,27 @@ export const getURL = () => {
 
 export const postData = async ({
   url,
-  data
+  data,
+  requestType
 }: {
   url: string;
-  data?: { price: Price };
+  data?: CreateSubscriptionRequest | CancelSubscriptionRequest;
+  requestType: 'create' | 'cancel';
 }) => {
   console.log('posting,', url, data);
 
   const res: Response = await fetch(url, {
     method: 'POST',
-    headers: new Headers({ 'Content-Type': 'application/json' }),
+    headers: new Headers({
+      'Content-Type': 'application/json',
+      Type: requestType
+    }),
     credentials: 'same-origin',
     body: JSON.stringify(data)
   });
 
   if (!res.ok) {
-    console.log('Error in postData', { url, data, res });
-
+    console.error('Error in postData', { url, data, res });
     throw Error(res.statusText);
   }
 
