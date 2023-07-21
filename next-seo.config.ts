@@ -9,7 +9,6 @@ export const description =
 const config: DefaultSeoProps = {
   canonical: url,
   title,
-  themeColor: '#34d399',
   description,
   openGraph: {
     type: 'website',
