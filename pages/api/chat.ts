@@ -133,7 +133,6 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     if (matchError) {
-      console.error(matchError);
       throw new Error('Failed to match document chunks');
     }
 

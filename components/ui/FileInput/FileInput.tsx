@@ -181,7 +181,7 @@ export default function FileInput() {
         updatedFiles.push(file);
 
         if (errorMessage) {
-          dispatch(optimisticErrorActions.addErrorWithTimeout(errorMessage));
+          dispatch(optimisticErrorActions.addErrorWithTimeout(errorMessage,10000));
         }
       });
 

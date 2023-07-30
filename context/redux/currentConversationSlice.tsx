@@ -298,11 +298,16 @@ export const thunkStreamingResponse =
     if (!response.ok || !response.body) {
       dispatch(setLoading(false));
       dispatch(setIsStreaming(false));
+      if (response.status == 429) {
+        dispatch(optimisticErrorActions.addErrorWithTimeout("You have ran out of request limit, please try again later"))
+      }else{
+
       dispatch(
         optimisticErrorActions.addErrorWithTimeout(
           'Failed to get response from the server'
         )
       );
+      }
       return;
     }
 
@@ -408,6 +413,7 @@ export const thunkRegenerateResponse =
       } as RequestBody)
     });
 
+    debugger
     if (!response.ok || !response.body) {
       if (response.status === 429) {
         dispatch(optimisticErrorActions.addErrorWithTimeout('Too many requests, please try again later'))
