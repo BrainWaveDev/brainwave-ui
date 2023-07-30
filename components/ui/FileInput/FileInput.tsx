@@ -1,4 +1,4 @@
-import FileUpload from '@/components/icons/FileUpload';
+import FileUploadIcon from '@/components/icons/FileUpload';
 import { useUser } from '@/utils/useUser';
 import { RotatingLines } from 'react-loader-spinner';
 import classNames from 'classnames';
@@ -16,10 +16,12 @@ import AlertModal, {
   ModalState,
   setModalOpen
 } from '@/components/ui/AlertModal';
-import { useAppDispatch } from 'context/redux/store';
+import { useAppDispatch, useAppSelector } from 'context/redux/store';
 import { optimisticDocumentActions } from 'context/redux/documentSlice';
 import { useDropzone } from 'react-dropzone';
 import { DocumentPlusIcon } from '@heroicons/react/24/outline';
+import { json } from 'stream/consumers';
+import { useSession } from '@supabase/auth-helpers-react';
 
 // Valid file type
 const validFileTypes = [
@@ -35,7 +37,6 @@ export default function FileInput() {
   // Redux State
   // ==============================
   const dispatch = useAppDispatch();
-
   // ==============================
   // User's Information
   // ==============================
@@ -116,6 +117,8 @@ export default function FileInput() {
     );
   };
 
+  const session = useSession();
+
   const uploadFiles = async () => {
     // TODO: Handle file upload in Redux Thunk
     if (files && files.length > 0 && !isLoading) {
@@ -129,36 +132,40 @@ export default function FileInput() {
         })
       );
 
+
       files.forEach((file) => {
+        const formData = new FormData();
+        formData.append('file', file.file);
+        formData.append('user', JSON.stringify(user))
+
         fileUploads.push(
-          supabase.storage
-            .from('documents')
-            .upload(`${user!.id}/${file.name}`, file.file, {
-              upsert: false
-            })
+          fetch(`api/upload/`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session!.access_token}`,
+            },
+            body: formData
+          })
         );
       });
 
       const updatedFiles: FileInfo[] = [];
 
       const results = await Promise.allSettled(fileUploads);
-      results.forEach((result, index) => {
+      results.forEach(async (result, index) => {
         const file = files[index];
         const filename = file.name;
         let errorMessage = null;
 
         if (result.status === 'fulfilled') {
-          const { error } = result.value;
-          if (error) {
+          const res = result.value;
+
+          if (res.status < 200 || res.status > 300) {
             file.uploadState = UploadState.UploadFailed;
-            errorMessage =
-              error.error === 'Duplicate' ? (
-                <>
-                  <strong>{filename}</strong> already exists
-                </>
-              ) : (
-                <> Couldn't upload {filename}.</>
-              );
+            let msg = await res.json()
+            errorMessage = (
+              <> Couldn't upload {filename}. Because {msg.error}</>
+            )
           } else {
             file.uploadState = UploadState.UploadComplete;
           }
@@ -225,8 +232,8 @@ export default function FileInput() {
                 isLoading
                   ? 'justify-center overflow-y-hidden'
                   : user && (!files || files.length < 1)
-                  ? `justify-center hover:border-gray-400 dark:hover:border-neutral4 cursor-pointer overflow-y-hidden`
-                  : 'justify-start overflow-y-scroll'
+                    ? `justify-center hover:border-gray-400 dark:hover:border-neutral4 cursor-pointer overflow-y-hidden`
+                    : 'justify-start overflow-y-scroll'
               )}
             >
               <div
@@ -271,7 +278,7 @@ export default function FileInput() {
                           'rounded-full w-14 h-14 flex items-center place-content-center'
                         )}
                       >
-                        <FileUpload
+                        <FileUploadIcon
                           className={classNames(
                             'w-8 h-8',
                             isDragActive
@@ -353,7 +360,7 @@ export default function FileInput() {
                 aria-label="Upload files"
                 onClick={uploadFiles}
               >
-                <FileUpload className={'w-5 h-5 fill-white'} />
+                <FileUploadIcon className={'w-5 h-5 fill-white'} />
                 <span className={'hidden sm:inline-block'}>Upload</span>
               </button>
             </motion.div>
