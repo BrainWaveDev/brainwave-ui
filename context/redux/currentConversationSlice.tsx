@@ -25,6 +25,7 @@ interface SelectedConversationState {
   messageIsStreaming: boolean;
   loading: boolean;
   stopConversation: boolean;
+  disableInput:boolean
 }
 
 const initialState: SelectedConversationState = {
@@ -33,7 +34,8 @@ const initialState: SelectedConversationState = {
   fetchingConversation: false,
   messageIsStreaming: false,
   loading: false,
-  stopConversation: false
+  stopConversation: false,
+  disableInput:false
 };
 
 const currentConversationSlice = createSlice({
@@ -45,6 +47,9 @@ const currentConversationSlice = createSlice({
     },
     clearSelectedConversation: (state) => {
       state.conversation = undefined;
+    },
+    setDisableInput:(state,action)=>{
+      state.disableInput = action.payload
     },
     setMessagesInCurrentConversations: (
       state,
@@ -163,305 +168,315 @@ const currentConversationSlice = createSlice({
 });
 const thunkRetrieveConversationDetails =
   (summary: ConversationSummary): AppThunk =>
-  async (dispatch) => {
-    dispatch(setFetchingConversation(true));
-    const tempConversation: Conversation = {
-      ...summary,
-      messages: []
+    async (dispatch) => {
+      dispatch(setFetchingConversation(true));
+      const tempConversation: Conversation = {
+        ...summary,
+        messages: []
+      };
+      dispatch(selectCurrentConversation(tempConversation));
+      try {
+        const conversation = await retrieveConversation(tempConversation.id);
+        dispatch(selectCurrentConversation(conversation));
+      } catch (e) {
+        dispatch(
+          optimisticErrorActions.addErrorWithTimeout(
+            'Failed to retrieve conversation details'
+          )
+        );
+        dispatch(clearSelectedConversation());
+      } finally {
+        dispatch(setFetchingConversation(false));
+      }
     };
-    dispatch(selectCurrentConversation(tempConversation));
-    try {
-      const conversation = await retrieveConversation(tempConversation.id);
-      dispatch(selectCurrentConversation(conversation));
-    } catch (e) {
-      dispatch(
-        optimisticErrorActions.addErrorWithTimeout(
-          'Failed to retrieve conversation details'
-        )
-      );
-      dispatch(clearSelectedConversation());
-    } finally {
-      dispatch(setFetchingConversation(false));
-    }
-  };
 
 const thunkSelectPrompt =
   (promptId: number): AppThunk =>
-  async (dispatch, getState) => {
-    const { currentConversation, prompts } = getState();
-    if (!currentConversation.conversation) {
-      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
-      return;
-    }
-    const prompt = prompts.prompts.find((p) => p.id === promptId);
-    dispatch(
-      currentConversationSlice.actions.selectPrompt(
-        prompt ? prompt.id : defaultPrompt.id
-      )
-    );
-  };
+    async (dispatch, getState) => {
+      const { currentConversation, prompts } = getState();
+      if (!currentConversation.conversation) {
+        dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
+        return;
+      }
+      const prompt = prompts.prompts.find((p) => p.id === promptId);
+      dispatch(
+        currentConversationSlice.actions.selectPrompt(
+          prompt ? prompt.id : defaultPrompt.id
+        )
+      );
+    };
 
 const thunkUserSent =
   (content: string, user_id: string): AppThunk =>
-  async (dispatch, getState) => {
-    let { conversation } = getState().currentConversation;
-    const newConversation = conversation === undefined;
+    async (dispatch, getState) => {
+      let { conversation } = getState().currentConversation;
+      const createNewConversation = conversation === undefined;
 
-    if (newConversation) {
-      conversation = randomPlaceholderConversation();
-      dispatch(addConversation(conversation));
-      dispatch(selectCurrentConversation(conversation));
-    }
-
-    const message: Message = {
-      content,
-      role: 'user',
-      index: newConversation ? 0 : conversation!.messages.length
-    };
-
-    dispatch(userSent(message));
-    dispatch(setLoading(true));
-
-    // Show empty assistant message to render loading animation
-    dispatch(currentConversationSlice.actions.appendLastAssistantMessage(''));
-
-    // Create conversation in db
-    if (newConversation) {
-      try {
-        await createConversation(conversation!);
-      } catch (e) {
-        // Delete conversation which failed to upload
-        dispatch(setLoading(false));
-        dispatch(clearSelectedConversation());
-        dispatch(deleteConversation(conversation!));
-        dispatch(
-          optimisticErrorActions.addErrorWithTimeout(
-            'Failed to create conversation'
-          )
-        );
-        return;
+      if (createNewConversation) {
+        conversation = randomPlaceholderConversation();
+        dispatch(addConversation(conversation));
+        dispatch(selectCurrentConversation(conversation));
       }
-    }
 
-    const messages = conversation!.messages;
-    try {
-      // Insert message to db
-      await insertMessage(message, conversation!.id, user_id);
-    } catch (e: any) {
-      dispatch(setLoading(false));
-      // Clear last two messages in the conversation
-      dispatch(setMessagesInCurrentConversations(messages.slice(0, -2)));
-      dispatch(
-        optimisticErrorActions.addErrorWithTimeout(
-          'Failed to update conversation messages'
-        )
-      );
-    }
-  };
+      const message: Message = {
+        content,
+        role: 'user',
+        index: createNewConversation ? 0 : conversation!.messages.length
+      };
+
+      dispatch(userSent(message));
+      dispatch(setLoading(true));
+
+      // Show empty assistant message to render loading animation
+      dispatch(currentConversationSlice.actions.appendLastAssistantMessage(''));
+
+      // Create conversation in db
+      if (createNewConversation) {
+        try {
+          await createConversation(conversation!);
+        } catch (e) {
+          // Delete conversation which failed to upload
+          dispatch(setLoading(false));
+          dispatch(clearSelectedConversation());
+          dispatch(deleteConversation(conversation!));
+          dispatch(
+            optimisticErrorActions.addErrorWithTimeout(
+              'Failed to create conversation'
+            )
+          );
+          return;
+        }
+      }
+
+      // const messages = conversation!.messages;
+      // try {
+      //   // Insert message to db
+      //   await insertMessage(message, conversation!.id, user_id);
+      // } catch (e: any) {
+      //   dispatch(setLoading(false));
+      //   // Clear last two messages in the conversation
+      //   dispatch(setMessagesInCurrentConversations(messages.slice(0, -2)));
+      //   dispatch(
+      //     optimisticErrorActions.addErrorWithTimeout(
+      //       'Failed to update conversation messages'
+      //     )
+      //   );
+      // }
+    };
 
 export const thunkStreamingResponse =
   (session: Session, search_space: number[]): AppThunk =>
-  async (dispatch, getState) => {
-    if (!getState().loading) dispatch(setLoading(true));
+    async (dispatch, getState) => {
+      if (!getState().loading) dispatch(setLoading(true));
 
-    const { conversation } = getState().currentConversation;
-    if (!conversation) {
-      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
-      return;
-    }
-    const messages = [...conversation.messages];
-    const lastMessage = messages[messages.length - 1];
-    if (!lastMessage) {
-      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
-      return;
-    } else if (lastMessage.content === '' && lastMessage.role === 'assistant') {
-      // Remove empty assistant message
-      messages.pop();
-    }
-    dispatch(setIsStreaming(true));
-    const controller = new AbortController();
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        jwt: session?.access_token,
-        messages: messages,
-        model: conversation.model,
-        search_space: search_space,
-        promptId: conversation.promptId
-      } as RequestBody)
-    });
-
-    if (!response.ok || !response.body) {
-      dispatch(setLoading(false));
-      dispatch(setIsStreaming(false));
-      if (response.status == 429) {
-        dispatch(optimisticErrorActions.addErrorWithTimeout("You have ran out of request limit, please try again later"))
-      }else{
-
-      dispatch(
-        optimisticErrorActions.addErrorWithTimeout(
-          'Failed to get response from the server'
-        )
-      );
-      }
-      return;
-    }
-
-    dispatch(setLoading(false));
-
-    const data = response.body;
-
-    if (!data) {
-      console.error(`there is no data`);
-      return;
-    }
-
-    const reader = data.getReader();
-    const decoder = new TextDecoder('utf-8');
-
-    let done = false;
-
-    while (!done) {
-      if (getState().currentConversation.stopConversation) {
-        controller.abort();
-        done = true;
-        break;
-      }
-
-      const { value, done: doneReading } = await reader.read();
-      done = doneReading;
-      const chunkValue = decoder.decode(value);
-      dispatch(
-        currentConversationSlice.actions.appendLastAssistantMessage(chunkValue)
-      );
-    }
-
-    dispatch(setIsStreaming(false));
-
-    const updatedConversation = getState().currentConversation.conversation!;
-    const updatedLastMessage =
-      updatedConversation?.messages[updatedConversation?.messages.length - 1];
-    if (updatedLastMessage?.role != 'assistant') {
-      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
-      return;
-    }
-    if (getState().currentConversation.stopConversation) {
-      // Change stop conversation response back to false
-      dispatch(setStopConversation(false));
-
-      // Clear last assistant message if the stream was stopped
-      if (updatedLastMessage.content === '') {
-        dispatch(clearLastAssistantMessage());
+      const { conversation } = getState().currentConversation;
+      if (!conversation) {
+        dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
         return;
       }
-    }
+      const messages = [...conversation.messages];
+      const lastMessage = messages[messages.length - 1];
+      if (!lastMessage) {
+        dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
+        return;
+      } else if (lastMessage.content === '' && lastMessage.role === 'assistant') {
+        // Remove empty assistant message
+        messages.pop();
+      }
+      dispatch(setIsStreaming(true));
+      const controller = new AbortController();
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          jwt: session?.access_token,
+          messages: messages,
+          model: conversation.model,
+          search_space: search_space,
+          promptId: conversation.promptId
+        } as RequestBody)
+      });
 
-    try {
-      await insertMessage(
-        updatedLastMessage,
-        updatedConversation.id,
-        session.user?.id
-      );
-    } catch (e) {
-      dispatch(
-        optimisticErrorActions.addErrorWithTimeout(
-          'Failed to update conversation messages'
+      if (!response.ok || !response.body) {
+        dispatch(setLoading(false));
+        dispatch(setIsStreaming(false));
+        dispatch(setDisableInput(true))
+        if (response.status == 429) {
+          dispatch(optimisticErrorActions.addErrorWithTimeout("You have ran out of request limit, please try again later"))
+        } else {
+
+          dispatch(
+            optimisticErrorActions.addErrorWithTimeout(
+              'Failed to get response from the server'
+            )
+          );
+        }
+        return;
+      }
+
+      dispatch(setLoading(false));
+
+      const data = response.body;
+
+      if (!data) {
+        console.error(`there is no data`);
+        return;
+      }
+
+      const reader = data.getReader();
+      const decoder = new TextDecoder('utf-8');
+
+      let done = false;
+
+      while (!done) {
+        if (getState().currentConversation.stopConversation) {
+          controller.abort();
+          done = true;
+          break;
+        }
+
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunkValue = decoder.decode(value);
+        dispatch(
+          currentConversationSlice.actions.appendLastAssistantMessage(chunkValue)
+        );
+      }
+
+      dispatch(setIsStreaming(false));
+      dispatch(setDisableInput(false))
+
+      const updatedConversation = getState().currentConversation.conversation!;
+      const updatedLastMessage =
+        updatedConversation?.messages[updatedConversation?.messages.length - 1];
+      const lastUserMessage = updatedConversation?.messages[updatedConversation?.messages.length - 2]
+      if (updatedLastMessage?.role != 'assistant') {
+        dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
+        return;
+      }
+      if (getState().currentConversation.stopConversation) {
+        // Change stop conversation response back to false
+        dispatch(setStopConversation(false));
+
+        // Clear last assistant message if the stream was stopped
+        if (updatedLastMessage.content === '') {
+          dispatch(clearLastAssistantMessage());
+          return;
+        }
+      }
+
+      try {
+        let updateUser = insertMessage(
+          lastUserMessage,
+          updatedConversation.id,
+          session.user?.id
         )
-      );
-    }
-  };
+
+        let updateAssisstent = insertMessage(
+          updatedLastMessage,
+          updatedConversation.id,
+          session.user?.id
+        );
+        await Promise.all([updateUser, updateAssisstent])
+      } catch (e) {
+        dispatch(
+          optimisticErrorActions.addErrorWithTimeout(
+            'Failed to update conversation messages'
+          )
+        );
+      }
+    };
 
 export const thunkRegenerateResponse =
   (session: Session, search_space: number[]): AppThunk =>
-  async (dispatch, getState) => {
-    dispatch(setLoading(true));
+    async (dispatch, getState) => {
+      dispatch(setLoading(true));
 
-    dispatch(currentConversationSlice.actions.removeLastAssistantMessage());
-    const { conversation } = getState().currentConversation;
+      dispatch(currentConversationSlice.actions.removeLastAssistantMessage());
+      const { conversation } = getState().currentConversation;
 
-    if (!conversation) {
-      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
-      return;
-    }
-    const messages = getState().currentConversation.conversation?.messages;
-    if (!messages) {
-      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
-      return;
-    }
-    const lastMessage = messages[messages.length - 1];
-    if (!lastMessage || lastMessage.role === 'assistant') {
-      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
-      return;
-    }
-
-    dispatch(currentConversationSlice.actions.removeLastAssistantMessage());
-
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        jwt: session?.access_token,
-        messages: messages,
-        model: conversation.model,
-        search_space: search_space
-      } as RequestBody)
-    });
-
-    debugger
-    if (!response.ok || !response.body) {
-      if (response.status === 429) {
-        dispatch(optimisticErrorActions.addErrorWithTimeout('Too many requests, please try again later'))
+      if (!conversation) {
+        dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
         return;
       }
-      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
-      return;
-    }
+      const messages = getState().currentConversation.conversation?.messages;
+      if (!messages) {
+        dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
+        return;
+      }
+      const lastMessage = messages[messages.length - 1];
+      if (!lastMessage || lastMessage.role === 'assistant') {
+        dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
+        return;
+      }
 
-    dispatch(setLoading(false));
+      dispatch(currentConversationSlice.actions.removeLastAssistantMessage());
 
-    const data = response.body;
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          jwt: session?.access_token,
+          messages: messages,
+          model: conversation.model,
+          search_space: search_space
+        } as RequestBody)
+      });
 
-    if (!data) {
-      dispatch(optimisticErrorActions.addErrorWithTimeout('Server error'));
-      return;
-    }
+      debugger
+      if (!response.ok || !response.body) {
+        if (response.status === 429) {
+          dispatch(optimisticErrorActions.addErrorWithTimeout('Too many requests, please try again later'))
+          return;
+        }
+        dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
+        return;
+      }
 
-    const reader = data.getReader();
-    const decoder = new TextDecoder('utf-8');
+      dispatch(setLoading(false));
 
-    dispatch(setIsStreaming(true));
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      const chunkValue = decoder.decode(value);
-      dispatch(
-        currentConversationSlice.actions.appendLastAssistantMessage(chunkValue)
-      );
-    }
-    dispatch(setIsStreaming(false));
-    const updatedConversation = getState().currentConversation.conversation!;
-    const updatedLastMessage =
-      updatedConversation?.messages[updatedConversation?.messages.length - 1];
-    if (updatedLastMessage?.role != 'assistant') {
-      dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
-      return;
-    }
-    try {
-      await replaceLastMessage(
-        updatedLastMessage,
-        updatedConversation.messages.length - 1,
-        updatedConversation.id
-      );
-    } catch (e) {
-      dispatch(optimisticErrorActions.addErrorWithTimeout('Server error'));
-    }
-  };
+      const data = response.body;
+
+      if (!data) {
+        dispatch(optimisticErrorActions.addErrorWithTimeout('Server error'));
+        return;
+      }
+
+      const reader = data.getReader();
+      const decoder = new TextDecoder('utf-8');
+
+      dispatch(setIsStreaming(true));
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        const chunkValue = decoder.decode(value);
+        dispatch(
+          currentConversationSlice.actions.appendLastAssistantMessage(chunkValue)
+        );
+      }
+      dispatch(setIsStreaming(false));
+      const updatedConversation = getState().currentConversation.conversation!;
+      const updatedLastMessage =
+        updatedConversation?.messages[updatedConversation?.messages.length - 1];
+      if (updatedLastMessage?.role != 'assistant') {
+        dispatch(optimisticErrorActions.addErrorWithTimeout('Internal error'));
+        return;
+      }
+      try {
+        await replaceLastMessage(
+          updatedLastMessage,
+          updatedConversation.messages.length - 1,
+          updatedConversation.id
+        );
+      } catch (e) {
+        dispatch(optimisticErrorActions.addErrorWithTimeout('Server error'));
+      }
+    };
 
 export const optimisticCurrentConversationAction = {
   retrieveAndSelectConversation: thunkRetrieveConversationDetails,
@@ -481,7 +496,8 @@ export const {
   setMessagesInCurrentConversations,
   clearLastAssistantMessage,
   setFetchingConversation,
-  selectPrompt
+  selectPrompt,
+  setDisableInput
 } = currentConversationSlice.actions;
 
 export const getCurrentConversationFromStore = () =>

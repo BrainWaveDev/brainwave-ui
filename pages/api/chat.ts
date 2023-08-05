@@ -33,7 +33,7 @@ const allowRequest = async (user:User,supabase: SupabaseClient<Database>) => {
   
   const [count_res,user_profile] = await Promise.all([count_res_future,user_profile_future]);
   console.debug(count_res,user_profile);
-  if (count_res.error || !count_res.data) {
+  if (count_res.error || undefined == count_res.data) {
     console.error(count_res.error);
     throw new Error('Failed to count messages');
   }
@@ -159,8 +159,6 @@ const handler = async (req: Request): Promise<Response> => {
     let tokenCount = 0;
     let contextText = '';
     let sourceKey = 1;
-    let sources =
-      documentChunks.length > 0 ? `\n\n<h3>Sources</h3>` : undefined;
 
     const iterator = contentByDocument.keys();
     for (const documentName of iterator) {
@@ -221,7 +219,8 @@ const handler = async (req: Request): Promise<Response> => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const message = {
         role: messages[i].role,
-        content: messages[i].content
+        content: messages[i].content,
+        index: i
       };
       const tokens = encoding.encode(message.content);
 
