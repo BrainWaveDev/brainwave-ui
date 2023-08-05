@@ -4,7 +4,7 @@ export interface Message {
   id?: number;
   role: Role;
   content: string;
-  index?: number;
+  index: number;
 }
 
 export type Role = 'assistant' | 'user';

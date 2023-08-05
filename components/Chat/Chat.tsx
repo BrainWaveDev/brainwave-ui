@@ -27,18 +27,15 @@ export default memo(function Chat() {
   const currentConversation = useMemo(() => {
     if (conversation && conversation.messages) {
       const messages = [...conversation.messages];
-      // Resort to sorting by ID if index is not available
-      return messages.sort((a, b) => {
-        if (a.index && b.index) {
-          return a.index - b.index;
-        } else {
-          return a.id! - b.id!;
-        }
-      });
+      const result =  messages.sort((a,b)=>{
+        return a.index - b.index
+      })
+      return result
     } else {
       return [];
     }
   }, [conversation]);
+
 
   // ============== Element References ==============
   const messagesEndRef = useRef<HTMLDivElement>(null);

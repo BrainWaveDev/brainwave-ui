@@ -117,7 +117,6 @@ export const retrieveConversation = async (conversationId: number) => {
   `
     )
     .eq('id', conversationId)
-    .order('created_at', { ascending: false })
     .single()) as any;
 
   if (error) {
@@ -125,22 +124,23 @@ export const retrieveConversation = async (conversationId: number) => {
     if (exist) return resource as Conversation;
     throw error;
   }
-
+  const resMessages: Message[] = data?.messages.map(
+    (m: any) => {
+      return ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        index: m.index
+      } as Message)
+    }
+  )
   const res = {
     id: data?.id, // no error
     name: data?.name,
     model: OpenAIModels['gpt-3.5-turbo'],
     promptId: data.prompt_id ?? defaultPrompt.id,
     folderId: data.folder_id ?? null,
-    messages: data?.messages.map(
-      (m: any) =>
-        ({
-          id: m.id,
-          role: m.role,
-          content: m.content,
-          index: m.index
-        } as Message)
-    )
+    messages: resMessages
   } as Conversation;
 
   // Remove previously saved conversation if it's a placeholder
@@ -157,7 +157,7 @@ export const fetchAllConversations = async (
   const { data, error } = await (supabaseClient ?? supabase)
     .from('conversation')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: true });
 
   if (error) throw error;
 

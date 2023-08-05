@@ -31,7 +31,7 @@ interface Props {
 export const ChatInput: FC<Props> = memo(
   ({ model, textareaRef, showScrollDownButton, handleScrollDown }) => {
     // ============== Redux State ==============
-    const { loading, messageIsStreaming } = getCurrentConversationFromStore();
+    const { loading, messageIsStreaming, disableInput } = getCurrentConversationFromStore();
     const searchSpace = getSearchSpaceFromStore();
     const dispatch = useAppDispatch();
 
@@ -107,9 +107,8 @@ export const ChatInput: FC<Props> = memo(
       if (textareaRef && textareaRef.current) {
         textareaRef.current.style.height = 'inherit';
         textareaRef.current.style.height = `${textareaRef.current?.scrollHeight}px`;
-        textareaRef.current.style.overflow = `${
-          textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
-        }`;
+        textareaRef.current.style.overflow = `${textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
+          }`;
       }
     }, [content]);
 
@@ -122,7 +121,7 @@ export const ChatInput: FC<Props> = memo(
           'bg-white py-2 px-4 text-black hover:opacity-50 dark:border-neutral-600',
           'dark:bg-[#343541] dark:text-white'
         )}
-        // onClick={onRegenerate}
+      // onClick={onRegenerate}
       >
         <IconRepeat size={16} /> {'Regenerate response'}
       </button>
@@ -164,20 +163,26 @@ export const ChatInput: FC<Props> = memo(
             'w-[calc(100%_-_3rem)] max-w-[50rem] xl:max-w-4xl relative flex rounded-xl',
             'mx-auto border-neutral3 bg-white dark:bg-neutral6',
             'dark:border-neutral5 border-2',
-            'items-center justify-start'
+            'items-center justify-start',
           )}
         >
-          <div className={'flex flex-row min-w-full max-w-full'}>
+          <div className={classNames(
+            'flex flex-row min-w-full max-w-full',
+
+            // `${disableInput ? "bg-gray-600 dark:bg-slate-600" : "bg-transparent dark:bg-transparent"}`
+          )
+          }>
             <textarea
               ref={textareaRef}
               className={classNames(
                 'grow border-0 max-w-[calc(100%_-_3.5rem)]',
-                'bg-transparent pl-3 my-2 sm:pl-2 text-black dark:bg-transparent',
+                'pl-3 my-2 sm:pl-2 text-black ',
                 'dark:text-white md:pl-4 focus:ring-0 whitespace-pre-wrap self-start',
-                '!overflow-y-scroll resize-none max-h-[200px] relative'
+                '!overflow-y-scroll resize-none max-h-[200px] relative scrollbar-hide',
               )}
-              placeholder={'Type a message...'}
+              placeholder={disableInput?'':'Type a message...'}
               value={content}
+              disabled={disableInput}
               rows={1}
               onCompositionStart={() => setIsTyping(true)}
               onCompositionEnd={() => setIsTyping(false)}
@@ -194,7 +199,7 @@ export const ChatInput: FC<Props> = memo(
               )}
               onClick={handleSend}
             >
-              {loading || messageIsStreaming ? (
+              {(loading || messageIsStreaming) ? (
                 <div
                   className={classNames(
                     'h-6 w-6 animate-spin rounded-full border-t-2',

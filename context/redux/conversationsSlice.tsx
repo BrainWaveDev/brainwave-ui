@@ -43,6 +43,7 @@ const conversationsSlice = createSlice({
         (conversation) => conversation.id !== action.payload.id
       );
     },
+    
     updateConversation(state, action: PayloadAction<ConversationSummary>) {
       return state.map((conversation) => {
         // Substitute the updated conversation
@@ -216,6 +217,7 @@ const thunkInitConversations = (): AppThunk => async (dispatch, getState) => {
     );
   }
 };
+
 
 export const optimisticConversationsActions = {
   createConversation: thunkCreateNewConversation,

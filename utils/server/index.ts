@@ -25,8 +25,13 @@ export const OpenAIStream = async (
   model: OpenAIModel,
   systemPrompt: string,
   messages: Message[],
-  sources?: string
 ) => {
+  let reqMessage = messages.map(m=>{
+    const {index,...rest} = m
+    return {
+      ...rest
+    }
+  })
   const res = await fetch(`${OPENAI_API_HOST}/v1/chat/completions`, {
     headers: {
       'Content-Type': 'application/json',
@@ -35,16 +40,19 @@ export const OpenAIStream = async (
         'OpenAI-Organization': process.env.OPENAI_ORGANIZATION
       })
     },
+    
     method: 'POST',
+
+
     body: JSON.stringify({
       model: model.id,
       messages: [
-        ...messages.slice(0, messages.length - 1),
+        ...reqMessage.slice(0, reqMessage.length - 1),
         {
           role: 'system',
           content: systemPrompt
         },
-        messages.at(messages.length - 1)
+        reqMessage.at(reqMessage.length - 1)
       ],
       max_tokens: 1000,
       temperature: 0.7,
