@@ -20,8 +20,8 @@ export default async function handler(request: Request): Promise<Response> {
     }
     try {
         let supabase = createServerDbClient(access_token);
-        let [formData, profile, documentsData] = await Promise.all([
-            request.formData(),
+        let [json, profile, documentsData] = await Promise.all([
+            request.json(),
             supabase.from('profile').select('*').single(),
             supabase.from('document').select("metadata")
         ]);
@@ -60,17 +60,23 @@ export default async function handler(request: Request): Promise<Response> {
             })
         }
 
-        const files = formData.getAll('file') as File[];
-        // assert one files at a time 
-        let file = files[0];
+
+        const file_name:string = json.file_name
+        if (file_name === undefined || file_name === null) {
+            return new Response(JSON.stringify({ error: "file_name must be included" }), {
+                status: 400
+            })
+        }
         let { data, error } = await supabase.storage
             .from('documents')
-            .upload(`${userData!.user?.id}/${file.name}`, file, {
-                upsert: false
-            })
+            .createSignedUploadUrl(`${userData!.user.id}/${file_name}`);
+            
 
         if (data) {
-            return new Response(JSON.stringify(data), {
+            return new Response(JSON.stringify({ data:{
+                ...data,
+                file_name:file_name
+            } }), {
                 status: 200,
                 headers: {
                     'Content-Type': 'application/json',
