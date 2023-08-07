@@ -134,46 +134,64 @@ export default function FileInput() {
 
 
       files.forEach((file) => {
-        const formData = new FormData();
-        formData.append('file', file.file);
-        formData.append('user', JSON.stringify(user))
-
         fileUploads.push(
           fetch(`api/upload/`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${session!.access_token}`,
             },
-            body: formData
+            body: JSON.stringify({
+              file_name: file.name
+            })
           })
         );
       });
 
       const updatedFiles: FileInfo[] = [];
 
-      const results = await Promise.allSettled(fileUploads);
+      type fileUploadResult = {
+        data: {
+          signedUrl: string;
+          token: string;
+          path: string;
+          file_name:string;
+        } | null,
+        error: any
+      }
+      const signedUrls: Response[] = await Promise.all(fileUploads);
+      const fileUploadResults = signedUrls.map(async (result,index) => {
+        let responseData: fileUploadResult = await result.json()
+        if (responseData.data) {
+          let { path, signedUrl, token,file_name } = responseData.data
+          return supabase.storage.from('documents').uploadToSignedUrl(path,token,files.filter(f=>f.name == file_name)[0]!.file)
+        }
+        return Promise.reject(responseData.error)
+      })
+      
+      // debugger
+      const results = await Promise.allSettled(fileUploadResults);
       results.forEach(async (result, index) => {
         const file = files[index];
         const filename = file.name;
         let errorMessage = null;
 
         if (result.status === 'fulfilled') {
-          const res = result.value;
-
-          if (res.status < 200 || res.status > 300) {
+          const value = result.value;
+          if (value.error) {
             file.uploadState = UploadState.UploadFailed;
-            let msg = await res.json()
             errorMessage = (
-              <> Couldn't upload {filename}. Because {msg.error}</>
+              <> Couldn't upload {filename}. Because {value.error}</>
             )
           } else {
             file.uploadState = UploadState.UploadComplete;
           }
         } else {
           file.uploadState = UploadState.UploadFailed;
+          let reason = result.reason;
           errorMessage = (
             <>
               Couldn't upload <span className={'truncate'}>{filename}</span>.
+              <span>because of {reason}</span>
             </>
           );
         }
