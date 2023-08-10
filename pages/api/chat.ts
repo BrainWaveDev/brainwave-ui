@@ -29,19 +29,19 @@ const allowRequest = async (user:User,supabase: SupabaseClient<Database>) => {
     p_target_time: one_hours_ago.toISOString()
   })
   
-  const user_profile_future = supabase.from('profile').select("*").eq('user_id',user.id).single();
+  const subscription_future = supabase.from('subscriptions').select("*").eq('user_id',user.id).single();
   
-  const [count_res,user_profile] = await Promise.all([count_res_future,user_profile_future]);
-  console.debug(count_res,user_profile);
+  const [count_res,subscription] = await Promise.all([count_res_future,subscription_future]);
+
   if (count_res.error || undefined == count_res.data) {
     console.error(count_res.error);
     throw new Error('Failed to count messages');
   }
 
   const count = count_res.data;
-  const tier = user_profile.data && user_profile.data.tier? user_profile.data.tier : 0;
-  if (tier === 0 && count >= ratelimit_per_hour_free_user) return false;
-  if (tier === 1 && count >= ratelimit_per_hour_pro_user) return false;
+  const isPro = subscription.data && subscription.data.status == "active";
+  if (!isPro && count >= ratelimit_per_hour_free_user) return false;
+  if (isPro && count >= ratelimit_per_hour_pro_user) return false;
 
 
   return true
