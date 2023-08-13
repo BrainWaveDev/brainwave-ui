@@ -18,8 +18,8 @@ export const config = {
 const openAIApiKey = process.env.OPENAI_API_KEY;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const ratelimit_per_hour_free_user = parseInt(process.env.FREE_USER_MESSAGE_PER_HOUR!);
-const ratelimit_per_hour_pro_user = parseInt(process.env.PRO_USER_MESSAGE_PER_HOUR!);
+const ratelimit_per_hour_free_user = parseInt(process.env.NEXT_PUBLIC_FREE_USER_MESSAGE_PER_HOUR!);
+const ratelimit_per_hour_pro_user = parseInt(process.env.NEXT_PUBLIC_PRO_USER_MESSAGE_PER_HOUR!);
 
 const allowRequest = async (user:User,supabase: SupabaseClient<Database>) => {
   const now = new Date();

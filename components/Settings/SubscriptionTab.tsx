@@ -14,6 +14,10 @@ import CheckBadgeIconFilled from '@/components/icons/CheckBadgeIconFilled';
 import { useRouter } from 'next/router';
 
 // TODO: Define fallback information for the Advanced Plan
+const free_user_storage_limit = process.env.NEXT_PUBLIC_FREE_USER_STORAGE_LIMIT_IN_MB
+const pro_user_strorage_limit = process.env.NEXT_PUBLIC_PRO_USER_STORAGE_LIMIT_IN_MB
+const ratelimit_per_hour_free_user = parseInt(process.env.NEXT_PUBLIC_FREE_USER_MESSAGE_PER_HOUR!);
+const ratelimit_per_hour_pro_user = parseInt(process.env.NEXT_PUBLIC_PRO_USER_MESSAGE_PER_HOUR!);
 
 const Subscription = memo(
   ({
@@ -157,7 +161,7 @@ const Subscription = memo(
           <div className="text-neutral7 dark:text-white font-medium text-base self-start">
             Choose your plan
           </div>
-          <div className={'max-w-full overflow-x-scroll overflow-y-clip pb-3'}>
+          <div className={'max-w-full overflow-x-scroll overflow-y-clip pb-3 scrollbar-hide'}>
             <div
               className={classNames(
                 'flex flex-row justify-center items-center mt-3 w-full min-w-fit',
@@ -201,7 +205,7 @@ const Subscription = memo(
                         <CheckCircleIcon className="object-fill fill-neutral4" />
                       </div>
                       <p className="ml-1 text-xs leading-5">
-                        Unlimited Messages
+                      {`${ratelimit_per_hour_free_user} number of messages per hour`}
                       </p>
                     </div>
                     <div className="flex mt-1">
@@ -209,17 +213,10 @@ const Subscription = memo(
                         <CheckCircleIcon className="object-fill fill-neutral4" />
                       </div>
                       <p className="ml-1 text-xs leading-5">
-                        Unlimited Messages
+                      {`${free_user_storage_limit} mb total stroage`}
                       </p>
                     </div>
-                    <div className="flex mt-1">
-                      <div className="w-[20px] h-[20px]">
-                        <CheckCircleIcon className="object-fill fill-neutral4" />
-                      </div>
-                      <p className="ml-1 text-xs leading-5">
-                        Unlimited Messages
-                      </p>
-                    </div>
+                    
                   </div>
                 </div>
                 <div className="w-full flex justify-center align-middle my-5">
@@ -308,7 +305,7 @@ const Subscription = memo(
                         <CheckCircleIcon className="object-fill fill-neutral3" />
                       </div>
                       <p className="ml-1 text-xs text-neutral3 leading-5">
-                        Unlimited Storage
+                        {`${ratelimit_per_hour_pro_user} number of messages per hour`}
                       </p>
                     </div>
                     <div className="flex mt-1">
@@ -316,15 +313,7 @@ const Subscription = memo(
                         <CheckCircleIcon className="object-fill" />
                       </div>
                       <p className="ml-1 text-xs leading-5">
-                        Unlimited Storage
-                      </p>
-                    </div>
-                    <div className="flex mt-1">
-                      <div className="w-[20px] h-[20px]">
-                        <CheckCircleIcon className="object-fill" />
-                      </div>
-                      <p className="ml-1 text-xs leading-5">
-                        Unlimited Storage
+                      {`${pro_user_strorage_limit} mb total stroage`}
                       </p>
                     </div>
                   </div>

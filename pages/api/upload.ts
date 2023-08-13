@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const aenoKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const free_user_storage_limit = process.env.FREE_USER_STORAGE_LIMIT_IN_MB
-const pro_user_strorage_limit = process.env.PRO_USER_STORAGE_LIMIT_IN_MB
+const free_user_storage_limit = process.env.NEXT_PUBLIC_FREE_USER_STORAGE_LIMIT_IN_MB
+const pro_user_strorage_limit = process.env.NEXT_PUBLIC_PRO_USER_STORAGE_LIMIT_IN_MB
 
 
 export const config = {
