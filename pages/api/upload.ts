@@ -20,9 +20,8 @@ export default async function handler(request: Request): Promise<Response> {
     }
     try {
         let supabase = createServerDbClient(access_token);
-        let [json, subscription, documentsData] = await Promise.all([
+        let [json, documentsData] = await Promise.all([
             request.json(),
-            supabase.from('subscriptions').select('*').single(),
             supabase.from('document').select("metadata")
         ]);
 
@@ -34,6 +33,7 @@ export default async function handler(request: Request): Promise<Response> {
             })
         }
 
+        let subscription = await supabase.from('subscriptions').select("*").eq("user_id",userData.user.id);
         if (subscription.error) {
             return new Response(JSON.stringify({ error: subscription.error.message }), {
                 status: 400
@@ -54,7 +54,7 @@ export default async function handler(request: Request): Promise<Response> {
 
         //size is in byte, convert to mb
         let size_total_in_mb = size_total / 1_048_576;
-        if (!hasEnoughStorage(subscription.data.status!, size_total_in_mb)) {
+        if (!hasEnoughStorage(subscription.data.map(s=>s.status), size_total_in_mb)) {
             return new Response(JSON.stringify({ error: "no enough storage space" }), {
                 status: 507
             })
@@ -116,8 +116,12 @@ export function createServerDbClient(accessToken: string) {
     });
 }
 
-function hasEnoughStorage(status: string, size_total_in_mb: number): boolean {
+function hasEnoughStorage(status_arr: (string | null)[], size_total_in_mb: number): boolean {
+    if(status_arr.length >= 2){
+        throw new Error("Error retiving subscription table, RLS policy needs to be checked")
+    }
 
+    let status = status_arr[0];
     if (status != 'active') {
         return size_total_in_mb < parseInt(free_user_storage_limit!)
     }

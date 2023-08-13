@@ -21,30 +21,43 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ratelimit_per_hour_free_user = parseInt(process.env.NEXT_PUBLIC_FREE_USER_MESSAGE_PER_HOUR!);
 const ratelimit_per_hour_pro_user = parseInt(process.env.NEXT_PUBLIC_PRO_USER_MESSAGE_PER_HOUR!);
 
-const allowRequest = async (user:User,supabase: SupabaseClient<Database>) => {
+const allowRequest = async (user: User, supabase: SupabaseClient<Database>) => {
   const now = new Date();
   const one_hours_ago = new Date(now.getTime() - 60 * 60 * 1000);
-  const count_res_future =  supabase.rpc('count_messages', {
+  const count_res_future = supabase.rpc('count_messages', {
     p_user_id: user.id,
     p_target_time: one_hours_ago.toISOString()
   })
-  
-  const subscription_future = supabase.from('subscriptions').select("*").eq('user_id',user.id).single();
-  
-  const [count_res,subscription] = await Promise.all([count_res_future,subscription_future]);
+
+  const subscription_future = supabase.from('subscriptions').select("*").eq('user_id', user.id);
+
+  const [count_res, subscriptions] = await Promise.all([count_res_future, subscription_future]);
 
   if (count_res.error || undefined == count_res.data) {
     console.error(count_res.error);
     throw new Error('Failed to count messages');
   }
 
+  if (subscriptions.error) {
+    throw new Error('Failed to retrive subscription messages');
+  }
+
+  if (!subscriptions.data) {
+    throw new Error("unknown error, database failed")
+  }
+  if (subscriptions.data.length >= 2) {
+    throw new Error('Subscription Table RLS has failed, please check')
+  }
+
+  let subscription_status_arr = subscriptions.data.map(s=>s.status)
+  let status = subscription_status_arr[0]
   const count = count_res.data;
-  const isPro = subscription.data && subscription.data.status == "active";
+  const isPro = status == "active";
   if (!isPro && count >= ratelimit_per_hour_free_user) return false;
   if (isPro && count >= ratelimit_per_hour_pro_user) return false;
 
-
   return true
+
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -96,9 +109,9 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    const allowRequestFuture = await allowRequest(user,supabase);
+    const allowRequestFuture = await allowRequest(user, supabase);
 
-    const [ embeddingResponse,allowResult ] = await Promise.all([
+    const [embeddingResponse, allowResult] = await Promise.all([
       embeddingFuture,
       allowRequestFuture
     ]);
