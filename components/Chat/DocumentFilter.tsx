@@ -15,6 +15,8 @@ import {
 } from 'context/redux/searchSpaceSlice';
 import { DocumentTextIcon } from '@heroicons/react/24/solid';
 import { getDocumentsFromStore } from '../../context/redux/documentSlice';
+import { getDucumentPublicURL } from '@/utils/app/documents';
+import LoadingCircle from '../icons/LoadingCircle';
 
 export default function DocumentFilter() {
   // ===========================
@@ -48,7 +50,7 @@ export default function DocumentFilter() {
           'bg-transparent border-nonerelative',
           'bg-white dark:bg-neutral6 border-b border-gray-200 dark:border-zinc-700',
           !documentFilterOpen &&
-            'shadow-[0_0.75rem_2.5rem_-0.75rem_rgba(0,0,0,0.06)] dark:shadow-[0_0.75rem_2.5rem_-0.75rem_rgba(0,0,0,0.15)]'
+          'shadow-[0_0.75rem_2.5rem_-0.75rem_rgba(0,0,0,0.06)] dark:shadow-[0_0.75rem_2.5rem_-0.75rem_rgba(0,0,0,0.15)]'
         )}
       >
         <Popover.Root
@@ -313,6 +315,19 @@ const DocumentRow = memo(
     selected: boolean;
     onSelectedChange: (id: number) => void;
   }) => {
+    const [loadingURL, setLoadingURL] = useState<boolean>(false)
+    const openInAnotherWindow = () => {
+      setLoadingURL(true)
+      getDucumentPublicURL(`${document.owner}/${document.name}`)
+        .then((res) => {
+          if (res.data) {
+            window.open(res.data.signedUrl, '_blank')
+          }
+        }).finally(() => {
+          setLoadingURL(false)
+        })
+    }
+
     return (
       <div
         className={classNames(
@@ -320,7 +335,7 @@ const DocumentRow = memo(
           'px-5 cursor-pointer z-[5] group',
           !selected && 'bg-gray-100/75 dark:bg-zinc-700'
         )}
-        onClick={() => onSelectedChange(document.id)}
+        onClick={() => openInAnotherWindow()}
       >
         <div className={'inline-flex items-center gap-x-2 max-w-[90%]'}>
           <div className="flex items-center w-6 h-6 fill-teal-400 rounded-full">
@@ -344,26 +359,36 @@ const DocumentRow = memo(
             {document.name}
           </h2>
         </div>
-        <Checkbox.Root
-          className={classNames(
-            'border text-teal-400 border-gray-300 rounded cursor-pointer',
-            'focus:outline-0 active:outline-0 focus:ring-teal-400',
-            'bg-white dark:bg-zinc-600 dark:border-zinc-600 dark:focus:ring-white dark:focus:ring-0',
-            'dark:focus:outline-0 w-4 h-4'
-          )}
-          checked={selected}
-          onCheckedChange={(checked) => {
-            if (typeof checked === 'boolean') {
-              onSelectedChange(document.id);
-            }
-          }}
-          onClick={() => onSelectedChange(document.id)}
-        >
-          <Checkbox.Indicator className="text-teal-400">
-            <CheckIcon />
-          </Checkbox.Indicator>
-        </Checkbox.Root>
+
+        {
+          loadingURL && <LoadingCircle />
+        }
+
+        {
+          !loadingURL &&
+          <Checkbox.Root
+            className={classNames(
+              'border text-teal-400 border-gray-300 rounded cursor-pointer',
+              'focus:outline-0 active:outline-0 focus:ring-teal-400',
+              'bg-white dark:bg-zinc-600 dark:border-zinc-600 dark:focus:ring-white dark:focus:ring-0',
+              'dark:focus:outline-0 w-4 h-4'
+            )}
+            checked={selected}
+            onCheckedChange={(checked) => {
+              if (typeof checked === 'boolean') {
+                onSelectedChange(document.id);
+              }
+            }}
+            onClick={() => onSelectedChange(document.id)}
+          >
+            <Checkbox.Indicator className="text-teal-400">
+              <CheckIcon />
+            </Checkbox.Indicator>
+          </Checkbox.Root>
+        }
       </div>
     );
   }
 );
+
+

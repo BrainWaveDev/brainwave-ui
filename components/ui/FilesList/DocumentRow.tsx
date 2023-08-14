@@ -1,5 +1,5 @@
 import { Document } from '@/types/document';
-import React, { ForwardedRef, memo, useMemo } from 'react';
+import React, { ForwardedRef, memo, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotatingLines } from 'react-loader-spinner';
 import classNames from 'classnames';
@@ -8,6 +8,8 @@ import { FileType } from '@/components/ui/FilesList/FilesList';
 import * as Accordion from '@radix-ui/react-accordion';
 import { ChevronDownIcon } from '@radix-ui/react-icons';
 import LoadingWrapper from '@/components/ui/LoadingWrapper/LoadingWrapper';
+import { getDucumentPublicURL } from '@/utils/app/documents';
+import LoadingCircle from '@/components/icons/LoadingCircle';
 
 function DocumentRow({
   doc,
@@ -22,6 +24,19 @@ function DocumentRow({
   setSelectedDocuments: (documentId: number) => void;
   columnWidths: { [_: string]: string };
 }) {
+  console.log(doc)
+  const [loadingURL, setLoadingURL] = useState<boolean>(false)
+  const openInAnotherWindow = () => {
+    setLoadingURL(true)
+    getDucumentPublicURL(`${doc.owner}/${doc.name}`)
+      .then((res) => {
+        if (res.data) {
+          window.open(res.data.signedUrl, '_blank')
+        }
+      }).finally(() => {
+        setLoadingURL(false)
+      })
+  }
   // Helper functions to format data
   const formatBytes = (bytes: number): string => {
     if (bytes < 1024) {
@@ -93,9 +108,8 @@ function DocumentRow({
           animate={{ opacity: 1, display: 'flex' }}
           exit={{ opacity: 0, display: 'none' }}
           transition={{ duration: 0 }}
-          className={`bg-transparent relative ${
-            loading && 'pointer-events-none'
-          }`}
+          className={`bg-transparent relative ${loading && 'pointer-events-none'
+            }`}
         >
           {loading && (
             <LoadingWrapper
@@ -126,7 +140,8 @@ function DocumentRow({
                       onClick={(event) => event.stopPropagation()}
                       onChange={(_) => setSelectedDocuments(doc.id)}
                     />
-                    <div className="flex items-center gap-x-2 max-w-[85%] group">
+                    <div className="flex items-center gap-x-2 max-w-[85%] group"
+                    >
                       <div className="flex items-center w-5 h-5 text-teal-400 rounded-full md:mr-1">
                         <DocumentTextIcon className="w-4 h-4 md:w-5 md:h-5 fill-teal-400" />
                       </div>
@@ -187,12 +202,18 @@ function DocumentRow({
             )}
           >
             <div className="flex items-center gap-x-3 w-full">
-              <input
-                type="checkbox"
-                className={selectAllDocumentsCheckboxStyle}
-                checked={selected}
-                onChange={(_) => setSelectedDocuments(doc.id)}
-              />
+              {
+                !loadingURL &&
+                <input
+                  type="checkbox"
+                  className={selectAllDocumentsCheckboxStyle}
+                  checked={selected}
+                  onChange={(_) => setSelectedDocuments(doc.id)}
+                />
+              }{
+                loadingURL && 
+                <LoadingCircle size={5}/>
+              }
               <div
                 className="flex items-center gap-x-2 max-w-[85%] group"
                 onClick={() => setSelectedDocuments(doc.id)}
@@ -205,6 +226,10 @@ function DocumentRow({
                     'inline m-0 max-w-full overflow-ellipsis whitespace-nowrap overflow-hidden',
                     'text-gray-700 dark:text-gray-100 group-hover:text-teal-400 cursor-pointer'
                   )}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openInAnotherWindow()
+                  }}
                 >
                   {doc.name}
                 </p>

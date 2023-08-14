@@ -44,6 +44,13 @@ export const deleteDocuments = async (ids: number[]): Promise<void> => {
   await supabase.from('document').delete().in('id', ids).throwOnError();
 };
 
+
+export const getDucumentPublicURL = async (path:string) => {
+
+  console.log(path)
+  return await supabase.storage.from('documents').createSignedUrl(path,60)
+}
+
 const convertToDocMetadata = (metadata: any): DocMetadata => {
   return {
     cacheControl: metadata.cacheControl,

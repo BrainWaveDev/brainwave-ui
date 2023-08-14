@@ -193,7 +193,7 @@ const handler = async (req: Request): Promise<Response> => {
         } else {
           // Append source key to first piece of content
           if (i === 0)
-            contextText += `Source key: \`${sourceKey}\`\n ` + `Content:\n\``;
+            contextText += `Document Name: \`${documentName}\` Source key: \`${sourceKey}\`\n ` + `Content:\n\``;
           contextText += `${piece}\n`;
         }
       }
