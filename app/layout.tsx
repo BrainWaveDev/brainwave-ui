@@ -9,6 +9,7 @@ import { getURL } from '@/utils/helpers';
 import '../styles/main.css';
 import PreLoader from './_lib/preloader';
 import { IsClientCtxProvider } from './_lib/isClientCtxProvider';
+import Redirector from './_lib/redirector';
 
 const url = getURL();
 
@@ -72,6 +73,7 @@ export default function RootLayout({
       <body className={'bg-neutral7'}>
           <IsClientCtxProvider>
             <PreLoader />
+            <Redirector/>
           </IsClientCtxProvider>
           <div className="relative isolate overflow-hidden aiu min-h-screen bg-neutral7 scrollbar-hide">
             <BackgroundPattern />

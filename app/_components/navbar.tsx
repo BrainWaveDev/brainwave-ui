@@ -19,7 +19,7 @@ const navigation: {
 }[] = [];
 
 export default function NavBar() {
-  const { session, loading, loggedOut } = getSession();
+  const { session, loading } = getSession();
 
   return (
     <header className="absolute inset-x-0 top-0 z-50">
