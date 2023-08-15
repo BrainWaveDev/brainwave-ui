@@ -7,6 +7,8 @@ import { getURL } from '@/utils/helpers';
 
 // These styles apply to every route in the application
 import '../styles/main.css';
+import PreLoader from './_lib/preloader';
+import { IsClientCtxProvider } from './_lib/isClientCtxProvider';
 
 const url = getURL();
 
@@ -66,16 +68,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className='scrollbar-hide'>
       <body className={'bg-neutral7'}>
-        <div className="relative isolate overflow-hidden aiu min-h-screen bg-neutral7 scrollbar-hide">
-          <BackgroundPattern />
-          <NavBar />
-          <main className={'w-full h-full flex items-center justify-center'}>
-            {children}
-          </main>
-          <Footer />
-        </div>
+          <IsClientCtxProvider>
+            <PreLoader />
+          </IsClientCtxProvider>
+          <div className="relative isolate overflow-hidden aiu min-h-screen bg-neutral7 scrollbar-hide">
+            <BackgroundPattern />
+            <NavBar />
+            <main className={'w-full h-full flex items-center justify-center'}>
+              {children}
+            </main>
+            <Footer />
+          </div>
       </body>
     </html>
   );

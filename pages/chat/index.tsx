@@ -41,6 +41,7 @@ const ChatUI = () => {
     };
   }, [dispatch]);
 
+
   // ===== Render prompt selector if no conversation is selected =====
   const renderPromptSelector =
     !currentConversation || !currentConversation.promptId;
