@@ -7,16 +7,17 @@ import {
 } from '@/types/chat';
 import { AppThunk, useAppSelector } from './store';
 import {
-  createConversation,
   insertMessage,
   replaceLastMessage,
+  replacePlaceholderConversation,
   retrieveConversation
 } from '@/utils/app/conversation';
 import { Session } from '@supabase/auth-helpers-react';
-import { addConversation, deleteConversation } from './conversationsSlice';
+import conversationsSlice, { addConversation, deleteConversation, replaceWithDBConversation } from './conversationsSlice';
 import { randomPlaceholderConversation } from '@/utils/app/conversation';
 import { optimisticErrorActions } from './errorSlice';
 import { defaultPrompt } from '@/utils/app/prompts';
+import { OpenAIModels } from '@/types/openai';
 
 interface SelectedConversationState {
   conversation: Conversation | undefined;
@@ -25,7 +26,7 @@ interface SelectedConversationState {
   messageIsStreaming: boolean;
   loading: boolean;
   stopConversation: boolean;
-  disableInput:boolean
+  disableInput: boolean
 }
 
 const initialState: SelectedConversationState = {
@@ -35,7 +36,7 @@ const initialState: SelectedConversationState = {
   messageIsStreaming: false,
   loading: false,
   stopConversation: false,
-  disableInput:false
+  disableInput: false
 };
 
 const currentConversationSlice = createSlice({
@@ -45,10 +46,18 @@ const currentConversationSlice = createSlice({
     selectCurrentConversation: (state, action: PayloadAction<Conversation>) => {
       state.conversation = action.payload;
     },
+    replaceWithDBId:(state,action:PayloadAction<number>)=>{
+      if (!state.conversation){
+        console.error("setting id for non-exist conversation")
+        return
+      }
+      state.conversation.id = action.payload
+      state.conversation.isPlaceholder = false
+    },
     clearSelectedConversation: (state) => {
       state.conversation = undefined;
     },
-    setDisableInput:(state,action)=>{
+    setDisableInput: (state, action) => {
       state.disableInput = action.payload
     },
     setMessagesInCurrentConversations: (
@@ -229,39 +238,6 @@ const thunkUserSent =
 
       // Show empty assistant message to render loading animation
       dispatch(currentConversationSlice.actions.appendLastAssistantMessage(''));
-
-      // Create conversation in db
-      if (createNewConversation) {
-        try {
-          await createConversation(conversation!);
-        } catch (e) {
-          // Delete conversation which failed to upload
-          dispatch(setLoading(false));
-          dispatch(clearSelectedConversation());
-          dispatch(deleteConversation(conversation!));
-          dispatch(
-            optimisticErrorActions.addErrorWithTimeout(
-              'Failed to create conversation'
-            )
-          );
-          return;
-        }
-      }
-
-      // const messages = conversation!.messages;
-      // try {
-      //   // Insert message to db
-      //   await insertMessage(message, conversation!.id, user_id);
-      // } catch (e: any) {
-      //   dispatch(setLoading(false));
-      //   // Clear last two messages in the conversation
-      //   dispatch(setMessagesInCurrentConversations(messages.slice(0, -2)));
-      //   dispatch(
-      //     optimisticErrorActions.addErrorWithTimeout(
-      //       'Failed to update conversation messages'
-      //     )
-      //   );
-      // }
     };
 
 export const thunkStreamingResponse =
@@ -349,7 +325,23 @@ export const thunkStreamingResponse =
       dispatch(setIsStreaming(false));
       dispatch(setDisableInput(false))
 
-      const updatedConversation = getState().currentConversation.conversation!;
+      let updatedConversation = getState().currentConversation.conversation!;
+
+      if (updatedConversation.isPlaceholder) {
+        let dbConveration = await replacePlaceholderConversation(updatedConversation)
+        dispatch(currentConversationSlice.actions.replaceWithDBId(dbConveration.id))
+        dispatch(replaceWithDBConversation({
+          tempConversationId:updatedConversation.id,
+          dbConversation:{
+            folderId:dbConveration.folder_id,
+            id:dbConveration.id,
+            model:OpenAIModels["gpt-3.5-turbo"],
+            name:dbConveration.name,
+            promptId:dbConveration.prompt_id || undefined
+          }
+        }))
+        updatedConversation = getState().currentConversation.conversation!;
+      }
       const updatedLastMessage =
         updatedConversation?.messages[updatedConversation?.messages.length - 1];
       const lastUserMessage = updatedConversation?.messages[updatedConversation?.messages.length - 2]

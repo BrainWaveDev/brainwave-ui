@@ -11,10 +11,11 @@ import { randomNumberId } from '@/utils/app/createDBOperation';
 import { OpenAIModels } from 'types/openai';
 import {
   clearAllConversations,
-  createConversation,
+  replacePlaceholderConversation,
   deleteConversation as deleteConversationFromDB,
   fetchAllConversations,
-  updateConversation as updateConversationDB
+  updateConversation as updateConversationDB,
+  randomPlaceholderConversation
 } from '@/utils/app/conversation';
 import {
   clearSelectedConversation,
@@ -35,7 +36,7 @@ const conversationsSlice = createSlice({
     addConversation(state, action: PayloadAction<ConversationSummary>) {
       return [...state, action.payload];
     },
-    setConversations(state, action: PayloadAction<ConversationSummary[]>) {
+    setConversations(_state, action: PayloadAction<ConversationSummary[]>) {
       return action.payload;
     },
     deleteConversation(state, action: PayloadAction<{ id: number }>) {
@@ -63,19 +64,19 @@ const conversationsSlice = createSlice({
     replaceWithDBConversation(
       state,
       action: PayloadAction<{
-        tempConversation: ConversationIdentifiable;
+        tempConversationId: number;
         dbConversation: ConversationSummary;
       }>
     ) {
       const index = state.findIndex(
-        (conversation) => conversation.id === action.payload.tempConversation.id
+        (conversation) => conversation.id === action.payload.tempConversationId
       );
       if (index !== -1) {
         state[index] = action.payload.dbConversation;
       } else {
         throw Error(
           "Couldn't find conversation with ID " +
-            action.payload.tempConversation.id
+            action.payload.tempConversationId
         );
       }
     }
@@ -90,37 +91,13 @@ function updateConversationProperty<K extends keyof ConversationSummary>(
   conversation[key] = value;
 }
 
-const thunkCreateNewConversation =
+const thunkCreateNewPlaceholderConversation =
   (promptId?: number): AppThunk =>
   async (dispatch) => {
-    const tempConversation: Conversation = {
-      id: randomNumberId(),
-      name: 'New Conversation',
-      model: OpenAIModels['gpt-3.5-turbo'],
-      promptId,
-      folderId: null,
-      messages: []
-    };
+    const tempConversation: Conversation = randomPlaceholderConversation(promptId)
 
     dispatch(addConversation(tempConversation));
     dispatch(selectCurrentConversation(tempConversation));
-    try {
-      const conversation = await createConversation(tempConversation);
-      dispatch(
-        conversationsSlice.actions.replaceWithDBConversation({
-          tempConversation,
-          dbConversation: conversation
-        })
-      );
-      dispatch(selectCurrentConversation(conversation));
-    } catch (e) {
-      dispatch(
-        optimisticErrorActions.addErrorWithTimeout(
-          "Couldn't create new conversation"
-        )
-      );
-      dispatch(deleteConversation({ id: tempConversation.id }));
-    }
   };
 
 const thunkDeleteConversation =
@@ -220,19 +197,20 @@ const thunkInitConversations = (): AppThunk => async (dispatch, getState) => {
 
 
 export const optimisticConversationsActions = {
-  createConversation: thunkCreateNewConversation,
+  createConversation: thunkCreateNewPlaceholderConversation,
   deleteConversation: thunkDeleteConversation,
   // update conversation does not update messages
   updateConversation: thunkUpdateConversation,
   clearConversations: thunkClearConversations,
-  fetchAllConversations: thunkFetchAllConversations
+  fetchAllConversations: thunkFetchAllConversations,
 };
 
 export const {
   addConversation,
   setConversations,
   deleteConversation,
-  clearConversations
+  clearConversations,
+  replaceWithDBConversation
 } = conversationsSlice.actions;
 
 export const getConversationsFromStorage = () =>

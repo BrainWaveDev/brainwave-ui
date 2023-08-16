@@ -6,14 +6,15 @@ import { defaultPrompt } from './prompts';
 import { get, remove, removeAll, set } from './localcache';
 import { SupabaseClient } from '@supabase/supabase-js';
 
-export const randomPlaceholderConversation = () => {
+export const randomPlaceholderConversation = (promptId?:number) => {
   return {
     id: randomNumberId(),
     name: 'New conversation',
     model: OpenAIModels['gpt-3.5-turbo'],
-    promptId: defaultPrompt.id,
+    promptId: promptId || defaultPrompt.id,
     messages: [],
-    folderId: null
+    folderId: null,
+    isPlaceholder:true
   } as Conversation;
 };
 
@@ -71,23 +72,27 @@ export const updateConversationFolder = async (
   return false;
 };
 
-export const createConversation = async (conversation: Conversation) => {
+export const replacePlaceholderConversation = async (conversation: Conversation) => {
+  if(!conversation.isPlaceholder){
+    throw new Error("cannot re-create conversation")
+  }
+
   // Save conversation to the local storage
   set('conversation', conversation.id.toString(), conversation);
 
   try {
-    await supabase
+    let res = await supabase
       .from('conversation')
       .insert({
-        id: conversation.id,
         name: conversation.name,
         prompt_id: conversation.promptId,
         model: OpenAIModels['gpt-3.5-turbo'].name
       })
       .select()
+      .single()
       .throwOnError();
 
-    return conversation;
+    return res.data!;
   } catch (err) {
     // Clear conversation from local storage
     remove('conversation', conversation.id.toString());

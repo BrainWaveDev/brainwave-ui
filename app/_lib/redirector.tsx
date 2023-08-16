@@ -9,7 +9,7 @@ const Redirector = () => {
     const isClient = useIsClient();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { session, loading } = getSession();
+    const { session } = getSession();
     const [code,setCode] = useState<string | null>(null);
 
     useEffect(() => {
