@@ -47,6 +47,7 @@ const currentConversationSlice = createSlice({
   reducers: {
     selectCurrentConversation: (state, action: PayloadAction<Conversation>) => {
       state.conversation = action.payload;
+      state.showPromptSelector = false
     },
     replaceWithDBId:(state,action:PayloadAction<number>)=>{
       if (!state.conversation){
