@@ -192,8 +192,8 @@ export default function DocumentFilter() {
           </Popover.Portal>
         </Popover.Root>
       </div>
+    {/* // Document filter displayed on large screens */}
       <div
-        // Document filter displayed on large screens
         className={classNames(
           'hidden lg:flex z-30 absolute top-0 right-0 bottom-0 flex-col',
           'rounded-r-[1.25rem] rounded-l-none shadow-[inset_0_1rem_2rem_rgba(0,0,0,0.01)]',
@@ -335,7 +335,6 @@ const DocumentRow = memo(
           'px-5 cursor-pointer z-[5] group',
           !selected && 'bg-gray-100/75 dark:bg-zinc-700'
         )}
-        onClick={() => openInAnotherWindow()}
       >
         <div className={'inline-flex items-center gap-x-2 max-w-[90%]'}>
           <div className="flex items-center w-6 h-6 fill-teal-400 rounded-full">
@@ -355,6 +354,7 @@ const DocumentRow = memo(
               'overflow-hidden max-w-[80%]',
               'truncate text-ellipsis'
             )}
+            onClick={() => openInAnotherWindow()}
           >
             {document.name}
           </h2>
@@ -379,7 +379,6 @@ const DocumentRow = memo(
                 onSelectedChange(document.id);
               }
             }}
-            onClick={() => onSelectedChange(document.id)}
           >
             <Checkbox.Indicator className="text-teal-400">
               <CheckIcon />
