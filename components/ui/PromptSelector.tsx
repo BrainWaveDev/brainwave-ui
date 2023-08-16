@@ -4,7 +4,8 @@ import { QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
 import { ArrowSmallRightIcon } from '@heroicons/react/24/outline';
 import {
   getCurrentConversationFromStore,
-  optimisticCurrentConversationAction
+  optimisticCurrentConversationAction,
+  showPromptSelector
 } from '../../context/redux/currentConversationSlice';
 import { useAppDispatch } from '../../context/redux/store';
 import { optimisticConversationsActions } from '../../context/redux/conversationsSlice';
@@ -29,16 +30,25 @@ function PromptSelector() {
   const prompts: PromptSelector[] = useMemo(() => {
     return predefinedPrompts.map((prompt) => {
       const onSelect = () => {
-        if (!currentConversation)
+        if (!currentConversation) {
           dispatch(
             optimisticConversationsActions.createConversation(prompt.id)
           );
-        else
-          dispatch(
-            optimisticCurrentConversationAction.selectConversationPrompt(
-              prompt.id
-            )
-          );
+        }
+        else {
+          if (currentConversation.isPlaceholder) {
+            dispatch(showPromptSelector(false))
+            dispatch(
+              optimisticCurrentConversationAction.selectConversationPrompt(
+                prompt.id
+              )
+            );
+          } else {
+            dispatch(
+              optimisticConversationsActions.createConversation(prompt.id)
+            );
+          }
+        }
       };
       let icon: any = null;
       if (prompt.name === 'Q&A') icon = QuestionMarkCircleIcon;

@@ -24,7 +24,7 @@ import {
   setTheme,
   getThemeFromStorage
 } from '../../../context/redux/themeSlice';
-import { useAppDispatch } from '../../../context/redux/store';
+import { useAppDispatch, useAppSelector } from '../../../context/redux/store';
 import {
   getModalStateFromStorage,
   initSidebar,
@@ -44,18 +44,19 @@ import useRouteChange from '../../../hooks/useRouteChange';
 import { RotatingLines } from 'react-loader-spinner';
 import SettingsDialog from '@/components/Settings/SettingsDialog';
 import { use100vh } from 'react-div-100vh';
+import { showPromptSelector } from 'context/redux/currentConversationSlice';
 
 type LinkType =
   | {
-      name: string;
-      icon: any;
-      href: string;
-    }
+    name: string;
+    icon: any;
+    href: string;
+  }
   | {
-      name: string;
-      icon: any;
-      onClick: (dispatch: ReturnType<typeof useAppDispatch>) => void;
-    };
+    name: string;
+    icon: any;
+    onClick: (dispatch: ReturnType<typeof useAppDispatch>) => void;
+  };
 
 export default function Sidebar() {
   // ===================================================
@@ -81,6 +82,7 @@ export default function Sidebar() {
   }, []);
   const { sideBarOpen, settingDialogOpen } = getModalStateFromStorage();
   const onToggleSidebar = () => dispatch(toggleSidebar());
+  const isPormptShowing = useAppSelector(state => state.currentConversation).showPromptSelector
   const theme = getThemeFromStorage();
   const isDarkTheme = theme === 'dark';
   const deletingConversations = getLoadingStateFromStore(
@@ -130,7 +132,7 @@ export default function Sidebar() {
     // Switch to chat page
     if (router.pathname !== '/chat') router.push('/chat');
     // Create a new conversation
-    dispatch(optimisticConversationsActions.createConversation());
+    dispatch(showPromptSelector(true));
     // Open the chat list
     if (!isChatlistOpen()) {
       chatListButtonRef.current?.click();
@@ -309,22 +311,26 @@ export default function Sidebar() {
                   sideBarOpen ? 'flex-row' : 'flex-col gap-y-1'
                 )}
               >
-                <button
-                  className={classNames(
-                    'group flex text-sm grow flex-shrink-0 font-semibold cursor-pointer select-none items-center',
-                    'gap-x-4 px-3 leading-normal text-white/50 hover:text-white transition-all duration-100'
-                  )}
-                  onClick={handleCreateConversation}
-                  id={'new-chat-button'}
-                >
-                  <PlusCircleIcon
-                    className={
-                      'w-[22px] h-[22px] fill-white/50 group-hover:fill-white transition-all duration-200'
-                    }
-                  />
-                  {sideBarOpen && 'New chat'}
-                </button>
-                <Separator.Root
+                {
+                  !isPormptShowing && <button
+                    className={classNames(
+                      'group flex text-sm grow flex-shrink-0 font-semibold cursor-pointer select-none items-center',
+                      'gap-x-4 px-3 leading-normal text-white/50 hover:text-white transition-all duration-100'
+                    )}
+                    onClick={handleCreateConversation}
+                    id={'new-chat-button'}
+                  >
+                    <PlusCircleIcon
+                      className={
+                        'w-[22px] h-[22px] fill-white/50 group-hover:fill-white transition-all duration-200'
+                      }
+                    />
+                    {sideBarOpen && 'New chat'}
+                  </button>
+                }
+                {
+                  !isPormptShowing && 
+                  <Separator.Root
                   className={classNames(
                     'bg-neutral-600',
                     'data-[orientation=vertical]:h-[80%] data-[orientation=vertical]:w-[2px]',
@@ -334,6 +340,7 @@ export default function Sidebar() {
                   decorative
                   orientation={sideBarOpen ? 'vertical' : 'horizontal'}
                 />
+                }
                 <button
                   className="group mx-3 flex flex-shrink-0 cursor-pointer items-center transition-all duration-200"
                   onClick={handleCreateFolder}

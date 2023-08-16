@@ -19,7 +19,8 @@ import {
 } from '@/utils/app/conversation';
 import {
   clearSelectedConversation,
-  selectCurrentConversation
+  selectCurrentConversation,
+  showPromptSelector
 } from './currentConversationSlice';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { endLoading, LoadingTrigger, startLoading } from './loadingSlice';
@@ -96,6 +97,7 @@ const thunkCreateNewPlaceholderConversation =
   async (dispatch) => {
     const tempConversation: Conversation = randomPlaceholderConversation(promptId)
 
+    dispatch(showPromptSelector(false))
     dispatch(addConversation(tempConversation));
     dispatch(selectCurrentConversation(tempConversation));
   };

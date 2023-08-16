@@ -22,6 +22,7 @@ import { OpenAIModels } from '@/types/openai';
 interface SelectedConversationState {
   conversation: Conversation | undefined;
   currentMessage: Message | undefined;
+  showPromptSelector:boolean;
   fetchingConversation: boolean;
   messageIsStreaming: boolean;
   loading: boolean;
@@ -32,6 +33,7 @@ interface SelectedConversationState {
 const initialState: SelectedConversationState = {
   conversation: undefined,
   currentMessage: undefined,
+  showPromptSelector:true,
   fetchingConversation: false,
   messageIsStreaming: false,
   loading: false,
@@ -56,6 +58,9 @@ const currentConversationSlice = createSlice({
     },
     clearSelectedConversation: (state) => {
       state.conversation = undefined;
+    },
+    showPromptSelector: (state,action)=>{
+      state.showPromptSelector = action.payload
     },
     setDisableInput: (state, action) => {
       state.disableInput = action.payload
@@ -489,7 +494,8 @@ export const {
   clearLastAssistantMessage,
   setFetchingConversation,
   selectPrompt,
-  setDisableInput
+  setDisableInput,
+  showPromptSelector
 } = currentConversationSlice.actions;
 
 export const getCurrentConversationFromStore = () =>

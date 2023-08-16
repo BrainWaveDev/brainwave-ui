@@ -16,7 +16,7 @@ import { getURL } from '@/utils/helpers';
 const ChatUI = () => {
   // ========= Redux State =========
   const dispatch = useAppDispatch();
-  const { conversation: currentConversation } =
+  const { conversation: currentConversation,showPromptSelector } =
     getCurrentConversationFromStore();
 
   // ========= Initialize Conversations in the Local Storage =========
@@ -44,7 +44,7 @@ const ChatUI = () => {
 
   // ===== Render prompt selector if no conversation is selected =====
   const renderPromptSelector =
-    !currentConversation || !currentConversation.promptId;
+    !currentConversation || !currentConversation.promptId || showPromptSelector;
 
   return (
     <>
